@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "cd app/ui && next dev",
+    "build": "cd app/ui && next build",
+    "start": "cd app/ui && next start",
+    "lint": "cd app/ui && next lint"
   },
   "dependencies": {
     "zustand": "^5.0.2",
