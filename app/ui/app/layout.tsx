@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fredoka.variable} font-sans`}>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background" style={{ backgroundImage: 'url(/icons/bgpattern.png)', backgroundRepeat: 'repeat' }}>
           <AppSidebar />
           <AppHeader />
           <main className="ml-60 pt-16">
