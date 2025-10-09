@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  static-signs:
+    build:
+      context: ./static-signs
+      dockerfile: Dockerfile
+    container_name: talk2dhand-static-signs
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the model file (read-only)
+      - ./static-signs/hand_landmarks.h5:/app/hand_landmarks.h5:ro
+      # Optional: mount the code for development (comment out for production)
+      - ./static-signs/simple_server.py:/app/simple_server.py
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - TF_ENABLE_ONEDNN_OPTS=0
+    restart: unless-stopped
+    networks:
+      - talk2dhand-network
+
+  dynamic-phrases:
+    build:
+      context: ./dynamic-phrases
+      dockerfile: Dockerfile
+    container_name: talk2dhand-dynamic-phrases
+    ports:
+      - "5008:5008"
+    volumes:
+      # Mount the model file (read-only) - ensure action.h5 exists!
+      - ./dynamic-phrases/action.h5:/app/action.h5:ro
+      # Optional: mount the code for development (comment out for production)
+      - ./dynamic-phrases/app.py:/app/app.py
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - talk2dhand-network
+
+networks:
+  talk2dhand-network:
+    driver: bridge
+

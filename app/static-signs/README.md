@@ -1,87 +1,118 @@
-# Sign Language Recognition API
+# Static Signs Recognition Service
 
-This folder contains the backend server for the sign language recognition application.
+This service provides sign language recognition using TensorFlow and MediaPipe.
 
-## Important Files
+## Requirements
 
-### Essential Files (DO NOT DELETE)
-- **simple_server.py** - The main Flask server that provides the sign recognition API
-- **hand_landmarks.h5** - The trained TensorFlow model for sign language recognition
-- **requirements.txt** - List of Python dependencies needed for the backend
-- **run_app.py** - Script to run both frontend and backend in one command
+- Python 3.10
+- TensorFlow 2.10.0
+- MediaPipe 0.8.9.1
+- Flask 2.0.1
 
-### How to Run the Application
+## Running with Docker (Recommended)
 
-The easiest way to run the entire application (both frontend and backend) is to use:
+The easiest way to run this service is using Docker, which ensures the correct Python version and dependencies:
+
+### Using Docker Compose
 
 ```bash
-cd api
-python run_app.py
+# From the app directory
+cd app
+docker-compose up -d
+
+# View logs
+docker-compose logs -f static-signs
+
+# Stop the service
+docker-compose down
 ```
 
-This will:
-1. Start the backend server on port 8000
-2. Start the frontend on port 8081
-3. Open a browser window automatically
-4. Handle shutting down all processes when you press Ctrl+C
-
-### Running the Backend Manually
-
-If you need to run only the backend:
+### Using Docker directly
 
 ```bash
+# Build the image
+cd app/static-signs
+docker build -t static-signs .
+
+# Run the container
+docker run -p 8000:8000 -v $(pwd)/hand_landmarks.h5:/app/hand_landmarks.h5:ro static-signs
+```
+
+## Running Locally (Not Recommended)
+
+If you must run locally, ensure you have Python 3.10:
+
+### On Windows
+
+```powershell
+# Create virtual environment with Python 3.10
+py -3.10 -m venv venv
+
+# Activate virtual environment
+.\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
 python simple_server.py
 ```
 
-The server will run on http://localhost:8000 with these endpoints:
-- `/health` - Health check endpoint
-- `/predict` - Endpoint that accepts base64-encoded images and returns sign predictions
+### On Linux/Mac
 
-#
-## Troubleshooting
+```bash
+# Create virtual environment with Python 3.10
+python3.10 -m venv venv
 
-If you encounter issues:
+# Activate virtual environment
+source venv/bin/activate
 
-1. Make sure you have installed the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-2. Check that the model file `hand_landmarks.h5` is in the api directory
+# Run the server
+python simple_server.py
+```
 
-3. Verify the server is running by accessing http://localhost:8000/health in your browser
-
-4. If the model isn't loading, check the console output for specific error messages
-
-## API Documentation
+## API Endpoints
 
 ### Health Check
-- **URL**: `/health`
-- **Method**: GET
-- **Response**: JSON with model status
-  ```json
-  {
-    "status": "healthy",
-    "model_loaded": true,
-    "message": "Sign recognition server is running"
-  }
-  ```
+```
+GET /health
+```
 
-### Predict Sign
-- **URL**: `/predict`
-- **Method**: POST
-- **Body**: JSON with base64 encoded image
-  ```json
-  {
-    "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QB..."
-  }
-  ```
-- **Response**: JSON with prediction results
-  ```json
-  {
-    "success": true,
-    "prediction": "A",
-    "confidence": 0.97,
-    "annotated_image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QB..."
-  }
-  ``` 
+Returns the status of the service and whether the model is loaded.
+
+### Predict
+```
+POST /predict
+Content-Type: application/json
+
+{
+  "image": "base64_encoded_image"
+}
+```
+
+Returns the predicted sign language character with confidence score.
+
+## Docker Environment
+
+The Docker container:
+- Uses Python 3.10 slim image
+- Installs all required system dependencies for OpenCV
+- Exposes port 8000
+- Mounts the model file as read-only
+- Automatically restarts on failure
+
+## Troubleshooting
+
+### Model not loading
+- Ensure `hand_landmarks.h5` exists in the `static-signs` directory
+- Check Docker logs: `docker-compose logs static-signs`
+
+### Port already in use
+- Change the port mapping in `docker-compose.yaml`: `"8001:8000"` (use port 8001 instead)
+
+### Container won't start
+- Check logs: `docker-compose logs static-signs`
+- Rebuild the image: `docker-compose build --no-cache static-signs`
