@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, HelpCircle } from "lucide-react"
@@ -22,6 +22,12 @@ export default function LessonPage() {
   const [detectedSign, setDetectedSign] = useState<string>("")
   const [timer, setTimer] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCameraReady, setIsCameraReady] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Find the lesson
   let lesson = null
@@ -33,12 +39,130 @@ export default function LessonPage() {
     }
   }
 
+  // Timer effect
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => prev + 1)
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  // Initialize camera
+  useEffect(() => {
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user"
+          }
+        })
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play()
+            setIsCameraReady(true)
+          }
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error)
+        setCameraError("Unable to access camera. Please check permissions.")
+      }
+    }
+
+    initCamera()
+
+    // Cleanup function
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+      }
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+      }
+    }
+  }, [])
+
+  // Send frame to backend for detection
+  const detectSign = async () => {
+    if (!videoRef.current || !canvasRef.current || !isCameraReady || !selectedSignId) {
+      return
+    }
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    
+    try {
+      const imageData = canvas.toDataURL("image/jpeg")
+      
+      const response = await fetch("http://localhost:8000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ image: imageData })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success && data.prediction) {
+        const predictedSign = data.prediction.toLowerCase()
+        setDetectedSign(data.prediction.toUpperCase())
+        
+        // Check if prediction matches selected sign
+        if (predictedSign === selectedSignId.toLowerCase()) {
+          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: "correct" }))
+          
+          // Stop detection and move to next sign after 1 second
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current)
+            detectionIntervalRef.current = null
+          }
+          
+          setTimeout(() => {
+            setSelectedSignId(null)
+            setDetectedSign("")
+          }, 1000)
+        }
+      }
+    } catch (error) {
+      console.error("Error detecting sign:", error)
+    }
+  }
+
+  // Start/stop detection based on selected sign
+  useEffect(() => {
+    if (selectedSignId && isCameraReady) {
+      // Start detection
+      detectionIntervalRef.current = setInterval(() => {
+        detectSign()
+      }, 1000) // Detect every second
+    } else {
+      // Stop detection
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+        detectionIntervalRef.current = null
+      }
+    }
+
+    return () => {
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+        detectionIntervalRef.current = null
+      }
+    }
+  }, [selectedSignId, isCameraReady])
 
   if (!lesson) {
     return <div>Lesson not found</div>
@@ -53,22 +177,7 @@ export default function LessonPage() {
   const handleSignSelect = (signId: string) => {
     setSelectedSignId(signId)
     setSignStatuses((prev) => ({ ...prev, [signId]: "idle" }))
-
-    // Simulate camera detection after 2 seconds
-    setTimeout(() => {
-      // Simulate random correct/incorrect detection
-      const isCorrect = Math.random() > 0.3
-      setDetectedSign(signId.toUpperCase())
-      setSignStatuses((prev) => ({ ...prev, [signId]: isCorrect ? "correct" : "incorrect" }))
-
-      if (isCorrect) {
-        // Move to next sign after 1 second
-        setTimeout(() => {
-          setSelectedSignId(null)
-          setDetectedSign("")
-        }, 1000)
-      }
-    }, 2000)
+    setDetectedSign("")
   }
 
   const getSignBorderColor = (signId: string) => {
@@ -113,12 +222,33 @@ export default function LessonPage() {
           )}
         >
           <div className="aspect-video bg-gray-900 flex items-center justify-center relative">
-            <div className="text-white text-center">
-              <p className="text-xl mb-2">Camera Feed</p>
-              <p className="text-sm text-gray-400">
-                {selectedSignId ? "Detecting hand signs..." : "Select a sign below to start"}
-              </p>
-            </div>
+            {cameraError ? (
+              <div className="text-white text-center p-4">
+                <p className="text-xl mb-2">Camera Error</p>
+                <p className="text-sm text-red-400">{cameraError}</p>
+              </div>
+            ) : !isCameraReady ? (
+              <div className="text-white text-center">
+                <p className="text-xl mb-2">Initializing Camera...</p>
+                <p className="text-sm text-gray-400">Please allow camera access</p>
+              </div>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                <canvas ref={canvasRef} className="hidden" />
+                {!selectedSignId && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <p className="text-white text-xl">Select a sign below to start</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </Card>
 
