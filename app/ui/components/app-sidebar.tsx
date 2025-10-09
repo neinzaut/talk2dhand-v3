@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { GraduationCap, Target, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -31,7 +32,13 @@ export function AppSidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-          <div className="text-2xl font-bold text-sidebar-foreground">Talk 👌 Hand</div>
+          <Image 
+            src="/icons/logo.png" 
+            alt="Talk 2D Hand" 
+            width={120} 
+            height={40} 
+            className="h-auto w-auto"
+          />
         </div>
 
         {/* Navigation */}

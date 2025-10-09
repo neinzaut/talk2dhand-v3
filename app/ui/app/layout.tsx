@@ -14,9 +14,8 @@ const fredoka = Fredoka({
 })
 
 export const metadata: Metadata = {
-  title: "Talk to Hand - Learn Sign Language",
-  description: "Gamified learning platform for American Sign Language",
-  generator: "v0.app",
+  title: "Talk2DHand",
+  description: "Gamified LMS for Sign Language",
 }
 
 export default function RootLayout({
