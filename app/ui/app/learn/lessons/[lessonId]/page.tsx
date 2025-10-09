@@ -24,6 +24,8 @@ export default function LessonPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [isInitializing, setIsInitializing] = useState(false)
+  const [showStartButton, setShowStartButton] = useState(true)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -47,34 +49,76 @@ export default function LessonPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Initialize camera
-  useEffect(() => {
-    const initCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: "user"
-          }
-        })
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play()
-            setIsCameraReady(true)
-          }
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error)
-        setCameraError("Unable to access camera. Please check permissions.")
+  // Initialize camera function
+  const initCamera = async () => {
+    setIsInitializing(true)
+    setCameraError(null)
+    setShowStartButton(false)
+    
+    try {
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("getUserMedia is not supported in this browser")
       }
+
+      // Request camera access with more flexible constraints
+      const constraints = {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user",
+          frameRate: { ideal: 30 }
+        }
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        
+        // Use oncanplay instead of onloadedmetadata for better compatibility
+        videoRef.current.oncanplay = () => {
+          videoRef.current?.play().then(() => {
+            setIsCameraReady(true)
+            setIsInitializing(false)
+          }).catch(err => {
+            console.error("Error playing video:", err)
+            setCameraError("Failed to start video playback")
+            setIsInitializing(false)
+            setShowStartButton(true)
+          })
+        }
+
+        // Add error handling for the video element
+        videoRef.current.onerror = (e) => {
+          console.error("Video element error:", e)
+          setCameraError("Failed to load video stream")
+          setIsInitializing(false)
+          setShowStartButton(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error)
+      let errorMessage = "Unable to access camera. Please check permissions."
+      
+      if (error instanceof Error) {
+        if (error.name === "NotAllowedError") {
+          errorMessage = "Camera access denied. Please allow camera permissions and try again."
+        } else if (error.name === "NotFoundError") {
+          errorMessage = "No camera found. Please connect a camera and try again."
+        } else if (error.name === "NotReadableError") {
+          errorMessage = "Camera is already in use by another application."
+        }
+      }
+      
+      setCameraError(errorMessage)
+      setIsInitializing(false)
+      setShowStartButton(true)
     }
+  }
 
-    initCamera()
-
-    // Cleanup function
+  // Cleanup function
+  useEffect(() => {
     return () => {
       if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream
@@ -195,7 +239,7 @@ export default function LessonPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.back()}>
+          <Button variant="default" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-4xl font-bold text-primary">{lesson.title.split(":")[1]?.trim() || lesson.title}</h1>
@@ -225,9 +269,29 @@ export default function LessonPage() {
             {cameraError ? (
               <div className="text-white text-center p-4">
                 <p className="text-xl mb-2">Camera Error</p>
-                <p className="text-sm text-red-400">{cameraError}</p>
+                <p className="text-sm text-red-400 mb-4">{cameraError}</p>
+                <Button 
+                  onClick={initCamera}
+                  variant="default"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Try Again
+                </Button>
               </div>
-            ) : !isCameraReady ? (
+            ) : showStartButton ? (
+              <div className="text-white text-center p-4">
+                <p className="text-xl mb-4">Ready to start practicing?</p>
+                <p className="text-sm text-gray-400 mb-6">Click the button below to initialize your camera</p>
+                <Button 
+                  onClick={initCamera}
+                  variant="default"
+                  size="lg"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
+                >
+                  Start Camera
+                </Button>
+              </div>
+            ) : isInitializing ? (
               <div className="text-white text-center">
                 <p className="text-xl mb-2">Initializing Camera...</p>
                 <p className="text-sm text-gray-400">Please allow camera access</p>
