@@ -26,6 +26,7 @@ export default function LessonPage() {
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(false)
   const [showStartButton, setShowStartButton] = useState(true)
+  const [stream, setStream] = useState<MediaStream | null>(null)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -61,35 +62,40 @@ export default function LessonPage() {
         throw new Error("getUserMedia is not supported in this browser")
       }
 
-      // Request camera access with more flexible constraints
+      // Simple, reliable constraints
       const constraints = {
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-          frameRate: { ideal: 30 }
+          width: 640,
+          height: 480,
+          facingMode: "user"
         }
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+      setStream(mediaStream)
       
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = mediaStream
         
-        // Use oncanplay instead of onloadedmetadata for better compatibility
-        videoRef.current.oncanplay = () => {
-          videoRef.current?.play().then(() => {
-            setIsCameraReady(true)
-            setIsInitializing(false)
-          }).catch(err => {
-            console.error("Error playing video:", err)
-            setCameraError("Failed to start video playback")
-            setIsInitializing(false)
-            setShowStartButton(true)
-          })
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                setIsCameraReady(true)
+                setIsInitializing(false)
+                console.log("Camera started successfully")
+              })
+              .catch(err => {
+                console.error("Error playing video:", err)
+                setCameraError("Failed to start video playback")
+                setIsInitializing(false)
+                setShowStartButton(true)
+              })
+          }
         }
 
-        // Add error handling for the video element
+        // Handle video errors
         videoRef.current.onerror = (e) => {
           console.error("Video element error:", e)
           setCameraError("Failed to load video stream")
@@ -117,18 +123,31 @@ export default function LessonPage() {
     }
   }
 
+  // Stop camera function
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setIsCameraReady(false)
+    setShowStartButton(true)
+    setCameraError(null)
+  }
+
   // Cleanup function
   useEffect(() => {
     return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
+      if (stream) {
         stream.getTracks().forEach(track => track.stop())
       }
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current)
       }
     }
-  }, [])
+  }, [stream])
 
   // Send frame to backend for detection
   const detectSign = async () => {
@@ -265,39 +284,44 @@ export default function LessonPage() {
             (!selectedSignId || signStatuses[selectedSignId] === "idle") && "border-orange-500",
           )}
         >
-          <div className="aspect-video bg-gray-900 flex items-center justify-center relative">
+          <div className="aspect-video bg-gray-900 flex items-center justify-center relative overflow-hidden rounded-lg">
             {cameraError ? (
-              <div className="text-white text-center p-4">
+              <div className="text-white text-center p-6">
+                <div className="text-4xl mb-4">📹</div>
                 <p className="text-xl mb-2">Camera Error</p>
-                <p className="text-sm text-red-400 mb-4">{cameraError}</p>
+                <p className="text-sm text-red-400 mb-6 max-w-md">{cameraError}</p>
                 <Button 
                   onClick={initCamera}
                   variant="default"
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Try Again
                 </Button>
               </div>
             ) : showStartButton ? (
-              <div className="text-white text-center p-4">
-                <p className="text-xl mb-4">Ready to start practicing?</p>
-                <p className="text-sm text-gray-400 mb-6">Click the button below to initialize your camera</p>
+              <div className="text-white text-center p-6">
+                <div className="text-6xl mb-4">📷</div>
+                <p className="text-2xl mb-2">Ready to Practice?</p>
+                <p className="text-sm text-gray-400 mb-8 max-w-md">
+                  Click the button below to start your camera for real-time sign recognition
+                </p>
                 <Button 
                   onClick={initCamera}
                   variant="default"
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg"
                 >
                   Start Camera
                 </Button>
               </div>
             ) : isInitializing ? (
-              <div className="text-white text-center">
+              <div className="text-white text-center p-6">
+                <div className="animate-spin text-4xl mb-4">📹</div>
                 <p className="text-xl mb-2">Initializing Camera...</p>
-                <p className="text-sm text-gray-400">Please allow camera access</p>
+                <p className="text-sm text-gray-400">Please allow camera access when prompted</p>
               </div>
             ) : (
-              <>
+              <div className="relative w-full h-full">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -306,12 +330,40 @@ export default function LessonPage() {
                   className="w-full h-full object-cover"
                 />
                 <canvas ref={canvasRef} className="hidden" />
+                
+                {/* Camera controls */}
+                <div className="absolute top-4 right-4">
+                  <Button
+                    onClick={stopCamera}
+                    variant="default"
+                    size="sm"
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    Stop Camera
+                  </Button>
+                </div>
+                
+                {/* Overlay when no sign is selected */}
                 {!selectedSignId && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <p className="text-white text-xl">Select a sign below to start</p>
+                  <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-white text-xl mb-2">Camera Ready!</p>
+                      <p className="text-gray-300">Select a sign below to start practicing</p>
+                    </div>
                   </div>
                 )}
-              </>
+                
+                {/* Success overlay when sign is detected */}
+                {selectedSignId && signStatuses[selectedSignId] === "correct" && (
+                  <div className="absolute inset-0 bg-green-500 bg-opacity-80 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <div className="text-4xl mb-2">✅</div>
+                      <p className="text-xl font-bold">Great job!</p>
+                      <p className="text-sm">Sign detected correctly</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </Card>
