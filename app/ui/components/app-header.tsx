@@ -1,9 +1,9 @@
 "use client"
 
 import { Flame, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/shared/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shared/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/shared/avatar"
 import { useAppStore, type Language } from "@/store/app-store"
 
 export function AppHeader() {

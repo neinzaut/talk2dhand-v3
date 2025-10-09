@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/card"
+import { Avatar, AvatarFallback } from "@/components/shared/avatar"
 import { Trophy, Medal, Award } from "lucide-react"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import type { LeaderboardEntry } from "@/store/app-store"

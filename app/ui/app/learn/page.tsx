@@ -1,8 +1,8 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent } from "@/components/shared/card"
+import { Button } from "@/components/shared/button"
+import { Progress } from "@/components/shared/progress"
 import { DailyQuestCard } from "@/components/daily-quest-card"
 import { LeaderboardCard } from "@/components/leaderboard-card"
 import { CheckCircle2, Circle } from "lucide-react"

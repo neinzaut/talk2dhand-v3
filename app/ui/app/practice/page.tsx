@@ -1,7 +1,7 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/shared/card"
+import { Button } from "@/components/shared/button"
 import { useRouter } from "next/navigation"
 import { PlayCircle, Target, Trophy } from "lucide-react"
 
