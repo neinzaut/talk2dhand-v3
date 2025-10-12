@@ -283,13 +283,13 @@ Most importantly, ASL is a **complete, living language** with its own slang, sto
     },
   ],
   leaderboard: [
-    { id: "1", name: "Juju Dunca", xp: 2855, change: 3 },
-    { id: "2", name: "Juju Dunca", xp: 2855, change: -3 },
-    { id: "3", name: "Juju Dunca", xp: 2855, change: 3 },
-    { id: "4", name: "Juju Dunca", xp: 2855, change: 3 },
-    { id: "5", name: "Juju Dunca", xp: 2855, change: -3 },
-    { id: "6", name: "Juju Dunca", xp: 2855, change: 3 },
-    { id: "7", name: "Juju Dunca", xp: 2855, change: 3 },
+    { id: "1", name: "Alex Johnson", xp: 3200, change: 5 },
+    { id: "2", name: "Sarah Williams", xp: 2950, change: 2 },
+    { id: "3", name: "Michael Brown", xp: 2800, change: -1 },
+    { id: "4", name: "Emily Davis", xp: 2650, change: 4 },
+    { id: "5", name: "David Miller", xp: 2500, change: 3 },
+    { id: "6", name: "Jessica Wilson", xp: 2400, change: -2 },
+    { id: "7", name: "Christopher Moore", xp: 2300, change: 1 },
   ],
 }
 
