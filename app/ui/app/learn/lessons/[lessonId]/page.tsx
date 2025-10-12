@@ -413,6 +413,20 @@ export default function LessonPage() {
           </div>
         )}
 
+        {/* Progress indicator */}
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Practice Progress:</span>
+            <span className="text-lg font-bold text-orange-600 dark:text-orange-400">{practiceProgress}%</span>
+            <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ml-2">
+              <div 
+                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500 ease-out rounded-full"
+                style={{ width: `${practiceProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-7 gap-4">
           {lesson.signs.map((sign) => (
             <button
@@ -429,14 +443,9 @@ export default function LessonPage() {
                 alt={`Sign for ${sign.label}`}
                 className="w-full h-full object-cover rounded"
               />
-              <p className="text-center font-bold mt-1">{sign.label}</p>
             </button>
           ))}
         </div>
-
-            <div className="text-center">
-              <p className="text-lg">Progress: {practiceProgress}%</p>
-            </div>
           </div>
         )
 
