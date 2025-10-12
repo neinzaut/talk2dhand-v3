@@ -64,62 +64,62 @@ export default function LessonPage() {
     setIsInitializing(true)
     setCameraError(null)
     setShowStartButton(false)
-    
+    console.log('[initCamera] Initializing...');
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("getUserMedia is not supported in this browser")
+        console.error('[initCamera] getUserMedia unsupported');
+        throw new Error('getUserMedia is not supported in this browser');
       }
-
       const constraints = {
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user",
+          facingMode: 'user',
           frameRate: { ideal: 30 }
         }
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[initCamera] Got camera stream:', stream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        
+        videoRef.current.srcObject = stream;
+        console.log('[initCamera] Set video srcObject:', videoRef.current);
         videoRef.current.oncanplay = () => {
+          console.log('[initCamera] videoRef oncanplay fired');
           videoRef.current?.play().then(() => {
-            setIsCameraReady(true)
-            setIsInitializing(false)
+            console.log('[initCamera] Video playing, camera ready');
+            setIsCameraReady(true);
+            setIsInitializing(false);
           }).catch(err => {
-            console.error("Error playing video:", err)
-            setCameraError("Failed to start video playback")
-            setIsInitializing(false)
-            setShowStartButton(true)
-          })
-        }
-
+            console.error('[initCamera] Error playing video:', err);
+            setCameraError('Failed to start video playback');
+            setIsInitializing(false);
+            setShowStartButton(true);
+          });
+        };
         videoRef.current.onerror = (e) => {
-          console.error("Video element error:", e)
-          setCameraError("Failed to load video stream")
-          setIsInitializing(false)
-          setShowStartButton(true)
-        }
+          console.error('[initCamera] Video element error:', e);
+          setCameraError('Failed to load video stream');
+          setIsInitializing(false);
+          setShowStartButton(true);
+        };
+      } else {
+        console.warn('[initCamera] videoRef.current is null');
       }
     } catch (error) {
-      console.error("Error accessing camera:", error)
-      let errorMessage = "Unable to access camera. Please check permissions."
-      
+      console.error('[initCamera] Error accessing camera:', error);
+      let errorMessage = 'Unable to access camera. Please check permissions.';
       if (error instanceof Error) {
-        if (error.name === "NotAllowedError") {
-          errorMessage = "Camera access denied. Please allow camera permissions and try again."
-        } else if (error.name === "NotFoundError") {
-          errorMessage = "No camera found. Please connect a camera and try again."
-        } else if (error.name === "NotReadableError") {
-          errorMessage = "Camera is already in use by another application."
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Camera access denied. Please allow camera permissions and try again.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No camera found. Please connect a camera and try again.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'Camera is already in use by another application.';
         }
       }
-      
-      setCameraError(errorMessage)
-      setIsInitializing(false)
-      setShowStartButton(true)
+      setCameraError(errorMessage);
+      setIsInitializing(false);
+      setShowStartButton(true);
     }
   }
 
@@ -139,53 +139,47 @@ export default function LessonPage() {
   // Send frame to backend for detection
   const detectSign = async () => {
     if (!videoRef.current || !canvasRef.current || !isCameraReady || !selectedSignId) {
-      return
+      console.warn('[detectSign] precondition failed', {
+        video: !!videoRef.current,
+        canvas: !!canvasRef.current,
+        isCameraReady,
+        selectedSignId
+      });
+      return;
     }
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { console.warn('[detectSign] No canvas context'); return; }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     try {
-      const imageData = canvas.toDataURL("image/jpeg")
-      
-      const response = await fetch("http://localhost:8000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ image: imageData })
-      })
-      
-      const data = await response.json()
-      
-      if (data.success && data.prediction) {
-        const predictedSign = data.prediction.toLowerCase()
-        setDetectedSign(data.prediction.toUpperCase())
-        
-        if (predictedSign === selectedSignId.toLowerCase()) {
-          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: "correct" }))
-          
-          if (detectionIntervalRef.current) {
-            clearInterval(detectionIntervalRef.current)
-            detectionIntervalRef.current = null
-          }
-          
-          setTimeout(() => {
-            setSelectedSignId(null)
-            setDetectedSign("")
-          }, 1000)
-        }
-      }
+      const imageData = canvas.toDataURL('image/jpeg');
+      // const response = await fetch('http://localhost:8000/predict', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ image: imageData })
+      // });
+      // const data = await response.json();
+      // if (data.success && data.prediction) {
+      //   const predictedSign = data.prediction.toLowerCase();
+      //   setDetectedSign(data.prediction.toUpperCase());
+      //   if (predictedSign === selectedSignId.toLowerCase()) {
+      //     setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
+      //     if (detectionIntervalRef.current) {
+      //       clearInterval(detectionIntervalRef.current);
+      //       detectionIntervalRef.current = null;
+      //     }
+      //     setTimeout(() => {
+      //       setSelectedSignId(null);
+      //       setDetectedSign('');
+      //     }, 1000);
+      //   }
+      // }
+      console.log('[detectSign] Would call backend predict here.');
     } catch (error) {
-      console.error("Error detecting sign:", error)
+      console.error('[detectSign] Error detecting sign:', error);
     }
   }
 
@@ -382,11 +376,6 @@ export default function LessonPage() {
                   Start Camera
                 </Button>
               </div>
-            ) : isInitializing ? (
-              <div className="text-white text-center">
-                <p className="text-xl mb-2">Initializing Camera...</p>
-                <p className="text-sm text-gray-400">Please allow camera access</p>
-              </div>
             ) : (
               <>
                 <video
@@ -397,7 +386,15 @@ export default function LessonPage() {
                   className="w-full h-full object-cover"
                 />
                 <canvas ref={canvasRef} className="hidden" />
-                {!selectedSignId && (
+                {isInitializing && (
+                  <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="text-white text-center">
+                      <p className="text-xl mb-2">Initializing Camera...</p>
+                      <p className="text-sm text-gray-400">Please allow camera access</p>
+                    </div>
+                  </div>
+                )}
+                {!selectedSignId && !isInitializing && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <p className="text-white text-xl">Select a sign below to start</p>
                   </div>
