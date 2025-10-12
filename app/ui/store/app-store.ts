@@ -75,4 +75,44 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { languageData: newLanguageData }
     })
   },
+
+  completeSubLesson: (lessonId, subLessonId) => {
+    set((state) => {
+      const newLanguageData = { ...state.languageData }
+      const modules = newLanguageData[state.currentLanguage].modules
+
+      for (const module of modules) {
+        const lesson = module.lessons.find((l) => l.id === lessonId)
+        if (lesson) {
+          const subLesson = lesson.subLessons.find((sl) => sl.id === subLessonId)
+          if (subLesson) {
+            subLesson.completed = true
+
+            // Calculate lesson progress based on completed sublessons
+            const completedSubLessons = lesson.subLessons.filter((sl) => sl.completed).length
+            const totalSubLessons = lesson.subLessons.length
+            lesson.progress = Math.round((completedSubLessons / totalSubLessons) * 100)
+            lesson.completed = lesson.progress === 100
+          }
+          break
+        }
+      }
+
+      return { languageData: newLanguageData }
+    })
+  },
+
+  getSubLessonById: (lessonId, subLessonId) => {
+    const state = get()
+    const modules = state.languageData[state.currentLanguage].modules
+
+    for (const module of modules) {
+      const lesson = module.lessons.find((l) => l.id === lessonId)
+      if (lesson) {
+        const subLesson = lesson.subLessons.find((sl) => sl.id === subLessonId)
+        return subLesson || null
+      }
+    }
+    return null
+  },
 }))

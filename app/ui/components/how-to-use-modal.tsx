@@ -1,4 +1,7 @@
+"use client"
+
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/shared/dialog"
+import { useEffect, useState } from "react"
 
 interface HowToUseModalProps {
   open: boolean
@@ -6,6 +9,15 @@ interface HowToUseModalProps {
 }
 
 export function HowToUseModal({ open, onOpenChange }: HowToUseModalProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">

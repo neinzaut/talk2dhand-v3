@@ -3,7 +3,7 @@
 import { Flame, ChevronDown } from "lucide-react"
 import { Button } from "@/components/shared/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shared/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/shared/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/shared/avatar"
 import { useAppStore, type Language } from "@/store/app-store"
 
 export function AppHeader() {
@@ -60,7 +60,8 @@ export function AppHeader() {
 
         {/* User Avatar */}
         <Avatar>
-          <AvatarFallback className="bg-primary text-primary-foreground">JD</AvatarFallback>
+          <AvatarImage src="/icons/icon-user.png" alt="User" />
+          <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
         </Avatar>
       </div>
     </header>

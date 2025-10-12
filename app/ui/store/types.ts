@@ -8,6 +8,16 @@ export interface Sign {
   imageUrl: string
 }
 
+export type SubLessonType = "content" | "practice" | "quiz"
+
+export interface SubLesson {
+  id: string
+  type: SubLessonType
+  title: string
+  completed: boolean
+  content?: string // Markdown content for 'content' type
+}
+
 export interface Lesson {
   id: string
   title: string
@@ -16,6 +26,7 @@ export interface Lesson {
   completed: boolean
   progress: number
   signs: Sign[]
+  subLessons: SubLesson[]
 }
 
 export interface Module {
@@ -58,5 +69,7 @@ export interface AppState {
   getCurrentLesson: () => Lesson | null
   updateLessonProgress: (lessonId: string, progress: number) => void
   completeLesson: (lessonId: string) => void
+  completeSubLesson: (lessonId: string, subLessonId: string) => void
+  getSubLessonById: (lessonId: string, subLessonId: string) => SubLesson | null
 }
 

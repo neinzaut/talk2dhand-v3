@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/card"
-import { Avatar, AvatarFallback } from "@/components/shared/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/shared/avatar"
 import { Trophy, Medal, Award } from "lucide-react"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import type { LeaderboardEntry } from "@/store/app-store"
@@ -40,6 +40,7 @@ export function LeaderboardCard({ leaderboard }: LeaderboardCardProps) {
                   {RankIcon ? <RankIcon className={`h-4 w-4 ${getIconColor(rank)}`} /> : rank}
                 </div>
                 <Avatar className="h-8 w-8">
+                  <AvatarImage src="/icons/icon-user.png" alt={user.name} />
                   <AvatarFallback className="text-xs">
                     {user.name
                       .split(" ")
