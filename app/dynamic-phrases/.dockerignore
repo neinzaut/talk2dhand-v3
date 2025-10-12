@@ -1,18 +1,31 @@
+# Python virtual environment and cache
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Build artifacts
 *.so
 *.egg
 *.egg-info
 dist/
 build/
+
+# System files
 .DS_Store
+
+# Environment files
 .env
 .venv
+
+# Client-side files (not needed for API-only backend)
 tfjs_model/
 node_modules/
 *.html
+*.js
+
+# DO NOT ignore model files - they are required!
+# action.h5 must be included in the Docker image
 
