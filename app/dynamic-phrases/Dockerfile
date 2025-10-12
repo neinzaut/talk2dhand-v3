@@ -22,8 +22,14 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the trained model file (required for inference)
+COPY action.h5 .
+
 # Copy application files
 COPY . .
+
+# Verify that the model file exists and is readable
+RUN test -f action.h5 || (echo "ERROR: action.h5 model file not found!" && exit 1)
 
 # Expose port 5008
 EXPOSE 5008
