@@ -481,8 +481,12 @@ export default function LessonPage() {
           </Button>
           <h1 className="text-4xl font-bold text-primary">{lesson.title.split(":")[1]?.trim() || lesson.title}</h1>
         </div>
-        <Button variant="default" className="gap-2" onClick={() => setIsModalOpen(true)}>
-          <HelpCircle className="h-4 w-4" />
+        <Button 
+          variant="default" 
+          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md px-6 py-2" 
+          onClick={() => setIsModalOpen(true)}
+        >
+          <HelpCircle className="h-5 w-5" />
           How to Use?
         </Button>
       </div>
@@ -553,10 +557,10 @@ export default function LessonPage() {
           size="lg"
           onClick={handlePrevious}
           disabled={currentSubLessonIndex === 0}
-          className="px-8 disabled:opacity-40"
+          className="px-8 disabled:opacity-40 bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold shadow-md"
           variant="default"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-5 w-5 mr-2" />
           PREVIOUS
         </Button>
         
@@ -567,11 +571,11 @@ export default function LessonPage() {
           <Button
             size="lg"
           onClick={handleNext}
-          className="px-8 bg-orange-500 hover:bg-orange-600 text-white"
+          className="px-8 bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md"
         >
           {currentSubLessonIndex === lesson.subLessons.length - 1 ? "FINISH" : "NEXT"}
           {currentSubLessonIndex < lesson.subLessons.length - 1 && (
-            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+            <ArrowLeft className="h-5 w-5 ml-2 rotate-180" />
           )}
           </Button>
       </div>
