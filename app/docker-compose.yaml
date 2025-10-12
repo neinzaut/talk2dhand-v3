@@ -7,9 +7,8 @@ services:
     ports:
       - "8000:8000"
     # volumes:
-    # Mount the model file (read-only)
-    # - ./static-signs/hand_landmarks.h5:/app/hand_landmarks.h5:ro
-    # Optional: mount the code for development (comment out for production)
+    # hand_landmarks.h5 model is baked into the Docker image (see Dockerfile)
+    # Uncomment for development (hot-reload code changes):
     # - ./static-signs/simple_server.py:/app/simple_server.py
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
@@ -26,13 +25,36 @@ services:
     ports:
       - "5008:5008"
     # volumes:
-    # Mount the model file (read-only) - ensure action.h5 exists!
-    # - ./dynamic-phrases/action.h5:/app/action.h5:ro
-    # Optional: mount the code for development (comment out for production)
+    # action.h5 model is baked into the Docker image (see Dockerfile)
+    # Uncomment for development (hot-reload code changes):
     # - ./dynamic-phrases/app.py:/app/app.py
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
       - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - talk2dhand-network
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: talk2dhand-ui
+    ports:
+      - "3000:3000"
+    # volumes:
+    # Uncomment for development (hot-reload code changes):
+    # - ./ui/app:/app/app
+    # - ./ui/components:/app/components
+    # - ./ui/store:/app/store
+    environment:
+      # Backend API URLs (accessible via Docker network)
+      - NEXT_PUBLIC_STATIC_SIGNS_API=http://static-signs:8000
+      - NEXT_PUBLIC_DYNAMIC_PHRASES_API=http://dynamic-phrases:5008
+      - NODE_ENV=production
+    depends_on:
+      - static-signs
+      - dynamic-phrases
     restart: unless-stopped
     networks:
       - talk2dhand-network
