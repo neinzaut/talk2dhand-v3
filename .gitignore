@@ -2,6 +2,7 @@
 .next/
 .cursor/
 venv/
+app/ui/node_modules
 
 # dependencies
 /node_modules
