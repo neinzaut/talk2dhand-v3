@@ -30,6 +30,8 @@ export default function LessonPage() {
   const [isInitializing, setIsInitializing] = useState(false)
   const [showStartButton, setShowStartButton] = useState(true)
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({})
+  const [annotatedImage, setAnnotatedImage] = useState<string>("");
+  const [backendError, setBackendError] = useState<string>("");
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -149,37 +151,76 @@ export default function LessonPage() {
     }
     const canvas = canvasRef.current;
     const video = videoRef.current;
+
+    // Check if video is actually playing and has dimensions
+    if (!video.videoWidth || !video.videoHeight) {
+      console.warn('[detectSign] Video not ready, skipping detection', {
+        width: video.videoWidth, height: video.videoHeight
+      });
+      return;
+    }
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) { console.warn('[detectSign] No canvas context'); return; }
+    if (!ctx) {
+      console.warn('[detectSign] No canvas context');
+      return;
+    }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/jpeg');
+    console.log('[detectSign] video/canvas', {
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height
+    });
+    console.log('[detectSign] imageData length:', imageData.length, 'preview:', imageData.slice(0, 50));
+    // Only send valid images
+    if (!imageData || imageData.length < 1000) {
+      console.warn('[detectSign] image capture is blank or failed, not sending.');
+      return;
+    }
     try {
-      const imageData = canvas.toDataURL('image/jpeg');
-      // const response = await fetch('http://localhost:8000/predict', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ image: imageData })
-      // });
-      // const data = await response.json();
-      // if (data.success && data.prediction) {
-      //   const predictedSign = data.prediction.toLowerCase();
-      //   setDetectedSign(data.prediction.toUpperCase());
-      //   if (predictedSign === selectedSignId.toLowerCase()) {
-      //     setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
-      //     if (detectionIntervalRef.current) {
-      //       clearInterval(detectionIntervalRef.current);
-      //       detectionIntervalRef.current = null;
-      //     }
-      //     setTimeout(() => {
-      //       setSelectedSignId(null);
-      //       setDetectedSign('');
-      //     }, 1000);
-      //   }
-      // }
-      console.log('[detectSign] Would call backend predict here.');
+      const response = await fetch('http://localhost:8000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData.split(',')[1] }),
+      });
+      if (!response.ok) throw new Error(`[detectSign] Backend error: ${response.status}`);
+      const data = await response.json();
+      if (data && data.prediction) {
+        setDetectedSign(data.prediction.toUpperCase());
+        setBackendError("");
+        if (data.annotated_image) setAnnotatedImage(data.annotated_image);
+        const predictedSign = data.prediction.toLowerCase();
+        const expectedSign = selectedSignId.toLowerCase();
+        if (predictedSign === expectedSign) {
+          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+            detectionIntervalRef.current = null;
+          }
+          setTimeout(() => {
+            setSelectedSignId(null);
+            setDetectedSign('');
+            setAnnotatedImage("");
+          }, 1000);
+        } else {
+          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'incorrect' }));
+        }
+      } else if (data && data.success === false && data.error) {
+        setDetectedSign('');
+        setAnnotatedImage("");
+        setBackendError(data.error);
+      } else {
+        setDetectedSign('');
+        setAnnotatedImage("");
+      }
     } catch (error) {
       console.error('[detectSign] Error detecting sign:', error);
+      setDetectedSign('');
+      setAnnotatedImage("");
+      setBackendError('Failed to contact backend or process frame.');
     }
   }
 
@@ -378,13 +419,23 @@ export default function LessonPage() {
               </div>
             ) : (
               <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative w-full h-full">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ display: annotatedImage ? "none" : "block" }}
+                  />
+                  {annotatedImage && (
+                    <img
+                      src={annotatedImage}
+                      alt="Backend annotated hand landmarks"
+                      className="absolute top-0 left-0 w-full h-full object-cover z-30"
+                    />
+                  )}
+                </div>
                 <canvas ref={canvasRef} className="hidden" />
                 {isInitializing && (
                   <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-10">
@@ -394,7 +445,14 @@ export default function LessonPage() {
                     </div>
                   </div>
                 )}
-                {!selectedSignId && !isInitializing && (
+                {backendError && !isInitializing && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="rounded bg-red-700/70 text-white px-6 py-3 text-lg font-semibold shadow-lg border border-red-400/60">
+                      {backendError}
+                    </span>
+                  </div>
+                )}
+                {!selectedSignId && !isInitializing && !backendError && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <p className="text-white text-xl">Select a sign below to start</p>
                   </div>

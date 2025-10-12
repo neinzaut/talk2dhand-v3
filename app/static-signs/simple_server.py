@@ -115,6 +115,9 @@ def predict():
     """Endpoint to predict signs from base64 image"""
     try:
         data = request.get_json()
+        print("RAW incoming data:", data)
+        image_data = data.get('image', '')
+        print("RAW image_data (first 100 chars):", image_data[:100], "length:", len(image_data))
         print("Received prediction request")
         
         if not data or 'image' not in data:
@@ -134,10 +137,19 @@ def predict():
                 }), 500
             
             # Convert base64 to image
-            image_data = data['image']
-            image_bytes = base64.b64decode(image_data.split(',')[1])
-            image = Image.open(io.BytesIO(image_bytes))
-            image_np = np.array(image)
+            image_data = data.get('image', '')
+            if not image_data or len(image_data) < 10:
+                return jsonify({'success': False, 'error': 'Image data is empty or invalid'}), 400
+            if ',' in image_data:
+                image_data = image_data.split(',', 1)[1]
+            try:
+                image_bytes = base64.b64decode(image_data)
+                image = Image.open(io.BytesIO(image_bytes))
+                image_np = np.array(image)
+            except Exception as e:
+                print(f'Error decoding image: {e}')
+                import traceback; traceback.print_exc()
+                return jsonify({'success': False, 'error': f'Image decode error: {str(e)}'}), 400
             
             # Convert to RGB (important for MediaPipe)
             image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
