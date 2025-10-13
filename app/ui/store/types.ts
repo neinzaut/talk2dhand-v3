@@ -16,6 +16,7 @@ export interface SubLesson {
   title: string
   completed: boolean
   content?: string // Markdown content for 'content' type
+  videos?: { label: string; youtubeId?: string; url?: string }[]
 }
 
 export interface Lesson {

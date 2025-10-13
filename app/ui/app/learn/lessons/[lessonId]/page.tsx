@@ -53,13 +53,20 @@ export default function LessonPage() {
 
   const currentSubLesson = lesson.subLessons[currentSubLessonIndex]
 
-  // Timer effect
+  // Timer effect - only run during practice sublesson
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimer((prev) => prev + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    let interval: NodeJS.Timeout | null = null
+    
+    if (currentSubLesson?.type === "practice" && isCameraReady) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev + 1)
+      }, 1000)
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [currentSubLesson?.type, isCameraReady])
 
   // Initialize camera function
   const initCamera = async () => {
@@ -137,6 +144,33 @@ export default function LessonPage() {
       }
     }
   }, [])
+
+  // Stop camera and detection when navigating away from practice
+  useEffect(() => {
+    if (currentSubLesson?.type !== "practice") {
+      // Stop camera stream
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+        videoRef.current.srcObject = null
+      }
+      
+      // Clear detection interval
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+        detectionIntervalRef.current = null
+      }
+      
+      // Reset camera states
+      setIsCameraReady(false)
+      setShowStartButton(true)
+      setCameraError(null)
+      setSelectedSignId(null)
+      setDetectedSign("")
+      setAnnotatedImage("")
+      setBackendError("")
+    }
+  }, [currentSubLesson?.type])
 
   // Send frame to backend for detection
   const detectSign = async () => {
@@ -285,6 +319,9 @@ export default function LessonPage() {
       setDetectedSign("")
       setShowStartButton(true)
       setIsCameraReady(false)
+      setTimer(0)
+      setAnnotatedImage("")
+      setBackendError("")
     } else {
       router.back()
     }
@@ -298,6 +335,9 @@ export default function LessonPage() {
       setDetectedSign("")
       setShowStartButton(true)
       setIsCameraReady(false)
+      setTimer(0)
+      setAnnotatedImage("")
+      setBackendError("")
     }
   }
 
@@ -370,6 +410,41 @@ export default function LessonPage() {
                   >
                     {currentSubLesson.content || ""}
                   </ReactMarkdown>
+                  {Array.isArray(currentSubLesson.videos) && currentSubLesson.videos.length > 0 && (
+                    <div className="mt-10">
+                      <h4 className="text-xl font-semibold text-primary mt-6 mb-4">Watch</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {currentSubLesson.videos.map((vid) => (
+                          <div key={(vid.youtubeId || vid.url || vid.label) ?? Math.random()} className="w-full max-w-2xl">
+                            {vid.label && (
+                              <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{vid.label}</p>
+                            )}
+                            <div className="aspect-video w-full overflow-hidden rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                              {vid.youtubeId ? (
+                                <iframe
+                                  className="w-full h-full"
+                                  src={`https://www.youtube.com/embed/${vid.youtubeId}`}
+                                  title={vid.label || "Video"}
+                                  loading="lazy"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              ) : vid.url ? (
+                                <iframe
+                                  className="w-full h-full"
+                                  src={vid.url}
+                                  title={vid.label || "Video"}
+                                  loading="lazy"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
         </div>
               </CardContent>
             </Card>
@@ -552,7 +627,18 @@ export default function LessonPage() {
           {lesson.subLessons.map((subLesson, index) => (
             <button
               key={subLesson.id}
-              onClick={() => setCurrentSubLessonIndex(index)}
+              onClick={() => {
+                setCurrentSubLessonIndex(index)
+                // Reset states when navigating directly to a sublesson
+                setSignStatuses({})
+                setSelectedSignId(null)
+                setDetectedSign("")
+                setShowStartButton(true)
+                setIsCameraReady(false)
+                setTimer(0)
+                setAnnotatedImage("")
+                setBackendError("")
+              }}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition-all min-w-[200px] justify-start hover:shadow-md",
                 index === currentSubLessonIndex && "border-orange-500 bg-orange-50 dark:bg-orange-900/30 shadow-sm",
@@ -618,10 +704,6 @@ export default function LessonPage() {
           <ArrowLeft className="h-5 w-5 mr-2" />
           PREVIOUS
         </Button>
-        
-        <div className="text-center text-sm text-muted-foreground">
-          {currentSubLessonIndex + 1} of {lesson.subLessons.length}
-        </div>
 
           <Button
             size="lg"
