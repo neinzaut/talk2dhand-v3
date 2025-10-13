@@ -31,13 +31,13 @@ export function AppSidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-60 bg-sidebar">
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
+        <div className="flex justify-center items-center h-20 px-4 pr-6 py-6">
           <Image 
-            src="/icons/logo.png" 
+            src="/icons/logo-white.png" 
             alt="Talk 2D Hand" 
-            width={120} 
-            height={40} 
-            className="h-auto w-auto"
+            width={160} 
+            height={53} 
+            className="h-auto w-full max-w-[160px]"
           />
         </div>
 
