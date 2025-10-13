@@ -16,7 +16,7 @@ type SignStatus = "idle" | "correct" | "incorrect"
 export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
-  const { getCurrentModules, completeSubLesson } = useAppStore()
+  const { getCurrentModules, completeSubLesson, currentLanguage } = useAppStore()
   const modules = getCurrentModules()
 
   const [currentSubLessonIndex, setCurrentSubLessonIndex] = useState(0)
@@ -30,6 +30,9 @@ export default function LessonPage() {
   const [isInitializing, setIsInitializing] = useState(false)
   const [showStartButton, setShowStartButton] = useState(true)
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({})
+  const [annotatedImage, setAnnotatedImage] = useState<string>("");
+  const [backendError, setBackendError] = useState<string>("");
+  const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -51,75 +54,82 @@ export default function LessonPage() {
 
   const currentSubLesson = lesson.subLessons[currentSubLessonIndex]
 
-  // Timer effect
+  // Timer effect - only run during practice sublesson
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimer((prev) => prev + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    let interval: NodeJS.Timeout | null = null
+    
+    if (currentSubLesson?.type === "practice" && isCameraReady) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev + 1)
+      }, 1000)
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [currentSubLesson?.type, isCameraReady])
 
   // Initialize camera function
   const initCamera = async () => {
     setIsInitializing(true)
     setCameraError(null)
     setShowStartButton(false)
-    
+    console.log('[initCamera] Initializing...');
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("getUserMedia is not supported in this browser")
+        console.error('[initCamera] getUserMedia unsupported');
+        throw new Error('getUserMedia is not supported in this browser');
       }
-
       const constraints = {
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user",
+          facingMode: 'user',
           frameRate: { ideal: 30 }
         }
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[initCamera] Got camera stream:', stream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        
+        videoRef.current.srcObject = stream;
+        console.log('[initCamera] Set video srcObject:', videoRef.current);
         videoRef.current.oncanplay = () => {
+          console.log('[initCamera] videoRef oncanplay fired');
           videoRef.current?.play().then(() => {
-            setIsCameraReady(true)
-            setIsInitializing(false)
+            console.log('[initCamera] Video playing, camera ready');
+            setIsCameraReady(true);
+            setIsInitializing(false);
           }).catch(err => {
-            console.error("Error playing video:", err)
-            setCameraError("Failed to start video playback")
-            setIsInitializing(false)
-            setShowStartButton(true)
-          })
-        }
-
+            console.error('[initCamera] Error playing video:', err);
+            setCameraError('Failed to start video playback');
+            setIsInitializing(false);
+            setShowStartButton(true);
+          });
+        };
         videoRef.current.onerror = (e) => {
-          console.error("Video element error:", e)
-          setCameraError("Failed to load video stream")
-          setIsInitializing(false)
-          setShowStartButton(true)
-        }
+          console.error('[initCamera] Video element error:', e);
+          setCameraError('Failed to load video stream');
+          setIsInitializing(false);
+          setShowStartButton(true);
+        };
+      } else {
+        console.warn('[initCamera] videoRef.current is null');
       }
     } catch (error) {
-      console.error("Error accessing camera:", error)
-      let errorMessage = "Unable to access camera. Please check permissions."
-      
+      console.error('[initCamera] Error accessing camera:', error);
+      let errorMessage = 'Unable to access camera. Please check permissions.';
       if (error instanceof Error) {
-        if (error.name === "NotAllowedError") {
-          errorMessage = "Camera access denied. Please allow camera permissions and try again."
-        } else if (error.name === "NotFoundError") {
-          errorMessage = "No camera found. Please connect a camera and try again."
-        } else if (error.name === "NotReadableError") {
-          errorMessage = "Camera is already in use by another application."
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Camera access denied. Please allow camera permissions and try again.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No camera found. Please connect a camera and try again.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'Camera is already in use by another application.';
         }
       }
-      
-      setCameraError(errorMessage)
-      setIsInitializing(false)
-      setShowStartButton(true)
+      setCameraError(errorMessage);
+      setIsInitializing(false);
+      setShowStartButton(true);
     }
   }
 
@@ -136,65 +146,143 @@ export default function LessonPage() {
     }
   }, [])
 
+  // Stop camera and detection when navigating away from practice
+  useEffect(() => {
+    if (currentSubLesson?.type !== "practice") {
+      // Stop camera stream
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+        videoRef.current.srcObject = null
+      }
+      
+      // Clear detection interval
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+        detectionIntervalRef.current = null
+      }
+      
+      // Reset camera states
+      setIsCameraReady(false)
+      setShowStartButton(true)
+      setCameraError(null)
+      setSelectedSignId(null)
+      setDetectedSign("")
+      setAnnotatedImage("")
+      setBackendError("")
+    }
+  }, [currentSubLesson?.type])
+
   // Send frame to backend for detection
   const detectSign = async () => {
     if (!videoRef.current || !canvasRef.current || !isCameraReady || !selectedSignId) {
-      return
+      console.warn('[detectSign] precondition failed', {
+        video: !!videoRef.current,
+        canvas: !!canvasRef.current,
+        isCameraReady,
+        selectedSignId
+      });
+      return;
     }
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
 
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    
+    // Check if video is actually playing and has dimensions
+    if (!video.videoWidth || !video.videoHeight) {
+      console.warn('[detectSign] Video not ready, skipping detection', {
+        width: video.videoWidth, height: video.videoHeight
+      });
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.warn('[detectSign] No canvas context');
+      return;
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/jpeg');
+    console.log('[detectSign] video/canvas', {
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height
+    });
+    console.log('[detectSign] imageData length:', imageData.length, 'preview:', imageData.slice(0, 50));
+    // Only send valid images
+    if (!imageData || imageData.length < 1000) {
+      console.warn('[detectSign] image capture is blank or failed, not sending.');
+      return;
+    }
     try {
-      const imageData = canvas.toDataURL("image/jpeg")
+      // Determine which API to use based on lesson
+      const isDynamicPhrases = lesson.id === "lesson-3";
+      const apiUrl = isDynamicPhrases ? 'http://localhost:5008/predict' : 'http://localhost:8000/predict';
       
-      const response = await fetch("http://localhost:8000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ image: imageData })
-      })
-      
-      const data = await response.json()
-      
-      if (data.success && data.prediction) {
-        const predictedSign = data.prediction.toLowerCase()
-        setDetectedSign(data.prediction.toUpperCase())
-        
-        if (predictedSign === selectedSignId.toLowerCase()) {
-          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: "correct" }))
-          
-          if (detectionIntervalRef.current) {
-            clearInterval(detectionIntervalRef.current)
-            detectionIntervalRef.current = null
+      const requestBody = isDynamicPhrases 
+        ? { 
+            image: imageData, 
+            clientId: clientId,
+            language: currentLanguage === "asl" ? "english" : "filipino"
           }
-          
+        : { image: imageData.split(',')[1] };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) throw new Error(`[detectSign] Backend error: ${response.status}`);
+      const data = await response.json();
+      
+      if (data && data.prediction) {
+        setDetectedSign(data.prediction.toUpperCase());
+        setBackendError("");
+        if (data.annotated_image) setAnnotatedImage(data.annotated_image);
+        
+        const predictedSign = data.prediction.toLowerCase();
+        const expectedSign = selectedSignId.toLowerCase();
+        
+        if (predictedSign === expectedSign) {
+          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+            detectionIntervalRef.current = null;
+          }
           setTimeout(() => {
-            setSelectedSignId(null)
-            setDetectedSign("")
-          }, 1000)
+            setSelectedSignId(null);
+            setDetectedSign('');
+            setAnnotatedImage("");
+          }, 1000);
+        } else {
+          setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'incorrect' }));
         }
+      } else if (data && data.success === false && data.error) {
+        setDetectedSign('');
+        setAnnotatedImage("");
+        setBackendError(data.error);
+      } else {
+        setDetectedSign('');
+        setAnnotatedImage("");
       }
     } catch (error) {
-      console.error("Error detecting sign:", error)
+      console.error('[detectSign] Error detecting sign:', error);
+      setDetectedSign('');
+      setAnnotatedImage("");
+      setBackendError('Failed to contact backend or process frame.');
     }
   }
 
   // Start/stop detection based on selected sign
   useEffect(() => {
     if (selectedSignId && isCameraReady) {
+      // Use shorter interval for dynamic phrases to capture sequences better
+      const interval = lesson.id === "lesson-3" ? 500 : 1000;
       detectionIntervalRef.current = setInterval(() => {
         detectSign()
-      }, 1000)
+      }, interval)
     } else {
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current)
@@ -208,7 +296,7 @@ export default function LessonPage() {
         detectionIntervalRef.current = null
       }
     }
-  }, [selectedSignId, isCameraReady])
+  }, [selectedSignId, isCameraReady, lesson.id])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -250,6 +338,9 @@ export default function LessonPage() {
       setDetectedSign("")
       setShowStartButton(true)
       setIsCameraReady(false)
+      setTimer(0)
+      setAnnotatedImage("")
+      setBackendError("")
     } else {
       router.back()
     }
@@ -263,6 +354,9 @@ export default function LessonPage() {
       setDetectedSign("")
       setShowStartButton(true)
       setIsCameraReady(false)
+      setTimer(0)
+      setAnnotatedImage("")
+      setBackendError("")
     }
   }
 
@@ -335,6 +429,41 @@ export default function LessonPage() {
                   >
                     {currentSubLesson.content || ""}
                   </ReactMarkdown>
+                  {Array.isArray(currentSubLesson.videos) && currentSubLesson.videos.length > 0 && (
+                    <div className="mt-10">
+                      <h4 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-6 mb-4">Watch</h4>
+                      <p className="text-base leading-relaxed mb-6 text-gray-700 dark:text-gray-300">
+                        Watch this short video to see how facial expressions, eye gaze, and body posture work together in real ASL conversation. Notice how each phrase combines hand movements with emotion and rhythm — this helps you understand not just what is being signed, but how meaning is expressed.
+                      </p>
+                      <div className="flex justify-center">
+                        {currentSubLesson.videos.map((vid) => (
+                          <div key={(vid.youtubeId || vid.url || vid.label) ?? Math.random()} className="w-full max-w-2xl">
+                            <div className="aspect-video w-full overflow-hidden rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                              {vid.youtubeId ? (
+                                <iframe
+                                  className="w-full h-full"
+                                  src={`https://www.youtube.com/embed/${vid.youtubeId}`}
+                                  title={vid.label || "Video"}
+                                  loading="lazy"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              ) : vid.url ? (
+                                <iframe
+                                  className="w-full h-full"
+                                  src={vid.url}
+                                  title={vid.label || "Video"}
+                                  loading="lazy"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                />
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
         </div>
               </CardContent>
             </Card>
@@ -382,22 +511,42 @@ export default function LessonPage() {
                   Start Camera
                 </Button>
               </div>
-            ) : isInitializing ? (
-              <div className="text-white text-center">
-                <p className="text-xl mb-2">Initializing Camera...</p>
-                <p className="text-sm text-gray-400">Please allow camera access</p>
-              </div>
             ) : (
               <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative w-full h-full">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ display: annotatedImage ? "none" : "block" }}
+                  />
+                  {annotatedImage && (
+                    <img
+                      src={annotatedImage}
+                      alt="Backend annotated hand landmarks"
+                      className="absolute top-0 left-0 w-full h-full object-cover z-30"
+                    />
+                  )}
+                </div>
                 <canvas ref={canvasRef} className="hidden" />
-                {!selectedSignId && (
+                {isInitializing && (
+                  <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="text-white text-center">
+                      <p className="text-xl mb-2">Initializing Camera...</p>
+                      <p className="text-sm text-gray-400">Please allow camera access</p>
+                    </div>
+                  </div>
+                )}
+                {backendError && !isInitializing && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="rounded bg-red-700/70 text-white px-6 py-3 text-lg font-semibold shadow-lg border border-red-400/60">
+                      {backendError}
+                    </span>
+                  </div>
+                )}
+                {!selectedSignId && !isInitializing && !backendError && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <p className="text-white text-xl">Select a sign below to start</p>
                   </div>
@@ -497,7 +646,18 @@ export default function LessonPage() {
           {lesson.subLessons.map((subLesson, index) => (
             <button
               key={subLesson.id}
-              onClick={() => setCurrentSubLessonIndex(index)}
+              onClick={() => {
+                setCurrentSubLessonIndex(index)
+                // Reset states when navigating directly to a sublesson
+                setSignStatuses({})
+                setSelectedSignId(null)
+                setDetectedSign("")
+                setShowStartButton(true)
+                setIsCameraReady(false)
+                setTimer(0)
+                setAnnotatedImage("")
+                setBackendError("")
+              }}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition-all min-w-[200px] justify-start hover:shadow-md",
                 index === currentSubLessonIndex && "border-orange-500 bg-orange-50 dark:bg-orange-900/30 shadow-sm",
@@ -563,10 +723,6 @@ export default function LessonPage() {
           <ArrowLeft className="h-5 w-5 mr-2" />
           PREVIOUS
         </Button>
-        
-        <div className="text-center text-sm text-muted-foreground">
-          {currentSubLessonIndex + 1} of {lesson.subLessons.length}
-        </div>
 
           <Button
             size="lg"

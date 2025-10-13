@@ -151,13 +151,20 @@ Across the Philippines, you'll see slight **regional variations** — especially
           icon: "❓",
           completed: false,
           progress: 0,
-          signs: [],
+          signs: [
+            { id: "hello", label: "Kumusta", imageUrl: "/images/fsl-labelled/kumusta.png" },
+            { id: "thanks", label: "Salamat", imageUrl: "/images/fsl-labelled/salamat.png" },
+            { id: "iloveyou", label: "Mahal Kita", imageUrl: "/images/fsl-labelled/mahal-kita.png" },
+          ],
           subLessons: [
             {
               id: "lesson-3-content",
               type: "content",
               title: "Learn About FSL Common Phrases",
               completed: false,
+              videos: [
+                { label: "Watch this short video to see how facial expressions, eye gaze, and body posture work together in real FSL conversation. Notice how each phrase combines hand movements with emotion and rhythm — this helps you understand not just what is being signed, but how meaning is expressed.", youtubeId: "Y1IfQ4DuQxU" },
+              ],
               content: `### **Lesson 3: FSL Common Phrases**
 
 FSL phrases capture the **expressive, emotional, and community-oriented nature** of Filipino communication. Facial expressions, eye gaze, and body movement are not just add-ons — they are a **core part of the grammar**.

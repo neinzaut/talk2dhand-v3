@@ -151,13 +151,20 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           icon: "❓",
           completed: false,
           progress: 0,
-          signs: [],
+          signs: [
+            { id: "hello", label: "Hello", imageUrl: "/images/asl-labelled/hello.png" },
+            { id: "thanks", label: "Thanks", imageUrl: "/images/asl-labelled/thanks.png" },
+            { id: "iloveyou", label: "I Love You", imageUrl: "/images/asl-labelled/iloveyou.png" },
+          ],
           subLessons: [
             {
               id: "lesson-3-content",
               type: "content",
               title: "Learn About ASL Phrases",
               completed: false,
+              videos: [
+                { label: "Watch this short video to see how facial expressions, eye gaze, and body posture work together in real ASL conversation. Notice how each phrase combines hand movements with emotion and rhythm — this helps you understand not just what is being signed, but how meaning is expressed.", youtubeId: "uKKvNqA9N20" },
+              ],
               content: `### **Lesson 3: ASL Phrases**
 
 ASL phrases don't follow English word-for-word order. Instead, ASL has its own grammar. For example, "How are you?" becomes **YOU HOW?** in ASL order.
