@@ -16,6 +16,11 @@ const fredoka = Fredoka({
 export const metadata: Metadata = {
   title: "Talk2DHand",
   description: "Gamified LMS for Sign Language",
+  icons: {
+    icon: '/icons/favicon.png',
+    shortcut: '/icons/favicon.png',
+    apple: '/icons/favicon.png',
+  },
 }
 
 export default function RootLayout({
