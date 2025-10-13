@@ -412,13 +412,13 @@ export default function LessonPage() {
                   </ReactMarkdown>
                   {Array.isArray(currentSubLesson.videos) && currentSubLesson.videos.length > 0 && (
                     <div className="mt-10">
-                      <h4 className="text-xl font-semibold text-primary mt-6 mb-4">Watch</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <h4 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-6 mb-4">Watch</h4>
+                      <p className="text-base leading-relaxed mb-6 text-gray-700 dark:text-gray-300">
+                        Watch this short video to see how facial expressions, eye gaze, and body posture work together in real ASL conversation. Notice how each phrase combines hand movements with emotion and rhythm — this helps you understand not just what is being signed, but how meaning is expressed.
+                      </p>
+                      <div className="flex justify-center">
                         {currentSubLesson.videos.map((vid) => (
                           <div key={(vid.youtubeId || vid.url || vid.label) ?? Math.random()} className="w-full max-w-2xl">
-                            {vid.label && (
-                              <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{vid.label}</p>
-                            )}
                             <div className="aspect-video w-full overflow-hidden rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                               {vid.youtubeId ? (
                                 <iframe
