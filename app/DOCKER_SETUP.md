@@ -1,29 +1,26 @@
 # Docker Setup Guide for Talk2DHand
 
-## Architecture Overview
+> **⚠️ This file is deprecated. Please use [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) for complete Docker setup documentation.**
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Docker Network                       │
-│                 (talk2dhand-network)                    │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │   UI (Next)  │  │ Static Signs │  │Dynamic Phrases│ │
-│  │   :3000      │  │   :8000      │  │   :5008      │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘ │
-│         │                 │                  │         │
-│         └─────────────────┴──────────────────┘         │
-│                  Internal Network                      │
-└─────────────────────────────────────────────────────────┘
-           │              │              │
-        :3000          :8000          :5008
-    (Host access)  (Host access)  (Host access)
-```
+## Quick Migration
+
+This file has been replaced by a comprehensive guide that covers both production and development setups:
+
+- **Production Setup** (full Docker stack) - Use `docker-compose.yaml`
+- **Development Setup** (hybrid approach) - Use `docker-compose.dev.yaml` or `dev-start.ps1`
+
+## Legacy Information
+
+This document previously described the production Docker setup. The new consolidated guide includes:
+
+- Clear separation between production and development workflows
+- Container naming strategy to prevent conflicts
+- Performance comparisons and recommendations
+- Comprehensive troubleshooting section
 
 ## Prerequisites
 
-- Docker installed (version 20.10+)
+- Docker installed (version 20.10+)  
 - Docker Compose installed (version 2.0+)
 - At least 4GB RAM available for Docker
 

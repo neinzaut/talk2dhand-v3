@@ -1,24 +1,32 @@
 # Development Scripts for Talk2DHand
 
+> **📖 For complete Docker setup documentation, see [DOCKER_GUIDE.md](./DOCKER_GUIDE.md)**
+
 This directory contains scripts to make development easier by running the UI natively while keeping backend services in Docker.
 
-## Quick Start
+## Quick Start (Recommended)
 
-### 1. Start Backend Services Only
+### Using PowerShell Scripts
 ```powershell
-# From the /app directory
-docker-compose -f docker-compose.dev.yaml up -d
+# Start everything (backend + UI with hot reload)
+.\dev-start.ps1
+
+# Stop everything
+.\dev-stop.ps1
 ```
 
-### 2. Start UI Development Server
+### Manual Setup
 ```powershell
-# From the /app/ui directory
-cd app/ui
+# 1. Start backend services only
+docker-compose -f docker-compose.dev.yaml up -d
+
+# 2. Start UI development server
+cd ui
 npm install  # Only needed first time or when dependencies change
 npm run dev
 ```
 
-### 3. Access the Application
+### Access Points
 - **UI**: http://localhost:3000 (Next.js dev server with hot-reload)
 - **Static Signs API**: http://localhost:8000
 - **Dynamic Phrases API**: http://localhost:5008

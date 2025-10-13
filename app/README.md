@@ -12,18 +12,30 @@ This directory contains all services for the Talk2DHand sign language learning p
 
 ## Quick Start
 
-```bash
-# Start all services
-docker-compose up -d
+### For Development (Recommended)
+```powershell
+# Start development environment (UI native + backend Docker)
+.\dev-start.ps1
 
-# View logs
-docker-compose logs -f
+# Stop development environment
+.\dev-stop.ps1
+```
+
+### For Production/Testing
+```powershell
+# Start all services in Docker
+docker-compose up -d
 
 # Stop services
 docker-compose down
 ```
 
-Access:
+## Documentation
+
+- **[DOCKER_GUIDE.md](./DOCKER_GUIDE.md)** - Complete Docker setup guide (primary reference)
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development workflow and scripts
+
+## Access Points
 - UI: http://localhost:3000
 - Static Signs API: http://localhost:8000/health
 - Dynamic Phrases API: http://localhost:5008/predict
