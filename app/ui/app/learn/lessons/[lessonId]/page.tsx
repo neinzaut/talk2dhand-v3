@@ -16,7 +16,7 @@ type SignStatus = "idle" | "correct" | "incorrect"
 export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
-  const { getCurrentModules, completeSubLesson } = useAppStore()
+  const { getCurrentModules, completeSubLesson, currentLanguage } = useAppStore()
   const modules = getCurrentModules()
 
   const [currentSubLessonIndex, setCurrentSubLessonIndex] = useState(0)
@@ -32,6 +32,7 @@ export default function LessonPage() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({})
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
+  const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -215,19 +216,35 @@ export default function LessonPage() {
       return;
     }
     try {
-      const response = await fetch('http://localhost:8000/predict', {
+      // Determine which API to use based on lesson
+      const isDynamicPhrases = lesson.id === "lesson-3";
+      const apiUrl = isDynamicPhrases ? 'http://localhost:5008/predict' : 'http://localhost:8000/predict';
+      
+      const requestBody = isDynamicPhrases 
+        ? { 
+            image: imageData, 
+            clientId: clientId,
+            language: currentLanguage === "asl" ? "english" : "filipino"
+          }
+        : { image: imageData.split(',')[1] };
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageData.split(',')[1] }),
+        body: JSON.stringify(requestBody),
       });
+      
       if (!response.ok) throw new Error(`[detectSign] Backend error: ${response.status}`);
       const data = await response.json();
+      
       if (data && data.prediction) {
         setDetectedSign(data.prediction.toUpperCase());
         setBackendError("");
         if (data.annotated_image) setAnnotatedImage(data.annotated_image);
+        
         const predictedSign = data.prediction.toLowerCase();
         const expectedSign = selectedSignId.toLowerCase();
+        
         if (predictedSign === expectedSign) {
           setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
           if (detectionIntervalRef.current) {
@@ -261,9 +278,11 @@ export default function LessonPage() {
   // Start/stop detection based on selected sign
   useEffect(() => {
     if (selectedSignId && isCameraReady) {
+      // Use shorter interval for dynamic phrases to capture sequences better
+      const interval = lesson.id === "lesson-3" ? 500 : 1000;
       detectionIntervalRef.current = setInterval(() => {
         detectSign()
-      }, 1000)
+      }, interval)
     } else {
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current)
@@ -277,7 +296,7 @@ export default function LessonPage() {
         detectionIntervalRef.current = null
       }
     }
-  }, [selectedSignId, isCameraReady])
+  }, [selectedSignId, isCameraReady, lesson.id])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)

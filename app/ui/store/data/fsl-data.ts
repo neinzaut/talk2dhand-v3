@@ -151,7 +151,11 @@ Across the Philippines, you'll see slight **regional variations** — especially
           icon: "❓",
           completed: false,
           progress: 0,
-          signs: [],
+          signs: [
+            { id: "hello", label: "Kumusta", imageUrl: "/images/fsl-labelled/kumusta.png" },
+            { id: "thanks", label: "Salamat", imageUrl: "/images/fsl-labelled/salamat.png" },
+            { id: "iloveyou", label: "Mahal Kita", imageUrl: "/images/fsl-labelled/mahal-kita.png" },
+          ],
           subLessons: [
             {
               id: "lesson-3-content",

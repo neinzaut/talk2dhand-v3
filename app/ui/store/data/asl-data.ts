@@ -151,7 +151,11 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           icon: "❓",
           completed: false,
           progress: 0,
-          signs: [],
+          signs: [
+            { id: "hello", label: "Hello", imageUrl: "/images/asl-labelled/hello.png" },
+            { id: "thanks", label: "Thanks", imageUrl: "/images/asl-labelled/thanks.png" },
+            { id: "iloveyou", label: "I Love You", imageUrl: "/images/asl-labelled/iloveyou.png" },
+          ],
           subLessons: [
             {
               id: "lesson-3-content",
