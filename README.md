@@ -41,10 +41,30 @@ Talk2DHand consists of three main services:
 
 ## Quick Start
 
-### Development
+### Development (Run in separate terminals)
+**Backend Services**
 ```powershell
+# Navigate to the app directory
 cd app
-.\dev-start.ps1
+
+# Build and run the backend services (if the containers haven't been built yet)
+docker-compose -f docker-compose.dev.yaml up --build
+
+# Run the backend services (if the containers already exist)
+docker-compose -f docker-compose.dev.yaml up
+```
+
+**Frontend Services**
+```powershell
+# Navigate to the frontend directory
+cd app
+cd ui
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
 ### Production
