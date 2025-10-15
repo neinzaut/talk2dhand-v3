@@ -33,7 +33,10 @@ export default function LessonPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  
+  const [currentQuizItemIndex, setCurrentQuizItemIndex] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [score, setScore] = useState(0);
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -54,20 +57,115 @@ export default function LessonPage() {
 
   const currentSubLesson = lesson.subLessons[currentSubLessonIndex]
 
-  // Timer effect - only run during practice sublesson
+  // Timer effect - only run during quiz sublesson
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-    
-    if (currentSubLesson?.type === "practice" && isCameraReady) {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (currentSubLesson?.type === "quiz" && !quizCompleted) {
+      setTimer(10); // Start with 10 seconds for each question
       interval = setInterval(() => {
-        setTimer((prev) => prev + 1)
-      }, 1000)
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval!);
+            handleNextQuizItem(); // Move to the next quiz item when time runs out
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-    
+
     return () => {
-      if (interval) clearInterval(interval)
+      if (interval) clearInterval(interval);
+    };
+  }, [currentSubLesson?.type, currentQuizItemIndex, quizCompleted]);
+
+  // Reset quiz state when switching to quiz sublesson
+  useEffect(() => {
+    if (currentSubLesson?.type === "quiz") {
+      setCurrentQuizItemIndex(0);
+      setQuizCompleted(false);
+      setScore(0);
     }
-  }, [currentSubLesson?.type, isCameraReady])
+  }, [currentSubLesson]);
+
+  const handleNextQuizItem = () => {
+    if (currentQuizItemIndex < quizItems.length - 1) {
+      setCurrentQuizItemIndex(currentQuizItemIndex + 1);
+      // Timer will be reset by the useEffect
+    } else {
+      setQuizCompleted(true);
+      setTimer(0); // Stop the timer when quiz is completed
+    }
+  };
+
+
+
+  // Utility function to shuffle an array
+  const shuffleArray = (array: any[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
+  // Define quizItems and related state
+  const [quizItems, setQuizItems] = useState(() => {
+    const items = [
+      {
+        imageUrl: "/images/asl-unlabelled/a.png",
+        options: ["A", "B", "C", "D"],
+        correctAnswer: "A",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/b.png",
+        options: ["B", "C", "D", "A"],
+        correctAnswer: "B",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/c.png",
+        options: ["C", "A", "B", "D"],
+        correctAnswer: "C",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/d.png",
+        options: ["D", "C", "A", "B"],
+        correctAnswer: "D",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/e.png",
+        options: ["E", "F", "G", "H"],
+        correctAnswer: "E",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/f.png",
+        options: ["F", "E", "G", "H"],
+        correctAnswer: "F",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/g.png",
+        options: ["G", "F", "H", "I"],
+        correctAnswer: "G",
+      },
+      {
+        imageUrl: "/images/asl-unlabelled/h.png",
+        options: ["H", "G", "I", "J"],
+        correctAnswer: "H",
+      }
+    ];
+    return shuffleArray(items);
+  });
+  // Fix implicit types
+  const handleAnswer = (selectedOption: string) => {
+    const currentItem = quizItems[currentQuizItemIndex];
+    if (selectedOption === currentItem.correctAnswer) {
+      setScore((prev) => prev + 1);
+    }
+    handleNextQuizItem();
+  };
+
+
 
   // Initialize camera function
   const initCamera = async () => {
@@ -473,10 +571,6 @@ export default function LessonPage() {
       case "practice":
         return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground">Timer: {formatTime(timer)}</p>
-        </div>
-
         <Card
           className={cn(
             "overflow-hidden border-8 transition-colors",
@@ -607,9 +701,53 @@ export default function LessonPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <p className="text-lg text-center text-muted-foreground">
-                    Quiz coming soon! Click Next to continue.
-                  </p>
+                  {quizCompleted ? (
+                    <div className="text-center space-y-4">
+                      <h2 className="text-2xl font-bold text-primary">Quiz Completed!</h2>
+                      <p className="text-lg">Your Score: {score}/{quizItems.length}</p>
+                      <div className="text-sm text-muted-foreground">
+                        <p>Great job! You've completed the quiz.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-medium">
+                          Question {currentQuizItemIndex + 1} of {quizItems.length}
+                        </span>
+                        <span className="text-lg font-bold text-orange-600">
+                          Time: {formatTime(timer)}
+                        </span>
+                      </div>
+                      
+                      <div className="text-center">
+                        <img
+                          src={quizItems[currentQuizItemIndex]?.imageUrl}
+                          alt="Quiz Item"
+                          className="w-48 h-48 mx-auto object-cover rounded-lg border-4 border-gray-200"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {quizItems[currentQuizItemIndex]?.options.map((option: string, index: number) => (
+                          <Button
+                            key={index}
+                            onClick={() => handleAnswer(option)}
+                            variant="default"
+                            className="h-12 text-lg font-medium border-2 border-gray-300 bg-white text-gray-800 hover:bg-orange-50 hover:border-orange-500 hover:text-orange-700"
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="text-sm text-muted-foreground">
+                          Score: {score}/{quizItems.length}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
