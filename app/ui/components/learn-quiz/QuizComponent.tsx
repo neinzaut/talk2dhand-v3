@@ -31,6 +31,8 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(10);
+  // Add a state to track user's answers
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (signs && signs.length > 0) {
@@ -97,6 +99,9 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
 
   const handleAnswer = (selectedOption: string) => {
     const currentItem = quizItems[currentQuizItemIndex];
+    // Update the handleAnswer function to store the user's answer
+    setUserAnswers((prev) => ({ ...prev, [currentQuizItemIndex]: selectedOption }));
+
     if (selectedOption === currentItem.correctAnswer) {
       setScore((prev) => prev + 1);
     }
@@ -138,6 +143,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
                   />
                   <div>
                     <p className="font-medium">Question {index + 1}</p>
+                    <p className="text-sm text-gray-600">Given Answer: {userAnswers[index] || "No Answer"}</p>
                     <p className="text-sm text-gray-600">Correct Answer: {item.correctAnswer}</p>
                   </div>
                 </div>
