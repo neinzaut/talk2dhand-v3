@@ -18,7 +18,7 @@ export default function PracticePage() {
     },
     {
       title: "Challenge Mode",
-      description: "Test your skills with timed challenges",
+      description: "Test your skills with challenges",
       icon: <Trophy className="h-8 w-8" />,
       action: () => router.push("/learn/lessons/lesson2"),
       color: "bg-orange-500"

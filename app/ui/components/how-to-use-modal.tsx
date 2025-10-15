@@ -25,26 +25,26 @@ export function HowToUseModal({ open, onOpenChange }: HowToUseModalProps) {
           <DialogTitle className="text-2xl">How to Use?</DialogTitle>
           <DialogDescription className="text-base space-y-4 pt-4">
             <div>
-              <h3 className="font-bold text-lg mb-2">Getting Started</h3>
+              <h3 className="font-bold text-lg mb-2">Quiz Rules</h3>
               <ol className="list-decimal list-inside space-y-2">
-                <li>Select a sign from the grid below the camera</li>
-                <li>Position your hand in front of the camera</li>
-                <li>Perform the sign gesture</li>
-                <li>Wait for the system to detect your sign</li>
+                <li>You will be shown 10 sign language gestures</li>
+                <li>Each question has 4 possible answers</li>
+                <li>You have 10 seconds to answer each question</li>
+                <li>Score is based on correct answers only</li>
               </ol>
             </div>
 
             <div>
-              <h3 className="font-bold text-lg mb-2">Visual Feedback</h3>
+              <h3 className="font-bold text-lg mb-2">Interface Guide</h3>
               <ul className="list-disc list-inside space-y-2">
                 <li>
-                  <span className="text-green-500 font-bold">Green border</span> - Correct sign detected!
+                  <span className="font-bold">Progress Bar</span> - Shows your position in the quiz
                 </li>
                 <li>
-                  <span className="text-red-500 font-bold">Red border</span> - Incorrect sign, try again
+                  <span className="font-bold">Timer</span> - Countdown for each question
                 </li>
                 <li>
-                  <span className="text-orange-500 font-bold">Orange border</span> - Currently detecting
+                  <span className="font-bold">Score</span> - Shown at the end with detailed review
                 </li>
               </ul>
             </div>
@@ -52,10 +52,10 @@ export function HowToUseModal({ open, onOpenChange }: HowToUseModalProps) {
             <div>
               <h3 className="font-bold text-lg mb-2">Tips</h3>
               <ul className="list-disc list-inside space-y-2">
-                <li>Ensure good lighting for better detection</li>
-                <li>Keep your hand clearly visible in the camera frame</li>
-                <li>You can retry incorrect signs until you get them right</li>
-                <li>Take your time - there's no rush!</li>
+                <li>Look carefully at each sign gesture before answering</li>
+                <li>Don't rush - use the full time if needed</li>
+                <li>Review your answers at the end to learn from mistakes</li>
+                <li>Practice regularly to improve your recognition skills</li>
               </ul>
             </div>
           </DialogDescription>

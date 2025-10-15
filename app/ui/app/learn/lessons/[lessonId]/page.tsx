@@ -5,18 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ca
 import { Button } from "@/components/shared/button"
 import { ArrowLeft, HelpCircle, CheckCircle, Circle } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, usePathname } from "next/navigation"
 import { HowToUseModal } from "@/components/how-to-use-modal"
+import { Progress } from "@/components/shared/progress"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import QuizComponent from "@/components/learn-quiz/QuizComponent";
 
 type SignStatus = "idle" | "correct" | "incorrect"
 
 export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
-  const { getCurrentModules, completeSubLesson, currentLanguage } = useAppStore()
+  const pathname = usePathname();
+  const { getCurrentModules, completeSubLesson, currentLanguage, setQuizActive } = useAppStore()
   const modules = getCurrentModules()
 
   const [currentSubLessonIndex, setCurrentSubLessonIndex] = useState(0)
@@ -33,7 +36,8 @@ export default function LessonPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  
+
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -54,20 +58,16 @@ export default function LessonPage() {
 
   const currentSubLesson = lesson.subLessons[currentSubLessonIndex]
 
-  // Timer effect - only run during practice sublesson
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
-    
-    if (currentSubLesson?.type === "practice" && isCameraReady) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev + 1)
-      }, 1000)
+  // Utility function to shuffle an array (used by other components)
+  const shuffleArray = (array: any[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
-    
-    return () => {
-      if (interval) clearInterval(interval)
-    }
-  }, [currentSubLesson?.type, isCameraReady])
+    return array;
+  };
+
+
 
   // Initialize camera function
   const initCamera = async () => {
@@ -473,10 +473,6 @@ export default function LessonPage() {
       case "practice":
         return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground">Timer: {formatTime(timer)}</p>
-        </div>
-
         <Card
           className={cn(
             "overflow-hidden border-8 transition-colors",
@@ -600,26 +596,29 @@ export default function LessonPage() {
 
       case "quiz":
         return (
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>{currentSubLesson.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <p className="text-lg text-center text-muted-foreground">
-                    Quiz coming soon! Click Next to continue.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )
+          <QuizComponent 
+            signs={lesson.signs} 
+            currentLanguage={currentLanguage}
+            onComplete={(score) => {
+              handleCompleteSubLesson();
+              handleNext();
+            }} 
+          />
+        );
 
       default:
         return null
     }
   }
+
+  useEffect(() => {
+    console.log("Current pathname:", pathname);
+
+    return () => {
+      console.log("Navigating away from pathname:", pathname);
+      setQuizActive(false);
+    };
+  }, [pathname, setQuizActive]);
 
   return (
     <div className="p-6">
@@ -687,24 +686,6 @@ export default function LessonPage() {
               </div>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Lesson Progress</span>
-              <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{lesson.progress}%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${lesson.progress}%` }}
-              />
-            </div>
-          </div>
         </div>
       </div>
 

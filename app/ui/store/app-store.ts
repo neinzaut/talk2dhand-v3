@@ -10,6 +10,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   totalXP: 300,
   currentLanguage: "asl",
   currentLessonId: "lesson-2",
+  isQuizActive: false,
   languageData: {
     asl: aslData,
     fsl: fslData,
@@ -18,6 +19,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   incrementStreak: () => set((state) => ({ streak: state.streak + 1 })),
   addXP: (amount) => set((state) => ({ totalXP: state.totalXP + amount })),
   setLanguage: (language) => set({ currentLanguage: language }),
+  setQuizActive: (isActive: boolean) => set({ isQuizActive: isActive }),
 
   getCurrentModules: () => {
     const state = get()

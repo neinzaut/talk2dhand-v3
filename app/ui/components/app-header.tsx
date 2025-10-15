@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/shared/avatar"
 import { useAppStore, type Language } from "@/store/app-store"
 
 export function AppHeader() {
-  const { streak, currentLanguage, setLanguage } = useAppStore()
+  const { streak, currentLanguage, setLanguage, isQuizActive } = useAppStore()
 
   const languages = [
     { code: "asl" as Language, flag: "🇺🇸", name: "American Sign Language" },
@@ -33,8 +33,12 @@ export function AppHeader() {
 
         {/* Language Selector */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="default" className="gap-2 bg-transparent">
+          <DropdownMenuTrigger asChild disabled={isQuizActive}>
+            <Button 
+              variant="default" 
+              className={`gap-2 bg-transparent ${isQuizActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isQuizActive}
+            >
               <img 
                 src={`/icons/icon-${currentLang.code}.png`} 
                 alt={currentLang.name} 
