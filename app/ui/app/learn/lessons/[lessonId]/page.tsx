@@ -62,7 +62,7 @@ export default function LessonPage() {
     let interval: NodeJS.Timeout | null = null;
 
     if (currentSubLesson?.type === "quiz" && !quizCompleted) {
-      setTimer(10); // Start with 10 seconds for each question
+      setTimer(5); 
       interval = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
