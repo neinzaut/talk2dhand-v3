@@ -81,9 +81,6 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
       setTimer(10);
     } else {
       setQuizCompleted(true);
-      if (onComplete) {
-        onComplete(score);
-      }
     }
   };
 
@@ -95,15 +92,48 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
     handleNextQuizItem();
   };
 
+  const handleFinishQuiz = () => {
+    if (onComplete) {
+      onComplete(score);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       {quizCompleted ? (
-        <div className="text-center space-y-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
           <h2 className="text-2xl font-bold text-primary">Quiz Completed!</h2>
-          <p className="text-lg">Your Score: {score}/{quizItems.length}</p>
+          <div className="space-y-4">
+            <p className="text-lg">Your Score: {score}/{quizItems.length}</p>
+            <div className="w-full bg-gray-100 rounded-full h-4">
+              <div 
+                className="bg-primary h-4 rounded-full transition-all duration-500"
+                style={{ width: `${(score / quizItems.length) * 100}%` }}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-6 mt-8">
+            <h3 className="text-xl font-semibold">Review Your Answers</h3>
+            {quizItems.map((item, index) => (
+              <div key={index} className="bg-gray-50 p-4 rounded-lg space-y-4">
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={item.imageUrl}
+                    alt={`Question ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg"
+                  />
+                  <div>
+                    <p className="font-medium">Question {index + 1}</p>
+                    <p className="text-sm text-gray-600">Correct Answer: {item.correctAnswer}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
           <div className="flex justify-between items-center">
             <span className="text-lg font-medium">
               Question {currentQuizItemIndex + 1} of {quizItems.length}
@@ -113,7 +143,14 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
             </span>
           </div>
 
-          <div className="text-center">
+          <div className="w-full bg-gray-100 rounded-full h-2">
+            <div 
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentQuizItemIndex) / quizItems.length) * 100}%` }}
+            />
+          </div>
+
+          <div className="text-center py-4">
             <img
               src={quizItems[currentQuizItemIndex]?.imageUrl}
               alt="Quiz Item"
