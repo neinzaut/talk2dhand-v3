@@ -57,8 +57,10 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
     const shuffledSigns = [...signs].sort(() => Math.random() - 0.5);
     return shuffledSigns.slice(0, 10).map((sign) => {
       const options = generateOptions(sign.label, signs);
+      // Convert the labeled image URL to its unlabelled counterpart
+      const unlabelledImageUrl = sign.imageUrl.replace('-labelled/', '-unlabelled/');
       return {
-        imageUrl: `/images/${language}-unlabelled/${sign.id}.png`, // Use unlabelled images
+        imageUrl: unlabelledImageUrl,
         options,
         correctAnswer: sign.label,
       };
