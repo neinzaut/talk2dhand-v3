@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/shared/button";
+import { useAppStore } from "@/store/app-store";
 
 interface QuizItem {
   imageUrl: string;
@@ -15,9 +16,16 @@ interface QuizComponentProps {
   }>;
   currentLanguage: "asl" | "fsl";
   onComplete?: (score: number) => void;
+  onQuizStateChange?: (isActive: boolean) => void;
 }
 
-const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, onComplete }) => {
+const QuizComponent: React.FC<QuizComponentProps> = ({ 
+  signs, 
+  currentLanguage, 
+  onComplete,
+  onQuizStateChange 
+}) => {
+  const { setQuizActive } = useAppStore();
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
   const [currentQuizItemIndex, setCurrentQuizItemIndex] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -29,8 +37,9 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
       const items = generateRandomQuestions(signs, currentLanguage);
       console.log("Generated quiz items:", items);
       setQuizItems(items);
+      setQuizActive(true);
     }
-  }, [signs, currentLanguage]);
+  }, [signs, currentLanguage, setQuizActive]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -95,6 +104,8 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ signs, currentLanguage, o
   };
 
   const handleFinishQuiz = () => {
+    // Notify parent that quiz is ending
+    onQuizStateChange?.(false);
     if (onComplete) {
       onComplete(score);
     }

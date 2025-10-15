@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/shared/ca
 import { Button } from "@/components/shared/button"
 import { ArrowLeft, HelpCircle, CheckCircle, Circle } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, usePathname } from "next/navigation"
 import { HowToUseModal } from "@/components/how-to-use-modal"
 import { Progress } from "@/components/shared/progress"
 import { cn } from "@/lib/utils"
@@ -18,7 +18,8 @@ type SignStatus = "idle" | "correct" | "incorrect"
 export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
-  const { getCurrentModules, completeSubLesson, currentLanguage } = useAppStore()
+  const pathname = usePathname();
+  const { getCurrentModules, completeSubLesson, currentLanguage, setQuizActive } = useAppStore()
   const modules = getCurrentModules()
 
   const [currentSubLessonIndex, setCurrentSubLessonIndex] = useState(0)
@@ -609,6 +610,15 @@ export default function LessonPage() {
         return null
     }
   }
+
+  useEffect(() => {
+    console.log("Current pathname:", pathname);
+
+    return () => {
+      console.log("Navigating away from pathname:", pathname);
+      setQuizActive(false);
+    };
+  }, [pathname, setQuizActive]);
 
   return (
     <div className="p-6">

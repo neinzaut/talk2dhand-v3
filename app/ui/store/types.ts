@@ -2,6 +2,24 @@
 
 export type Language = "asl" | "fsl"
 
+export interface AppState {
+  streak: number
+  totalXP: number
+  currentLanguage: Language
+  currentLessonId: string
+  isQuizActive: boolean
+  languageData: Record<Language, LanguageData>
+  incrementStreak: () => void
+  addXP: (amount: number) => void
+  setLanguage: (language: Language) => void
+  setQuizActive: (isActive: boolean) => void
+  getCurrentModules: () => Module[]
+  getCurrentLeaderboard: () => LeaderboardEntry[]
+  setCurrentLesson: (lessonId: string) => void
+  getCurrentLesson: () => Lesson | null
+  updateLessonProgress: (lessonId: string, progress: number) => void
+}
+
 export interface Sign {
   id: string
   label: string
