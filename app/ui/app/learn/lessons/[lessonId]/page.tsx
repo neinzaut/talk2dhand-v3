@@ -7,9 +7,11 @@ import { ArrowLeft, HelpCircle, CheckCircle, Circle } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
 import { useParams, useRouter } from "next/navigation"
 import { HowToUseModal } from "@/components/how-to-use-modal"
+import { Progress } from "@/components/shared/progress"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import QuizComponent from "@/components/learn-quiz/QuizComponent";
 
 type SignStatus = "idle" | "correct" | "incorrect"
 
@@ -33,9 +35,7 @@ export default function LessonPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  const [currentQuizItemIndex, setCurrentQuizItemIndex] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [score, setScore] = useState(0);
+
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -57,112 +57,13 @@ export default function LessonPage() {
 
   const currentSubLesson = lesson.subLessons[currentSubLessonIndex]
 
-  // Timer effect - only run during quiz sublesson
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (currentSubLesson?.type === "quiz" && !quizCompleted) {
-      setTimer(5); 
-      interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval!);
-            handleNextQuizItem(); // Move to the next quiz item when time runs out
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [currentSubLesson?.type, currentQuizItemIndex, quizCompleted]);
-
-  // Reset quiz state when switching to quiz sublesson
-  useEffect(() => {
-    if (currentSubLesson?.type === "quiz") {
-      setCurrentQuizItemIndex(0);
-      setQuizCompleted(false);
-      setScore(0);
-    }
-  }, [currentSubLesson]);
-
-  const handleNextQuizItem = () => {
-    if (currentQuizItemIndex < quizItems.length - 1) {
-      setCurrentQuizItemIndex(currentQuizItemIndex + 1);
-      // Timer will be reset by the useEffect
-    } else {
-      setQuizCompleted(true);
-      setTimer(0); // Stop the timer when quiz is completed
-    }
-  };
-
-
-
-  // Utility function to shuffle an array
+  // Utility function to shuffle an array (used by other components)
   const shuffleArray = (array: any[]) => {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-  };
-
-  // Define quizItems and related state
-  const [quizItems, setQuizItems] = useState(() => {
-    const items = [
-      {
-        imageUrl: "/images/asl-unlabelled/a.png",
-        options: ["A", "B", "C", "D"],
-        correctAnswer: "A",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/b.png",
-        options: ["B", "C", "D", "A"],
-        correctAnswer: "B",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/c.png",
-        options: ["C", "A", "B", "D"],
-        correctAnswer: "C",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/d.png",
-        options: ["D", "C", "A", "B"],
-        correctAnswer: "D",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/e.png",
-        options: ["E", "F", "G", "H"],
-        correctAnswer: "E",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/f.png",
-        options: ["F", "E", "G", "H"],
-        correctAnswer: "F",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/g.png",
-        options: ["G", "F", "H", "I"],
-        correctAnswer: "G",
-      },
-      {
-        imageUrl: "/images/asl-unlabelled/h.png",
-        options: ["H", "G", "I", "J"],
-        correctAnswer: "H",
-      }
-    ];
-    return shuffleArray(items);
-  });
-  // Fix implicit types
-  const handleAnswer = (selectedOption: string) => {
-    const currentItem = quizItems[currentQuizItemIndex];
-    if (selectedOption === currentItem.correctAnswer) {
-      setScore((prev) => prev + 1);
-    }
-    handleNextQuizItem();
   };
 
 
@@ -694,65 +595,15 @@ export default function LessonPage() {
 
       case "quiz":
         return (
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>{currentSubLesson.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {quizCompleted ? (
-                    <div className="text-center space-y-4">
-                      <h2 className="text-2xl font-bold text-primary">Quiz Completed!</h2>
-                      <p className="text-lg">Your Score: {score}/{quizItems.length}</p>
-                      <div className="text-sm text-muted-foreground">
-                        <p>Great job! You've completed the quiz.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-medium">
-                          Question {currentQuizItemIndex + 1} of {quizItems.length}
-                        </span>
-                        <span className="text-lg font-bold text-orange-600">
-                          Time: {formatTime(timer)}
-                        </span>
-                      </div>
-                      
-                      <div className="text-center">
-                        <img
-                          src={quizItems[currentQuizItemIndex]?.imageUrl}
-                          alt="Quiz Item"
-                          className="w-48 h-48 mx-auto object-cover rounded-lg border-4 border-gray-200"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        {quizItems[currentQuizItemIndex]?.options.map((option: string, index: number) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleAnswer(option)}
-                            variant="default"
-                            className="h-12 text-lg font-medium border-2 border-gray-300 bg-white text-gray-800 hover:bg-orange-50 hover:border-orange-500 hover:text-orange-700"
-                          >
-                            {option}
-                          </Button>
-                        ))}
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="text-sm text-muted-foreground">
-                          Score: {score}/{quizItems.length}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )
+          <QuizComponent 
+            signs={lesson.signs} 
+            currentLanguage={currentLanguage}
+            onComplete={(score) => {
+              handleCompleteSubLesson();
+              handleNext();
+            }} 
+          />
+        );
 
       default:
         return null
@@ -825,24 +676,6 @@ export default function LessonPage() {
               </div>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Lesson Progress</span>
-              <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{lesson.progress}%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${lesson.progress}%` }}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
