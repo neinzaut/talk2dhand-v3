@@ -10,25 +10,32 @@ export default function PracticePage() {
 
   const practiceOptions = [
     {
-      title: "Quick Practice",
-      description: "Practice random signs with instant feedback",
+      title: "Text-to-Sign",
+      description: "Enter any word or phrase and see its ASL or FSL sign instantly — perfect for learning new vocabulary visually.",
       icon: <Target className="h-8 w-8" />,
-      action: () => router.push("/learn/lessons/lesson1"),
+      action: () => router.push("/practice/text-to-sign"),
       color: "bg-blue-500"
     },
     {
-      title: "Challenge Mode",
-      description: "Test your skills with challenges",
-      icon: <Trophy className="h-8 w-8" />,
-      action: () => router.push("/learn/lessons/lesson2"),
+      title: "Audio-to-Sign",
+      description: "Say a word or phrase out loud and watch its corresponding sign animation — helping bridge sound and sign.",
+      icon: <PlayCircle className="h-8 w-8" />,
+      action: () => router.push("/practice/audio-to-sign"),
       color: "bg-orange-500"
     },
     {
-      title: "Free Practice",
-      description: "Practice any sign with camera recognition",
-      icon: <PlayCircle className="h-8 w-8" />,
-      action: () => router.push("/learn/lessons/lesson3"),
+      title: "Camera-to-Sign",
+      description: "Use your camera to perform a sign and get AI-powered recognition with accuracy scores. Practice, correct, and improve.",
+      icon: <Trophy className="h-8 w-8" />,
+      action: () => router.push("/practice/camera-to-sign"),
       color: "bg-green-500"
+    },
+    {
+      title: "Memory Game",
+      description: "A fun way to strengthen your memory — match signs to their meanings through levels that get more challenging as you improve.",
+      icon: <PlayCircle className="h-8 w-8" />,
+      action: () => router.push("/practice/memory-game"),
+      color: "bg-purple-500"
     }
   ]
 
@@ -37,11 +44,11 @@ export default function PracticePage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Practice</h1>
         <p className="text-lg text-muted-foreground">
-          Choose your practice mode and improve your sign language skills with interactive exercises.
+          Your interactive space to master sign language through hands-on practice. Choose how you want to learn — type, speak, sign, or play.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {practiceOptions.map((option, index) => (
           <Card 
             key={index}
@@ -62,18 +69,6 @@ export default function PracticePage() {
             </div>
           </Card>
         ))}
-      </div>
-
-      <div className="mt-8">
-        <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
-          <h2 className="text-2xl font-bold mb-4">Practice Tips</h2>
-          <ul className="space-y-2 text-muted-foreground">
-            <li>• Make sure you have good lighting for better camera recognition</li>
-            <li>• Keep your hands visible and well-positioned in front of the camera</li>
-            <li>• Practice regularly to improve your muscle memory</li>
-            <li>• Start with basic signs and gradually move to more complex ones</li>
-          </ul>
-        </Card>
       </div>
     </div>
   )
