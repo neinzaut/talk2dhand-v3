@@ -1,7 +1,7 @@
 "use client"
 
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app-store";
 import { HowToUseModal } from "@/components/how-to-use-modal";
 
@@ -11,9 +11,12 @@ type ScreenshotResult = {
   predicted: string;
 };
 
+
 function getRandomSignsFromList(signList: string[], count = 5): string[] {
-  const shuffled = [...signList].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+  // Ensure unique signs
+  const unique = Array.from(new Set(signList));
+  const shuffled = unique.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 function CameraToSignPage() {
@@ -25,10 +28,12 @@ function CameraToSignPage() {
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
   const [howToOpen, setHowToOpen] = useState(false);
+  const [capturing, setCapturing] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const captureTriggeredRef = useRef<boolean>(false);
 
   // Get current language and sign list from store
   const currentLanguage = useAppStore((s) => s.currentLanguage);
@@ -73,66 +78,154 @@ function CameraToSignPage() {
 
   // Countdown logic
   useEffect(() => {
-    if (!started || round >= 5) return;
+    if (!started || round >= signs.length || capturing) return;
+    
+    console.log(`[Countdown] Starting for round ${round}`);
     setCountdown(5);
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c === 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          handleCapture();
-        }
-        return c - 1;
-      });
+    let hasCaptured = false; // Local flag to prevent double capture
+    
+    let countdownValue = 5;
+    const timer = setInterval(() => {
+      countdownValue--;
+      setCountdown(countdownValue);
+      
+      if (countdownValue === 0 && !hasCaptured) {
+        hasCaptured = true;
+        clearInterval(timer);
+        console.log(`[Countdown] Reached 0, triggering capture for round ${round}`);
+        // Trigger capture immediately
+        setCapturing(true);
+      }
     }, 1000);
+    
+    timerRef.current = timer;
+    
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      console.log(`[Countdown] Cleanup for round ${round}`);
+      if (timer) {
+        clearInterval(timer);
+      }
     };
-    // eslint-disable-next-line
-  }, [round, started]);
+  }, [round, started, signs.length, capturing]);
 
-  function handleCapture() {
-    // Capture screenshot from video
+  // Perform capture - runs when capturing flag is set to true
+  useEffect(() => {
+    if (!capturing || !started || round >= signs.length) return;
+    
+    const currentRound = round;
+    console.log(`[Capture] Starting for round ${currentRound}, expected sign: ${signs[currentRound]}`);
+    
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (video && canvas) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageDataUrl = canvas.toDataURL("image/png");
-        // Simulate prediction
-        const predicted = predictSign(imageDataUrl);
+    
+    if (!video || !canvas) {
+      setCapturing(false);
+      return;
+    }
+    
+    // Check if video is actually playing and has dimensions
+    if (!video.videoWidth || !video.videoHeight) {
+      console.warn('[Capture] Video not ready, skipping');
+      setCapturing(false);
+      return;
+    }
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    
+    if (!ctx) {
+      setCapturing(false);
+      return;
+    }
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageDataUrl = canvas.toDataURL("image/jpeg");
+    
+    // Only send valid images
+    if (!imageDataUrl || imageDataUrl.length < 1000) {
+      console.warn('[Capture] Image is blank or failed');
+      setCapturing(false);
+      return;
+    }
+
+    // Send image to backend for prediction - send only base64 part
+    const base64Data = imageDataUrl.split(',')[1];
+    
+    fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: base64Data }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        let predicted = "No hand detected";
+        let landmarks = [];
+        
+        if (data.success) {
+          predicted = data.prediction;
+          landmarks = data.landmarks;
+          console.log("[Capture] Hand landmarks:", landmarks);
+        } else {
+          console.error("[Capture] Prediction failed:", data.error);
+        }
+
         setScreenshots((prev: ScreenshotResult[]) => [
           ...prev,
-          { image: imageDataUrl, expected: signs[round], predicted },
+          { image: imageDataUrl, expected: signs[currentRound], predicted },
         ]);
-        if (predicted === signs[round]) setScore((s) => s + 1);
-      }
-    }
-    // Next round or show results
-    setTimeout(() => {
-      if (round < 4) {
-        setRound((r) => r + 1);
-      } else {
-        setShowResults(true);
-      }
-    }, 800);
-  }
+        
+        if (predicted === signs[currentRound]) {
+          setScore((s) => s + 1);
+        }
 
-  function handleRestart() {
-    setSigns(getRandomSignsFromList(signList, 5));
+        // Next round or show results
+        if (currentRound < signs.length - 1) {
+          console.log(`[Capture] Moving to next round: ${currentRound + 1}`);
+          setCapturing(false);
+          setRound(currentRound + 1);
+        } else {
+          console.log("[Capture] Showing results");
+          setShowResults(true);
+        }
+      })
+      .catch((error) => {
+        console.error("[Capture] Error calling backend:", error);
+        // Still progress to next round even on error
+        setScreenshots((prev: ScreenshotResult[]) => [
+          ...prev,
+          { image: imageDataUrl, expected: signs[currentRound], predicted: "Error" },
+        ]);
+        
+        if (currentRound < signs.length - 1) {
+          setCapturing(false);
+          setRound(currentRound + 1);
+        } else {
+          setShowResults(true);
+        }
+      });
+  }, [capturing, started, round, signs]);
+
+  const handleRestart = useCallback(() => {
+    const newSigns = getRandomSignsFromList(signList, 5);
+    setSigns(newSigns);
     setScreenshots([]);
     setScore(0);
     setRound(0);
+    setCapturing(false);
     setShowResults(false);
     setStarted(false);
-  }
+  }, [signList]);
 
-  function handleStart() {
-    setSigns(getRandomSignsFromList(signList, 5));
+  const handleStart = useCallback(() => {
+    const newSigns = getRandomSignsFromList(signList, 5);
+    console.log("Starting with signs:", newSigns);
+    setSigns(newSigns);
+    setCapturing(false);
     setStarted(true);
-  }
+  }, [signList]);
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] justify-center py-8">
@@ -161,12 +254,16 @@ function CameraToSignPage() {
               </button>
             ) : (
               <>
-                <div className="mb-2 text-lg font-semibold">
-                  Sign {round + 1} of 5
-                </div>
-                <div className="mb-3 text-5xl font-bold text-blue-600 bg-blue-50 rounded-lg px-8 py-4 shadow">
-                  {signs[round]}
-                </div>
+                {round < signs.length && (
+                  <>
+                    <div className="mb-2 text-lg font-semibold">
+                      Sign {round + 1} of {signs.length}
+                    </div>
+                    <div className="mb-3 text-5xl font-bold text-blue-600 bg-blue-50 rounded-lg px-8 py-4 shadow">
+                      {signs[round]}
+                    </div>
+                  </>
+                )}
                 <div className="mb-3 text-lg">Show this sign to your camera!</div>
                 <video
                   ref={videoRef}
@@ -182,7 +279,7 @@ function CameraToSignPage() {
         ) : (
           <div className="flex flex-col items-center w-full">
             <h2 className="text-2xl font-bold mb-4">Results</h2>
-            <div className="mb-4 text-lg">Score: <span className="font-bold">{score} / 5</span></div>
+            <div className="mb-4 text-lg">Score: <span className="font-bold">{score} / {signs.length}</span></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {screenshots.map((item, idx) => (
                 <div key={idx} className="flex flex-col items-center bg-white rounded-lg shadow p-4 border border-blue-100 max-w-xs">
