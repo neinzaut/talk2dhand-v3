@@ -169,7 +169,7 @@ function CameraToSignPage() {
           landmarks = data.landmarks;
           console.log("[Capture] Hand landmarks:", landmarks);
         } else {
-          console.error("[Capture] Prediction failed:", data.error);
+          console.log("[Capture] No hand detected:", data.error);
         }
 
         setScreenshots((prev: ScreenshotResult[]) => [
