@@ -66,14 +66,27 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     console.log("Input:", input)
     console.log("Correct answer:", correctAnswer)
     
-    const normalizedInput = input.trim().toLowerCase()
-    const normalizedAnswer = correctAnswer.trim().toLowerCase()
+    // Remove punctuation and extra whitespace, convert to lowercase
+    const cleanInput = input
+      .trim()
+      .toLowerCase()
+      .replace(/[.,!?;:"'-]/g, "") // Remove common punctuation
+      .replace(/\s+/g, " ") // Normalize whitespace
     
-    console.log("Normalized input:", normalizedInput)
-    console.log("Normalized answer:", normalizedAnswer)
+    const cleanAnswer = correctAnswer
+      .trim()
+      .toLowerCase()
+      .replace(/[.,!?;:"'-]/g, "")
+      .replace(/\s+/g, " ")
+    
+    console.log("Cleaned input:", cleanInput)
+    console.log("Cleaned answer:", cleanAnswer)
 
+    // Check for exact match or if answer is contained in input
     const correct =
-      normalizedInput === normalizedAnswer || normalizedAnswer.includes(normalizedInput)
+      cleanInput === cleanAnswer || 
+      cleanInput.includes(cleanAnswer) ||
+      cleanAnswer.includes(cleanInput)
 
     console.log("Is correct?", correct)
     setIsCorrect(correct)
@@ -103,6 +116,11 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     whisper.startRecording()
   }
 
+  const stopListening = () => {
+    console.log("⏹️ stopListening called")
+    whisper.stopRecording()
+  }
+
   const resetFeedback = () => {
     setSpokenText("")
     setFeedback("")
@@ -119,6 +137,7 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     isCorrect,
     isModelLoading: whisper.isModelLoading,
     startListening,
+    stopListening,
     resetFeedback,
   }
 }

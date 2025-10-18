@@ -42,6 +42,7 @@ export default function AudioToSignPage() {
     isCorrect,
     isModelLoading,
     startListening,
+    stopListening,
     resetFeedback,
   } = useSpeechPractice({ correctAnswer: currentSignLabel, language: currentLanguage === "asl" ? "ASL" : "FSL" })
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -209,27 +210,44 @@ export default function AudioToSignPage() {
                   <p className="text-gray-500 text-sm">This may take 1-2 minutes. The model will be cached for future use.</p>
                 </div>
               )}
-              <button
-                className={`rounded-full p-6 shadow-md transition-all ${
-                  isModelLoading
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : isListening 
-                    ? "bg-red-500 animate-pulse" 
-                    : selectedSignId 
-                    ? "bg-blue-500 hover:bg-blue-600 cursor-pointer" 
-                    : "bg-gray-300 cursor-not-allowed"
-                }`}
-                onClick={startMic}
-                disabled={!selectedSignId || isModelLoading}
-                aria-label="Start microphone"
-              >
-                <Mic className={`h-12 w-12 ${isListening ? "text-white" : selectedSignId && !isModelLoading ? "text-white" : "text-gray-500"}`} />
-              </button>
+              
+              <div className="flex gap-4 items-center">
+                {/* Record button */}
+                <button
+                  className={`rounded-full p-6 shadow-md transition-all ${
+                    isModelLoading
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : isListening 
+                      ? "bg-red-500 animate-pulse" 
+                      : selectedSignId 
+                      ? "bg-blue-500 hover:bg-blue-600 cursor-pointer" 
+                      : "bg-gray-300 cursor-not-allowed"
+                  }`}
+                  onClick={startMic}
+                  disabled={!selectedSignId || isModelLoading || isListening}
+                  aria-label="Start microphone"
+                >
+                  <Mic className={`h-12 w-12 ${isListening ? "text-white" : selectedSignId && !isModelLoading ? "text-white" : "text-gray-500"}`} />
+                </button>
+                
+                {/* Stop button - only show when recording */}
+                {isListening && (
+                  <button
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition shadow-md"
+                    onClick={stopListening}
+                    aria-label="Stop recording"
+                  >
+                    ⏹️ Stop
+                  </button>
+                )}
+              </div>
+              
               <h2 className="text-xl font-semibold text-gray-700 mt-4">
-                {isListening ? "🎙️ Recording... (5 seconds)" : `Detected: ${spokenText || detectedText || "..."}`}
+                {isListening ? "🎙️ Recording... Click STOP when done!" : `Detected: ${spokenText || detectedText || "..."}`}
               </h2>
-              <p className="text-gray-500 mt-2 text-center">
-                Select a sign below, then click the microphone and say its name. <strong>Works offline!</strong>
+              <p className="text-gray-500 mt-2 text-center max-w-md">
+                <strong>How to use:</strong> Select a sign, click 🎤, then say <strong>just the letter</strong> (e.g., "B"). 
+                Click <strong>Stop</strong> when done or wait 5 seconds. <span className="text-blue-600">Works offline!</span>
               </p>
             </>
           )}
@@ -353,12 +371,17 @@ export default function AudioToSignPage() {
           <h3 className="text-lg font-semibold mt-4 mb-2">🎙️ Microphone Mode (NEW: Offline AI!)</h3>
           <ul className="list-disc ml-6 space-y-2">
             <li>Select a sign from the grid below.</li>
-            <li>Click the microphone button and say the name of the sign out loud.</li>
-            <li>Watch as your spoken answer is detected and matched to the sign.</li>
+            <li>Click the 🎤 microphone button to start recording.</li>
+            <li><strong>Say JUST the letter name</strong> clearly (e.g., "B", "C", "A" - no prefix needed!).</li>
+            <li>Click the <strong>"⏹️ Stop"</strong> button when done, or wait 5 seconds for auto-stop.</li>
+            <li>The AI will transcribe and check your answer automatically.</li>
             <li><strong>✨ NEW:</strong> Uses Whisper AI - <strong>works completely offline!</strong></li>
             <li><strong>First use:</strong> AI model will download (~50MB, 1-2 min). Cached afterwards.</li>
-            <li>Recording automatically stops after 5 seconds or when you're done speaking.</li>
           </ul>
+          
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-3">
+            <p className="text-sm"><strong>💡 Pro Tip:</strong> Speak clearly and at normal speed. Whisper handles punctuation automatically, so "B" and "B." are both accepted!</p>
+          </div>
 
           <h3 className="text-lg font-semibold mt-4 mb-2">⌨️ Text Input Mode (Fallback)</h3>
           <ul className="list-disc ml-6 space-y-2">

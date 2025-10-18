@@ -22,6 +22,7 @@ export function useWhisperRecognition({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const transcriber = useRef<AutomaticSpeechRecognitionPipeline | null>(null)
+  const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize Whisper model (lazy loading)
   const initializeModel = useCallback(async () => {
@@ -65,34 +66,57 @@ export function useWhisperRecognition({
       audioChunksRef.current = []
 
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      
-      // Create MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm") 
-          ? "audio/webm" 
-          : "audio/mp4"
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000,
+        } 
       })
+      
+      // Create MediaRecorder with best available format
+      let mimeType = "audio/webm;codecs=opus"
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = "audio/webm"
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "audio/mp4"
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = "" // Let browser choose
+          }
+        }
+      }
+      
+      console.log("🎙️ Using MIME type:", mimeType || "default")
+      
+      const mediaRecorder = new MediaRecorder(stream, 
+        mimeType ? { mimeType } : undefined
+      )
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log("📦 Data available:", event.data.size, "bytes")
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
         }
       }
 
       mediaRecorder.onstop = async () => {
-        console.log("🛑 Recording stopped, processing audio...")
-        stream.getTracks().forEach(track => track.stop())
+        console.log("🛑 Recording stopped, total chunks:", audioChunksRef.current.length)
+        stream.getTracks().forEach(track => {
+          track.stop()
+          console.log("🔇 Track stopped:", track.kind)
+        })
         await processAudio()
       }
 
-      mediaRecorder.start()
+      // Start with timeslice to get data periodically
+      mediaRecorder.start(100) // Collect data every 100ms
       mediaRecorderRef.current = mediaRecorder
       setIsRecording(true)
-      toast.info("🎙️ Recording... Click stop when done.")
-
+      console.log("✅ Recording started")
+      
       // Auto-stop after 5 seconds
-      setTimeout(() => {
+      autoStopTimeoutRef.current = setTimeout(() => {
+        console.log("⏱️ Auto-stopping after 5 seconds")
         if (mediaRecorder.state === "recording") {
           stopRecording()
         }
@@ -113,6 +137,12 @@ export function useWhisperRecognition({
       console.log("⏹️ Stopping recording...")
       mediaRecorderRef.current.stop()
       setIsRecording(false)
+      
+      // Clear auto-stop timeout
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current)
+        autoStopTimeoutRef.current = null
+      }
     }
   }, [])
 
@@ -120,6 +150,7 @@ export function useWhisperRecognition({
   const processAudio = useCallback(async () => {
     if (audioChunksRef.current.length === 0) {
       console.warn("⚠️ No audio data to process")
+      toast.warning("⚠️ No audio detected. Please try again.")
       return
     }
 
@@ -146,14 +177,41 @@ export function useWhisperRecognition({
       const audioData = audioBuffer.getChannelData(0)
       
       console.log("🎵 Audio data length:", audioData.length)
+      console.log("🎵 Audio duration:", audioBuffer.duration, "seconds")
+      console.log("🎵 Sample rate:", audioBuffer.sampleRate)
+      
+      // Check if audio is too short
+      if (audioData.length < 1600) { // Less than 0.1 seconds at 16kHz
+        console.warn("⚠️ Audio too short:", audioData.length, "samples")
+        toast.warning("⚠️ Audio too short. Please speak longer.")
+        setIsProcessing(false)
+        return
+      }
 
+      // Check if audio is silent (all zeros or very low amplitude)
+      const maxAmplitude = Math.max(...Array.from(audioData).map(Math.abs))
+      console.log("🔊 Max amplitude:", maxAmplitude)
+      
+      if (maxAmplitude < 0.01) {
+        console.warn("⚠️ Audio appears to be silent")
+        toast.warning("⚠️ No speech detected. Please speak louder.")
+        setIsProcessing(false)
+        return
+      }
+
+      console.log("🤖 Running Whisper transcription...")
+      
       // Run Whisper transcription
       const result = await model(audioData, {
         language: language === "en" ? "english" : undefined,
         task: "transcribe",
         return_timestamps: false,
+        chunk_length_s: 30,
+        stride_length_s: 5,
       }) as any
 
+      console.log("📋 Raw Whisper result:", result)
+      
       const text = ((result.text || result[0]?.text || "") as string).trim()
       console.log("📝 Transcription result:", text)
 
@@ -164,7 +222,8 @@ export function useWhisperRecognition({
         toast.success(`✅ Detected: "${text}"`)
         if (onResult) onResult(text)
       } else {
-        toast.warning("⚠️ No speech detected. Please try again.")
+        console.warn("⚠️ Empty transcription result")
+        toast.warning("⚠️ No speech detected. Please try speaking more clearly.")
       }
 
     } catch (err) {
