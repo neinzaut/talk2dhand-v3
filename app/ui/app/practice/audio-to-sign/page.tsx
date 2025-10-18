@@ -185,7 +185,7 @@ export default function AudioToSignPage() {
               onClick={() => setInputMode("mic")}
             >
               <Mic className="inline h-4 w-4 mr-2" />
-              Microphone
+              Voice
             </button>
             <button
               className={`px-4 py-2 rounded-lg transition ${
@@ -196,7 +196,7 @@ export default function AudioToSignPage() {
               onClick={() => setInputMode("text")}
             >
               <Keyboard className="inline h-4 w-4 mr-2" />
-              Text Input
+              Keyboard
             </button>
           </div>
 
@@ -281,9 +281,6 @@ export default function AudioToSignPage() {
                     Check
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2 text-center">
-                  Expected: <strong>{currentSignLabel || "Select a sign"}</strong>
-                </p>
               </div>
               <p className="text-gray-500 mt-2 text-center">
                 Select a sign below, type its name, and press Enter or click Check.
@@ -340,35 +337,35 @@ export default function AudioToSignPage() {
           </button>
         ))}
       </div>
-
+        {/* DEBUGGING */}
       <div className="mt-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
-        <h3 className="font-bold text-lg mb-2">🔍 Debug Info:</h3>
+        <h3 className="font-bold text-lg mb-2">🔍 Detailed Information:</h3>
         <div className="space-y-1 text-sm">
-          <p><strong>Speech Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
+          <p><strong>Recognition Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
           <p><strong>Model Status:</strong> {isModelLoading ? "⏳ Loading..." : "✅ Ready"}</p>
           <p><strong>Mic Allowed:</strong> {micAllowed ? "✅ Yes" : "❌ No"}</p>
           <p><strong>Is Listening:</strong> {isListening ? "🎙️ Yes" : "❌ No"}</p>
-          <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Microphone" : "⌨️ Text"}</p>
+          <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Voice" : "⌨️ Keyboard"}</p>
           <p><strong>Selected Sign:</strong> {selectedSignId || "None"}</p>
-          <p><strong>Expected Answer:</strong> {currentSignLabel || "None"}</p>
-          <p><strong>You Said:</strong> {spokenText || textInput || "..."}</p>
-          <p><strong>Feedback:</strong> {feedback || "..."}</p>
-          <p><strong>Is Correct:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Yes" : "❌ No"}</p>
+          <p><strong>Target Answer:</strong> {currentSignLabel || "None"}</p>
+          <p><strong>Your Input:</strong> {spokenText || textInput || "..."}</p>
+          <p><strong>Result:</strong> {feedback || "..."}</p>
+          <p><strong>Status:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Correct" : "❌ Incorrect"}</p>
         </div>
         <p className="text-xs text-gray-500 mt-2">Check browser console (F12) for detailed logs</p>
       </div>
 
-      <div className="mt-4">
+      {/* <div className="mt-4">
         {!micAllowed && <p className="text-red-500 font-bold text-lg">{feedback}</p>}
         {spokenText && <p className="text-blue-700 font-semibold text-lg">You said: "{spokenText}"</p>}
         {feedback && micAllowed && <p className="text-gray-800 font-semibold text-lg">{feedback}</p>}
-      </div>
+      </div> */}
 
       <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <div className="p-4">
-          <h2 className="text-2xl font-bold mb-2">How to Use Audio-to-Sign</h2>
+          <h2 className="text-2xl font-bold mb-2">How to Use Sign Recognition Practice</h2>
           
-          <h3 className="text-lg font-semibold mt-4 mb-2">🎙️ Microphone Mode (NEW: Offline AI!)</h3>
+          <h3 className="text-lg font-semibold mt-4 mb-2">🎙️ Voice Recognition Mode (Offline AI!)</h3>
           <ul className="list-disc ml-6 space-y-2">
             <li>Select a sign from the grid below.</li>
             <li>Click the 🎤 microphone button to start recording.</li>
@@ -383,12 +380,12 @@ export default function AudioToSignPage() {
             <p className="text-sm"><strong>💡 Pro Tip:</strong> Speak clearly and at normal speed. Whisper handles punctuation automatically, so "B" and "B." are both accepted!</p>
           </div>
 
-          <h3 className="text-lg font-semibold mt-4 mb-2">⌨️ Text Input Mode (Fallback)</h3>
+          <h3 className="text-lg font-semibold mt-4 mb-2">⌨️ Text Input Mode (Alternative)</h3>
           <ul className="list-disc ml-6 space-y-2">
             <li>Select a sign from the grid below.</li>
             <li>Type the name of the sign in the text box.</li>
             <li>Press Enter or click the "Check" button to verify your answer.</li>
-            <li>Works offline and is great when speech recognition fails.</li>
+            <li>Perfect for silent practice or when voice input is unavailable.</li>
           </ul>
 
           <h3 className="text-lg font-semibold mt-4 mb-2">📊 General Tips</h3>
