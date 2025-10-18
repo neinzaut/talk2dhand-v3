@@ -18,7 +18,7 @@ export default function PracticePage() {
     },
     {
       title: "Audio-to-Sign",
-      description: "Say a word or phrase out loud and watch its corresponding sign animation — helping bridge sound and sign.",
+      description: "Practice identifying signs by speaking their names aloud. Select a sign, use the microphone, and get instant feedback!",
       icon: <PlayCircle className="h-8 w-8" />,
       action: () => router.push("/practice/audio-to-sign"),
       color: "bg-orange-500"
