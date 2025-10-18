@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react"
 import { useAppStore } from "@/store/app-store"
-import { cn } from "@/lib/utils"
-import { Mic, CheckCircle, Circle } from "lucide-react"
+import { Mic, Shuffle } from "lucide-react"
+import { HowToUseModal } from "@/components/how-to-use-modal"
+import { toast } from "react-toastify"
 
 const getUnlabelledImageUrl = (signId: string, language: string) => {
   if (language === "asl") return `/images/asl-unlabelled/${signId}.png`
@@ -24,10 +25,17 @@ export default function AudioToSignPage() {
   const [signStatuses, setSignStatuses] = useState<Record<string, SignStatus>>({})
   const [detectedText, setDetectedText] = useState<string>("")
   const [isListening, setIsListening] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [shuffledSigns, setShuffledSigns] = useState(signs)
   const recognitionRef = useRef<any>(null)
 
   // Microphone speech recognition logic
   const startListening = () => {
+    if (!selectedSignId) {
+      toast.error("Please select a sign before using the microphone.")
+      return
+    }
+
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       alert('Speech Recognition not supported in this browser.')
       return
@@ -45,7 +53,7 @@ export default function AudioToSignPage() {
       setIsListening(false)
       // Check answer
       if (selectedSignId) {
-        const sign = signs.find(s => s.id === selectedSignId)
+        const sign = shuffledSigns.find(s => s.id === selectedSignId)
         if (sign) {
           const correct = transcript.toLowerCase() === sign.label.toLowerCase()
           setSignStatuses(prev => ({ ...prev, [selectedSignId]: correct ? "correct" : "incorrect" }))
@@ -62,10 +70,33 @@ export default function AudioToSignPage() {
     recognition.start()
   }
 
-  const handleSignSelect = (signId: string) => {
-    setSelectedSignId(signId)
+  // Shuffle logic
+  const shuffleSigns = () => {
+    const arr = [...signs]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    setShuffledSigns(arr)
+    setSelectedSignId(null)
     setDetectedText("")
-    setSignStatuses(prev => ({ ...prev, [signId]: "idle" }))
+    setSignStatuses({})
+  }
+
+  // Keep shuffledSigns in sync with signs if language changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  if (shuffledSigns.length !== signs.length) setShuffledSigns(signs)
+
+  const handleSignSelect = (signId: string) => {
+    if (selectedSignId === signId) {
+      setSelectedSignId(null)
+      setDetectedText("")
+      setSignStatuses(prev => ({ ...prev, [signId]: "idle" }))
+    } else {
+      setSelectedSignId(signId)
+      setDetectedText("")
+      setSignStatuses(prev => ({ ...prev, [signId]: "idle" }))
+    }
   }
 
   const getSignBorderColor = (signId: string) => {
@@ -78,62 +109,91 @@ export default function AudioToSignPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-bold mb-4">Practice by Audio</h1>
-      <div className="flex flex-col items-center mb-8">
-        <div className="flex flex-col items-center gap-4 bg-white rounded-xl shadow-md p-6 w-full max-w-xl">
-          <button
-            className={cn(
-              "rounded-full bg-blue-100 hover:bg-blue-200 p-6 shadow-lg border-4 border-blue-400 flex items-center justify-center transition-all",
-              isListening && "animate-pulse border-blue-600"
-            )}
-            onClick={startListening}
-            disabled={isListening || !selectedSignId}
-            aria-label="Start audio input"
-          >
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Audio to Sign</h1>
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          onClick={() => setIsModalOpen(true)}
+        >
+          How to Use
+        </button>
+      </header>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex flex-col items-center">
+          <div className="rounded-full bg-blue-100 p-6 shadow-md">
             <Mic className="h-12 w-12 text-blue-600" />
-          </button>
-          <div className="text-2xl font-semibold text-gray-700 mt-2">
-            Detected: {detectedText ? <span className="text-blue-700">{detectedText}</span> : <span className="text-gray-400">...</span>}
           </div>
-          <div className="text-sm text-gray-500">Select a sign below, then click the microphone and say its name.</div>
+          <h2 className="text-xl font-semibold text-gray-700 mt-4">Detected: {detectedText || "..."}</h2>
+          <p className="text-gray-500 mt-2 text-center">
+            Select a sign below, then click the microphone and say its name. Use the shuffle button for varied practice.
+          </p>
+        </div>
+
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700 font-semibold">Progress</span>
+            <span className="text-blue-600 font-bold">{shuffledSigns.length - Object.values(signStatuses).filter(status => status === "correct").length} / {shuffledSigns.length}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full"
+              style={{ width: `${(Object.values(signStatuses).filter(status => status === "correct").length / shuffledSigns.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        <div className="flex justify-center mt-6 gap-4">
+          <button
+            className="rounded-full bg-orange-100 hover:bg-orange-200 p-2 shadow flex items-center justify-center transition-all"
+            onClick={shuffleSigns}
+            aria-label="Shuffle signs"
+          >
+            <Shuffle className="h-6 w-6 text-orange-600" />
+          </button>
+          <button
+            className="rounded-full bg-red-100 hover:bg-red-200 p-2 shadow flex items-center justify-center transition-all"
+            onClick={() => {
+              setSignStatuses({})
+              setSelectedSignId(null)
+              setDetectedText("")
+            }}
+            aria-label="Reset progress"
+          >
+            <span className="text-red-600 font-semibold">Reset</span>
+          </button>
         </div>
       </div>
-      <div className="grid grid-cols-8 gap-4 justify-center">
-        {signs.map(sign => (
+
+      <div className="mt-6 grid grid-cols-8 gap-4">
+        {shuffledSigns.map(sign => (
           <button
             key={sign.id}
-            className={cn(
-              "aspect-square w-20 h-20 rounded-xl border-4 flex items-center justify-center bg-white shadow-md transition-all",
-              getSignBorderColor(sign.id),
-              selectedSignId === sign.id && "ring-2 ring-orange-400"
-            )}
+            className={`p-1 rounded-lg shadow-md border-4 ${getSignBorderColor(sign.id)} hover:shadow-lg hover:scale-105 transition-transform`}
             onClick={() => handleSignSelect(sign.id)}
-            aria-label={`Select sign ${sign.label}`}
           >
-            <img
-              src={getUnlabelledImageUrl(sign.id, currentLanguage)}
-              alt={`Sign for ${sign.label}`}
-              className="w-16 h-16 object-contain"
-            />
+            <img src={getUnlabelledImageUrl(sign.id, currentLanguage)} alt="Unlabelled sign" className="w-full h-auto" />
           </button>
         ))}
       </div>
-      <div className="mt-8 flex justify-center">
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-6 w-6 text-green-500" />
-            <span className="text-green-700 font-semibold">Correct</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Circle className="h-6 w-6 text-orange-500" />
-            <span className="text-orange-700 font-semibold">Selected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Circle className="h-6 w-6 text-red-500" />
-            <span className="text-red-700 font-semibold">Incorrect</span>
-          </div>
+
+      <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <div className="p-4">
+          <h2 className="text-2xl font-bold mb-2">How to Use Audio-to-Sign</h2>
+          <ul className="list-disc ml-6 space-y-2 text-lg">
+            <li>Select a sign from the grid below.</li>
+            <li>Click the microphone button and say the name of the sign out loud.</li>
+            <li>Watch as your spoken answer is detected and matched to the sign.</li>
+            <li>
+              Use the{' '}
+              <Shuffle className="inline h-4 w-4 text-orange-600 align-text-bottom" />{' '}
+              shuffle button to randomize the grid for more challenge.
+            </li>
+            <li>Green border = correct, red = incorrect, orange = selected.</li>
+          </ul>
+          <div className="mt-4 text-gray-600 text-sm">Tip: Make sure your browser supports speech recognition and allow microphone access.</div>
         </div>
-      </div>
+      </HowToUseModal>
     </div>
   )
 }
