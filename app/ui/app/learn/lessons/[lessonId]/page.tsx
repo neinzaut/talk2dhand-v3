@@ -11,7 +11,8 @@ import { Progress } from "@/components/shared/progress"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import QuizComponent from "@/components/learn-quiz/QuizComponent";
+import QuizComponent from "@/components/learn/QuizComponent"
+import GrammarPracticeQuizComponent from "@/components/learn/GrammarPracticeQuizComponent"
 
 type SignStatus = "idle" | "correct" | "incorrect"
 
@@ -604,6 +605,21 @@ export default function LessonPage() {
               handleNext();
             }} 
           />
+        );
+
+      case "grammar-practice":
+        const isQuiz = currentSubLesson.type === "grammar-practice" && currentSubLesson.title?.toLowerCase().includes("quiz");
+        return (
+          <div className="max-w-5xl mx-auto">
+            <GrammarPracticeQuizComponent 
+              language={currentLanguage}
+              mode={isQuiz ? "quiz" : "practice"}
+              onComplete={(correctCount, total) => {
+                handleCompleteSubLesson();
+                handleNext();
+              }} 
+            />
+          </div>
         );
 
       default:

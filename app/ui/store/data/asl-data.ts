@@ -274,13 +274,13 @@ Most importantly, ASL is a **complete, living language** with its own slang, sto
             },
             {
               id: "lesson-4-practice",
-              type: "practice",
+              type: "grammar-practice",
               title: "Practice ASL Grammar",
               completed: false,
             },
             {
               id: "lesson-4-quiz",
-              type: "quiz",
+              type: "grammar-practice",
               title: "Test Your Knowledge",
               completed: false,
             },

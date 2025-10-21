@@ -26,7 +26,7 @@ export interface Sign {
   imageUrl: string
 }
 
-export type SubLessonType = "content" | "practice" | "quiz"
+export type SubLessonType = "content" | "practice" | "quiz" | "grammar-practice"
 
 export interface SubLesson {
   id: string
