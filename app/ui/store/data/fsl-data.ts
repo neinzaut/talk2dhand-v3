@@ -277,13 +277,13 @@ FSL storytelling is also **more visually rich and animated** than ASL. Signers o
             },
             {
               id: "lesson-4-practice",
-              type: "practice",
+              type: "grammar-practice",
               title: "Practice FSL Grammar",
               completed: false,
             },
             {
               id: "lesson-4-quiz",
-              type: "quiz",
+              type: "grammar-practice",
               title: "Test Your Knowledge",
               completed: false,
             },
