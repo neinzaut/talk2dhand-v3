@@ -8,7 +8,7 @@ import { useAppStore } from "@/store/app-store"
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { HowToUseModal } from "@/components/how-to-use-modal"
 import { Progress } from "@/components/shared/progress"
-import { cn } from "@/lib/utils"
+import { cn, getExpectedType, getExpectedTypeFromLesson } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import QuizComponent from "@/components/learn/QuizComponent"
@@ -221,13 +221,30 @@ export default function LessonPage() {
       const isDynamicPhrases = lesson.id === "lesson-3";
       const apiUrl = isDynamicPhrases ? 'http://localhost:5008/predict' : 'http://localhost:8000/predict';
       
+      // Determine expected type for static signs
+      let expectedType: "alphabet" | "number" | null = null;
+      if (!isDynamicPhrases && selectedSignId) {
+        // First try to get from the sign label
+        const sign = lesson.signs.find(s => s.id === selectedSignId);
+        if (sign) {
+          expectedType = getExpectedType(sign.label);
+        }
+        // Fallback to lesson title if sign type couldn't be determined
+        if (!expectedType) {
+          expectedType = getExpectedTypeFromLesson(lesson.title);
+        }
+      }
+      
       const requestBody = isDynamicPhrases 
         ? { 
             image: imageData, 
             clientId: clientId,
             language: currentLanguage === "asl" ? "english" : "filipino"
           }
-        : { image: imageData.split(',')[1] };
+        : { 
+            image: imageData.split(',')[1],
+            ...(expectedType && { expectedType })
+          };
 
       const response = await fetch(apiUrl, {
         method: 'POST',

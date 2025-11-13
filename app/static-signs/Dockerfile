@@ -17,7 +17,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements file
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies with increased timeout and in stages
+# Install large packages separately to handle network timeouts
+RUN pip install --no-cache-dir --timeout=1000 tensorflow==2.10.0
+RUN pip install --no-cache-dir --timeout=1000 mediapipe==0.10.9
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
