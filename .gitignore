@@ -46,10 +46,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# ML model files (too large for git)
-*.h5
-*.tflite
-*.p
-*.pkl
-*.pickle
-app/static-signs/model/
+__pycache__/

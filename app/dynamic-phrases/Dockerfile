@@ -4,17 +4,15 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Skip apt-get if packages are already available or install from cache
-# Combine everything in one layer and use cache mounts for faster builds
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y --no-install-recommends \
+# Install system deps (no BuildKit cache mounts for wider compatibility)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender1 \
     libgomp1
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
 COPY requirements.txt .
