@@ -1,7 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 .next/
 .cursor/
+.venv/
 venv/
+app/venv/
 app/ui/node_modules
 
 # dependencies
@@ -43,3 +45,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ML model files (too large for git)
+*.h5
+*.tflite
+*.p
+*.pkl
+*.pickle
+app/static-signs/model/

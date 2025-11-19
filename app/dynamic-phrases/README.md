@@ -1,183 +1,114 @@
 # Dynamic Phrases Recognition Service
 
-This service provides dynamic sign language phrase recognition (hello, thanks, iloveyou) using TensorFlow and MediaPipe Holistic.
+This service streams webcam frames from the UI, extracts MediaPipe Holistic landmarks, and feeds them into the ISLR (Isolated Sign Language Recognition) TensorFlow Lite model that lives in `module/islr`. It is the backend for Lesson 3 “Practice” and exposes a single `/predict` endpoint that the Next.js app calls every 500 ms.
 
-## Requirements
+## What changed in this refactor?
+
+- The legacy `action.h5` model has been removed.
+- We now load `module/islr/model.tflite` plus `dict_sign.csv`, matching the `word_model` demo bundle.
+- The service performs the same buffering, motion filtering, and smoothing as `word_model/run_camera.py`.
+- Only `hello` and `thanks` are exposed to the UI today (the expanded dataset supports more labels and we will map them incrementally).
+
+## Requirements (local development)
 
 - Python 3.11
-- TensorFlow 2.15.0
+- TensorFlow 2.15.0 (CPU)
 - MediaPipe 0.10.9
-- Flask 3.0.0
-- **action.h5** model file (required, not included in repository)
+- OpenCV (headless build)
+- pandas (needed by `module/islr/model.py`)
+- Files under `module/islr/`: `model.tflite`, `dict_sign.csv`, `model.py`
 
-## Important: Model File
-
-This service requires an `action.h5` model file to function. Place it in the `app/dynamic-phrases/` directory before building the container.
-
-If you're migrating from an old repository, copy the `action.h5` file to this directory:
-```bash
-cp /path/to/old/repo/action.h5 app/dynamic-phrases/action.h5
-```
-
-## Running with Docker (Recommended)
-
-The easiest way to run this service is using Docker, which ensures the correct Python version and dependencies:
-
-### Using Docker Compose
-
-```bash
-# From the app directory
-cd app
-docker-compose up -d
-
-# View logs for dynamic-phrases service
-docker-compose logs -f dynamic-phrases
-
-# Stop all services
-docker-compose down
-```
-
-### Using Docker directly
-
-```bash
-# Build the image
-cd app/dynamic-phrases
-docker build -t dynamic-phrases .
-
-# Run the container
-docker run -p 5008:5008 -v $(pwd)/action.h5:/app/action.h5:ro dynamic-phrases
-```
-
-## Running Locally (Not Recommended)
-
-If you must run locally, ensure you have Python 3.11:
-
-### On Windows
+Install everything with:
 
 ```powershell
-# Create virtual environment with Python 3.11
-py -3.11 -m venv venv
-
-# Activate virtual environment
-.\venv\Scripts\activate
-
-# Install dependencies
+cd app/dynamic-phrases
+py -3.11 -m venv .venv
+. .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# Run the server
 python app.py
 ```
 
-### On Linux/Mac
+> ℹ️ The repo already contains the `module/islr` assets. Do not delete or rename that folder; the Docker image validates that `module/islr/model.tflite` exists during build.
 
-```bash
-# Create virtual environment with Python 3.11
-python3.11 -m venv venv
+## Running with Docker (recommended)
 
-# Activate virtual environment
-source venv/bin/activate
+From `app/`:
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-python app.py
+```powershell
+docker-compose up -d dynamic-phrases
+docker-compose logs -f dynamic-phrases
 ```
 
-## API Endpoints
+Or build/run the service directly:
 
-### Predict
+```powershell
+cd app/dynamic-phrases
+docker build -t talk2dhand-dynamic-phrases .
+docker run -p 5008:5008 talk2dhand-dynamic-phrases
 ```
-POST /predict
-Content-Type: application/json
 
+The Dockerfile installs TensorFlow + MediaPipe first (long-running downloads) and then copies the rest of the app, including `module/islr`.
+
+## API
+
+### `POST /predict`
+
+```jsonc
 {
-  "image": "base64_encoded_image",
-  "clientId": "unique_client_id",
-  "language": "english" // or "tagalog"
+  "image": "data:image/jpeg;base64,...", // raw canvas frame from the UI
+  "clientId": "lesson-3-session-id",     // optional; default = "default"
+  "language": "english"                  // or "filipino"
 }
 ```
 
-Returns the predicted sign with confidence score and annotated frame.
+Response:
 
-### Forward to Angular (Legacy)
-```
-POST /forward_to_angular
-Content-Type: application/json
-
+```jsonc
 {
-  "text": "message to forward"
+  "success": true,
+  "prediction": "hello",          // translated label for requested language
+  "english_prediction": "hello",  // normalized label ("hello" or "thanks")
+  "confidence": 0.82,
+  "frames_collected": 18,
+  "sequence_ready": true,
+  "supported_signs": ["hello", "thanks"],
+  "annotated_image": "data:image/jpeg;base64,...", // frame with overlay
+  "sentence": ["hello"],
+  "is_valid_sign": true
 }
 ```
 
-This endpoint is from the old repository and may not be needed for the new UI integration.
+Key behaviors:
 
-## Docker Environment
+- Frames are stored per `clientId` so concurrent students don’t collide.
+- Motion must exceed `MOVE_THRESHOLD` before we call the model, mirroring the desktop demo.
+- Smoothing (`SMOOTHING_WINDOW` + `STABILITY_COUNT`) keeps the UI from flickering.
+- When `language` is `"filipino"`, the response uses `kamusta` / `salamat` in `prediction`.
 
-The Docker container:
-- Uses Python 3.11 slim image
-- Installs all required system dependencies for OpenCV and MediaPipe
-- Exposes port 5008
-- Mounts the model file as read-only
-- Automatically restarts on failure
+### `POST /health`
 
-## Integrating with UI
+Simple readiness probe:
 
-This service is designed to be called by the Next.js UI application. Example integration:
-
-```typescript
-// In your Next.js component
-const predictPhrase = async (imageData: string) => {
-  const response = await fetch('http://localhost:5008/predict', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      image: imageData,
-      clientId: 'unique-client-id',
-      language: 'english'
-    })
-  });
-  
-  const result = await response.json();
-  return result;
-};
+```json
+{
+  "status": "ok",
+  "supported_signs": ["hello", "thanks"],
+  "model_path": "/app/module/islr"
+}
 ```
 
-## Supported Phrases
+## Current limitations
 
-The model recognizes three dynamic phrases:
-- **hello** (kamusta in Tagalog)
-- **thanks** (salamat in Tagalog)
-- **iloveyou** (mahal kita in Tagalog)
+- `iloveyou` is temporarily omitted until we finish validating the expanded dataset.
+- Only RGB frames (JPEG) are supported.
+- The service does not persist session history; restarting the container resets buffers.
 
 ## Troubleshooting
 
-### Model not loading
-- Ensure `action.h5` exists in the `dynamic-phrases` directory
-- Check Docker logs: `docker-compose logs dynamic-phrases`
-- Verify the model file is not corrupted
+| Issue | Fix |
+|-------|-----|
+| `module/islr/model.tflite not found` | Re-run `git lfs pull` if applicable or copy from `word_model/module/islr`. |
+| High CPU usage | Lower `MOVE_THRESHOLD` / increase request interval, or run the service on a machine with more cores. |
+| No predictions | Ensure the UI keeps sending frames (Lesson 3 poll interval = 500 ms) and there is visible motion. |
 
-### Port already in use
-- Change the port mapping in `docker-compose.yaml`: `"5009:5008"` (use port 5009 instead)
-
-### Container won't start
-- Check logs: `docker-compose logs dynamic-phrases`
-- Rebuild the image: `docker-compose build --no-cache dynamic-phrases`
-
-### High CPU usage
-- MediaPipe Holistic uses significant CPU for full-body tracking
-- Consider using a machine with GPU support for better performance
-- Adjust `model_complexity` in app.py if needed (currently set to 0 for performance)
-
-## Converting Model to TensorFlow.js (Optional)
-
-If you want to run the model in the browser, use the conversion script:
-
-```bash
-# Inside the container or virtual environment
-python convert_model.py
-```
-
-This will create a `tfjs_model` directory with the converted model.
+Check logs with `docker-compose logs -f dynamic-phrases` or `python app.py` when running locally.
