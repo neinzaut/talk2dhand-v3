@@ -152,9 +152,8 @@ Across the Philippines, you'll see slight **regional variations** — especially
           completed: false,
           progress: 0,
           signs: [
-            { id: "hello", label: "Kumusta", imageUrl: "/images/fsl-labelled/kumusta.png" },
-            { id: "thanks", label: "Salamat", imageUrl: "/images/fsl-labelled/salamat.png" },
-            { id: "iloveyou", label: "Mahal Kita", imageUrl: "/images/fsl-labelled/mahal-kita.png" },
+            { id: "hello", label: "Kumusta", imageUrl: "/gifs/hello.gif" },
+            { id: "thanks", label: "Salamat", imageUrl: "/gifs/thankyou.gif" },
           ],
           subLessons: [
             {
@@ -195,6 +194,17 @@ FSL also includes many **localized terms** that reflect Filipino life and cultur
 * *Thank you!* → **SALAMAT** with a small head bow or nod of sincerity.
 
 Because Filipino culture values friendliness and emotion, **facial grammar** is even more pronounced in FSL. It's common for signers to use full-body storytelling, shoulder shifts, and clear eye contact to express meaning.
+
+#### **Mga Halimbawa ng Visual (Visual Examples)**
+
+Narito ang mga animated na halimbawa ng mga pariralang iyong masasanay:
+
+| Tanda | Animasyon |
+| :---- | :----: |
+| **Kumusta** | ![Hello](gifs/hello.gif) |
+| **Salamat** | ![Thank You](gifs/thankyou.gif) |
+
+Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang naaangkop na mga pagpapahayag sa mukha. Magsanay ng mga tandang ito nang dahan-dahan sa una, na nakatuon sa wastong anyo at pagpapahayag.
 
 > 💡 **Tip:** Think of your face as your tone of voice. Don't hold back — your expressions complete your message.`
             },

@@ -37,18 +37,19 @@ except Exception as exc:
 
 mp_holistic = mp.solutions.holistic
 holistic = mp_holistic.Holistic(
-    min_detection_confidence=0.5,
+    min_detection_confidence=0.3,  # Lower for faster initial detection
     min_tracking_confidence=0.5,
-    model_complexity=0,
+    model_complexity=0,  # Fastest model
     enable_segmentation=False,
     refine_face_landmarks=False,
+    smooth_landmarks=True,  # Enable smoothing for better tracking
 )
 
-BUFFER_SIZE = 18
-SMOOTHING_WINDOW = 5
-STABILITY_COUNT = 3
-PROB_THRESHOLD = 0.7
-MOVE_THRESHOLD = 0.06
+BUFFER_SIZE = 10  # Reduced from 18 for faster initial predictions
+SMOOTHING_WINDOW = 3  # Reduced from 5 for quicker response
+STABILITY_COUNT = 2  # Reduced from 3 to show predictions faster
+PROB_THRESHOLD = 0.65  # Slightly lower to be more permissive
+MOVE_THRESHOLD = 0.04  # Reduced from 0.06 to detect smaller movements
 
 SUPPORTED_SIGNS = {
     "hello": "hello",
@@ -160,7 +161,7 @@ def _annotate_frame(frame: np.ndarray, text: str, confidence: float, motion: flo
         (255, 255, 255),
         1,
     )
-    _, buffer = cv2.imencode(".jpg", overlay, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    _, buffer = cv2.imencode(".jpg", overlay, [cv2.IMWRITE_JPEG_QUALITY, 60])
     return f"data:image/jpeg;base64,{base64.b64encode(buffer).decode('utf-8')}"
 
 
@@ -254,7 +255,8 @@ def predict():
     translated_prediction = _translate(normalized_sign, language)
     english_prediction = normalized_sign or ""
 
-    annotated = _annotate_frame(frame, translated_prediction, confidence or 0.0, state.last_motion)
+    # Only annotate when we have a stable prediction to reduce processing overhead
+    annotated = _annotate_frame(frame, translated_prediction, confidence or 0.0, state.last_motion) if normalized_sign else ""
 
     response = {
         "success": True,

@@ -152,9 +152,8 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           completed: false,
           progress: 0,
           signs: [
-            { id: "hello", label: "Hello", imageUrl: "/images/asl-labelled/hello.png" },
-            { id: "thanks", label: "Thanks", imageUrl: "/images/asl-labelled/thanks.png" },
-            { id: "iloveyou", label: "I Love You", imageUrl: "/images/asl-labelled/iloveyou.png" },
+            { id: "hello", label: "Hello", imageUrl: "/gifs/hello.gif" },
+            { id: "thanks", label: "Thanks", imageUrl: "/gifs/thankyou.gif" },
           ],
           subLessons: [
             {
@@ -183,7 +182,18 @@ A huge part of meaning in ASL comes from **facial expressions, head position, bo
 
 Because NMS are essential, the correct handshape alone isn't enough—your facial and body grammar must match. Both dynamic facial expressions and timing affect meaning in ASL.
 
-Familiar phrases like **HELLO**, **THANK YOU**, and **I LOVE YOU** are widely known, but communities may sign them with slightly different motions or emphasis.
+Familiar phrases like **HELLO** and **THANK YOU** are widely known, but communities may sign them with slightly different motions or emphasis.
+
+#### **Visual Examples**
+
+Below are animated examples of the phrases you'll practice:
+
+| Sign | Animation |
+| :---- | :----: |
+| **Hello** | ![Hello](gifs/hello.gif) |
+| **Thank You** | ![Thank You](gifs/thankyou.gif) |
+
+Notice how the hand movements flow naturally and include appropriate facial expressions. Practice these signs slowly at first, focusing on proper form and expression.
 
 > 💡 **Tip:** Practice full-body signing—hands, face, and posture work together. Don't sign with a blank face; your expressions complete the sentence. ASL is expressive, visual, and alive! Your face and hands work together to communicate meaning!`
             },

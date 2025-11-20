@@ -296,7 +296,7 @@ export default function LessonPage() {
   // Start/stop detection based on selected sign
   useEffect(() => {
     if (selectedSignId && isCameraReady) {
-      // Use shorter interval for dynamic phrases to capture sequences better
+      // Faster polling for dynamic phrases with reduced backend buffer
       const interval = lesson.id === "lesson-3" ? 500 : 1000;
       detectionIntervalRef.current = setInterval(() => {
         detectSign()
@@ -442,6 +442,13 @@ export default function LessonPage() {
                         <blockquote className="border-l-4 border-orange-500 bg-orange-50/50 dark:bg-orange-900/10 py-3 px-4 my-6 rounded-r-lg">
                           {children}
                         </blockquote>
+                      ),
+                      img: ({ src, alt }) => (
+                        <img
+                          src={src?.startsWith('/') ? src : `/${src}`}
+                          alt={alt || 'Sign language demonstration'}
+                          className="w-64 h-auto rounded-lg shadow-md my-4 mx-auto"
+                        />
                       ),
                     }}
                   >
