@@ -1,9 +1,7 @@
 import os
-import tensorflow as tf
 import absl.logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from tensorflow.keras.models import load_model
 import base64
 import io
 from PIL import Image
@@ -16,15 +14,18 @@ import threading
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 absl.logging.set_verbosity(absl.logging.ERROR)
-tf.get_logger().setLevel('ERROR')
 
-print("Starting simple sign recognition server...")
+# Import our recognizers
+from alphabet_recognizer import AlphabetRecognizer
+from number_recognizer import NumberRecognizer
+
+print("Starting unified sign recognition server (alphabet + numbers)...")
 
 # Create Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Create a singleton class to manage the model - exactly like sign_recognition.py
+# Create a singleton class to manage both models
 class ModelManager:
     _instance = None
     _lock = threading.Lock()
@@ -38,86 +39,306 @@ class ModelManager:
         return cls._instance
     
     def __init__(self):
-        self.model = None
-        self.is_loaded = False
+        self.alphabet_recognizer = None
+        self.number_recognizer = None
+        self.alphabet_loaded = False
+        self.number_loaded = False
         self.error = None
-        self.load_model()
-        # Print the actual status after loading
-        print(f"ModelManager after initialization: model_loaded={self.is_loaded}, model=={self.model is not None}")
+        self.load_models()
     
-    def load_model(self):
+    def load_models(self):
+        """Load both alphabet and number models."""
         try:
-            # Get absolute path to model file
-            current_dir = os.getcwd()
-            model_path = os.path.join(current_dir, "hand_landmarks.h5")
+            # Get absolute paths
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # Alphabet model paths
+            alphabet_model_path = os.path.join(current_dir, "model", "alphabet", "keypoint_classifier", "keypoint_classifier.tflite")
+            alphabet_labels_path = os.path.join(current_dir, "model", "alphabet", "keypoint_classifier", "keypoint_classifier_label.csv")
+            
+            # Number model path
+            number_model_path = os.path.join(current_dir, "model", "numbers", "fingerspelling", "number_model.p")
             
             print(f"ModelManager: Current directory: {current_dir}")
-            print(f"ModelManager: Model path: {model_path}")
-            print(f"ModelManager: Model file exists: {os.path.exists(model_path)}")
+            print(f"ModelManager: Alphabet model path: {alphabet_model_path}")
+            print(f"ModelManager: Number model path: {number_model_path}")
             
-            # Try to load the model
-            if os.path.exists(model_path):
-                print(f"ModelManager: Loading model from: {model_path}")
-                self.model = load_model(model_path)
-                
-                # Verify model works
-                dummy_input = np.random.rand(1, 21, 3)
-                dummy_pred = self.model.predict(dummy_input)
-                print(f"ModelManager: ✅ MODEL LOADED SUCCESSFULLY! Prediction shape: {dummy_pred.shape}")
-                self.is_loaded = True
-                print(f"ModelManager: Setting is_loaded to {self.is_loaded}")
+            # Load alphabet model
+            if os.path.exists(alphabet_model_path):
+                print(f"ModelManager: Loading alphabet model...")
+                self.alphabet_recognizer = AlphabetRecognizer(
+                    model_path=alphabet_model_path,
+                    labels_path=alphabet_labels_path
+                )
+                self.alphabet_loaded = True
+                print(f"ModelManager: Alphabet model loaded successfully!")
             else:
-                print(f"ModelManager: ❌ ERROR: Model file not found at {model_path}")
-                self.is_loaded = False
-                self.error = f"Model file not found at {model_path}"
+                print(f"ModelManager: WARNING: Alphabet model not found at {alphabet_model_path}")
+            
+            # Load number model
+            if os.path.exists(number_model_path):
+                print(f"ModelManager: Loading number model...")
+                self.number_recognizer = NumberRecognizer(model_path=number_model_path)
+                self.number_loaded = True
+                print(f"ModelManager: Number model loaded successfully!")
+            else:
+                print(f"ModelManager: WARNING: Number model not found at {number_model_path}")
+            
+            if not self.alphabet_loaded and not self.number_loaded:
+                self.error = "No models loaded. Check model file paths."
+                print(f"ModelManager: ERROR: {self.error}")
+            elif not self.alphabet_loaded:
+                self.error = "Alphabet model not loaded"
+                print(f"ModelManager: WARNING: {self.error}")
+            elif not self.number_loaded:
+                self.error = "Number model not loaded"
+                print(f"ModelManager: WARNING: {self.error}")
+                
         except Exception as e:
-            print(f"ModelManager: ❌ ERROR loading model: {str(e)}")
-            self.is_loaded = False
+            print(f"ModelManager: ERROR loading models: {str(e)}")
+            import traceback
+            traceback.print_exc()
             self.error = str(e)
     
-    def get_model(self):
-        return self.model
-    
     def is_model_loaded(self):
-        status = self.is_loaded and self.model is not None
-        print(f"ModelManager.is_model_loaded(): Returning {status}, self.is_loaded={self.is_loaded}, model is not None={self.model is not None}")
-        return status
+        """Check if at least one model is loaded."""
+        return (self.alphabet_loaded or self.number_loaded) and (self.alphabet_recognizer is not None or self.number_recognizer is not None)
 
 # Initialize MediaPipe
 mp_hands = mp.solutions.hands
-# We'll create a new Hands instance for each request to avoid timestamp issues
 mp_drawing = mp.solutions.drawing_utils
 
-# Define classes
-classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-           'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-           'U', 'V', 'W', 'X', 'Y', 'Z', 'CH', 'ENYE', 'NG']
-
-# Initialize the model manager - exactly like in sign_recognition.py
+# Initialize the model manager
 model_manager = ModelManager.get_instance()
-
-# Hard-coded model status workaround
-MODEL_LOADED_GLOBAL = True
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Simple health check endpoint that confirms if model is loaded"""
-    # Always return true for model_loaded to fix frontend issues
+    """Simple health check endpoint that confirms if models are loaded"""
     return jsonify({
         'status': 'healthy',
-        'model_loaded': True,
-        'message': "Sign recognition server is running"
+        'model_loaded': model_manager.is_model_loaded(),
+        'alphabet_loaded': model_manager.alphabet_loaded,
+        'number_loaded': model_manager.number_loaded,
+        'message': "Unified sign recognition server is running"
     })
+
+def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expected_type=None, confidence_override=None):
+    """
+    Detect alphabet or number based on expected type or smart detection.
+    
+    Args:
+        expected_type: 'alphabet' or 'number' - if provided, uses that model directly
+                      None - uses smart detection to determine which model to use
+        confidence_override: Optional lower confidence threshold for practice mode
+    
+    Strategy when expected_type is None:
+    1. Try both models and get predictions
+    2. If alphabet predicts A-Z with high confidence (>0.75), use alphabet model
+    3. If alphabet predicts 0-9, compare with number model
+    4. Use confidence thresholds to avoid false positives
+    
+    Returns:
+        dict with keys: prediction, confidence, model_used, all_predictions
+    """
+    results = {
+        'prediction': None,
+        'confidence': 0.0,
+        'model_used': None,
+        'all_predictions': {}
+    }
+    
+    # If expected_type is provided, ONLY use that specific model (no fallback)
+    # This prevents letters from being misclassified as numbers or UNKNOWN_NUMBER
+    if expected_type == 'alphabet':
+        print(f"=====> Alphabet branch activated", flush=True)
+        # ONLY use alphabet model when expected_type is 'alphabet'
+        if model_manager.alphabet_loaded and model_manager.alphabet_recognizer:
+            try:
+                landmark_points = AlphabetRecognizer.landmarks_from_mediapipe(image_rgb, hand_landmarks)
+                preprocessed = AlphabetRecognizer.preprocess_landmarks(landmark_points)
+                alphabet_result = model_manager.alphabet_recognizer.predict(preprocessed)
+                
+                print(f"[Alphabet Only] Label: {alphabet_result.get('label')}, Confidence: {alphabet_result.get('confidence', 0):.3f}", flush=True)
+                
+                if alphabet_result['label']:
+                    results['all_predictions']['alphabet'] = {
+                        'label': alphabet_result['label'],
+                        'confidence': alphabet_result['confidence']
+                    }
+                    
+                    # Use confidence override for practice mode, otherwise use default 0.05 (very permissive for alphabet)
+                    alphabet_threshold = confidence_override if confidence_override is not None else 0.05
+                    print(f"[Alphabet Only] Using threshold: {alphabet_threshold}", flush=True)
+                    
+                    # Use alphabet prediction if it's actually a letter and confidence is reasonable
+                    if alphabet_result['label'].isalpha() and alphabet_result['confidence'] > alphabet_threshold:
+                        print(f"[Alphabet Only] Using: {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})", flush=True)
+                        results['prediction'] = alphabet_result['label']
+                        results['confidence'] = alphabet_result['confidence']
+                        results['model_used'] = 'alphabet'
+                    else:
+                        print(f"[Alphabet Only] Rejected - Not a letter or low confidence", flush=True)
+            except Exception as e:
+                print(f"[Alphabet Only] Error: {str(e)}", flush=True)
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"[Alphabet Only] Alphabet model not loaded", flush=True)
+        
+        return results
+    
+    if expected_type == 'number':
+        # ONLY use number model when expected_type is 'number'
+        if model_manager.number_loaded and model_manager.number_recognizer:
+            try:
+                image_shape = image_rgb.shape
+                preprocessed = NumberRecognizer.preprocess_landmarks(hand_landmarks, image_shape, handedness)
+                number_result = model_manager.number_recognizer.predict(preprocessed)
+                
+                print(f"[Number Only] Label: {number_result.get('label')}, Confidence: {number_result.get('confidence', 0):.3f}", flush=True)
+                
+                if number_result['label']:
+                    results['all_predictions']['number'] = {
+                        'label': number_result['label'],
+                        'confidence': number_result['confidence']
+                    }
+                    
+                    # Use confidence override for practice mode, otherwise use default 0.05 (very permissive for numbers)
+                    number_threshold = confidence_override if confidence_override is not None else 0.05
+                    print(f"[Number Only] Using threshold: {number_threshold}", flush=True)
+                    
+                    # Filter out UNKNOWN_NUMBER and use prediction if confidence is reasonable
+                    if number_result['label'] != 'UNKNOWN_NUMBER' and number_result['confidence'] > number_threshold:
+                        print(f"[Number Only] Using: {number_result['label']} (conf: {number_result['confidence']:.3f})", flush=True)
+                        results['prediction'] = number_result['label']
+                        results['confidence'] = number_result['confidence']
+                        results['model_used'] = 'number'
+                    elif number_result['label'] == 'UNKNOWN_NUMBER':
+                        print(f"[Number Only] Rejected - UNKNOWN_NUMBER", flush=True)
+                    else:
+                        print(f"[Number Only] Rejected - Low confidence {number_result['confidence']:.3f}", flush=True)
+            except Exception as e:
+                print(f"[Number Only] Error: {str(e)}", flush=True)
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"[Number Only] Number model not loaded", flush=True)
+        
+        return results
+    
+    # Smart detection (expected_type is None)
+    alphabet_result = None
+    number_result = None
+    
+    # Try alphabet model if available
+    if model_manager.alphabet_loaded and model_manager.alphabet_recognizer:
+        try:
+            # Convert MediaPipe landmarks to pixel coordinates
+            landmark_points = AlphabetRecognizer.landmarks_from_mediapipe(image_rgb, hand_landmarks)
+            # Preprocess for alphabet model
+            preprocessed = AlphabetRecognizer.preprocess_landmarks(landmark_points)
+            # Predict
+            alphabet_result = model_manager.alphabet_recognizer.predict(preprocessed)
+            
+            if alphabet_result['label']:
+                results['all_predictions']['alphabet'] = {
+                    'label': alphabet_result['label'],
+                    'confidence': alphabet_result['confidence']
+                }
+        except Exception as e:
+            print(f"Error in alphabet prediction: {str(e)}")
+    
+    # Try number model if available
+    if model_manager.number_loaded and model_manager.number_recognizer:
+        try:
+            # Preprocess for number model
+            image_shape = image_rgb.shape
+            preprocessed = NumberRecognizer.preprocess_landmarks(hand_landmarks, image_shape, handedness)
+            # Predict
+            number_result = model_manager.number_recognizer.predict(preprocessed)
+            
+            if number_result['label']:
+                results['all_predictions']['number'] = {
+                    'label': number_result['label'],
+                    'confidence': number_result['confidence']
+                }
+        except Exception as e:
+            print(f"Error in number prediction: {str(e)}")
+    
+    # Decision logic with improved detection
+    if alphabet_result and alphabet_result['label']:
+        alphabet_label = alphabet_result['label']
+        alphabet_conf = alphabet_result['confidence']
+        
+        # If alphabet predicts A-Z with high confidence, use it
+        if alphabet_label.isalpha() and alphabet_conf > 0.75:
+            results['prediction'] = alphabet_label
+            results['confidence'] = alphabet_conf
+            results['model_used'] = 'alphabet'
+            return results
+        
+        # If alphabet predicts 0-9, compare with number model
+        if alphabet_label.isdigit():
+            if number_result and number_result['label']:
+                number_conf = number_result['confidence']
+                number_label = number_result['label']
+                
+                # If number model has significantly higher confidence, use it
+                # This helps avoid alphabets being misclassified as numbers
+                if number_conf > alphabet_conf + 0.15 and number_conf > 0.6:
+                    results['prediction'] = number_label
+                    results['confidence'] = number_conf
+                    results['model_used'] = 'number'
+                else:
+                    # Prefer alphabet model for numbers (it's more general)
+                    # But only if confidence is reasonable
+                    if alphabet_conf > 0.6:
+                        results['prediction'] = alphabet_label
+                        results['confidence'] = alphabet_conf
+                        results['model_used'] = 'alphabet'
+                    elif number_conf > 0.6:
+                        results['prediction'] = number_label
+                        results['confidence'] = number_conf
+                        results['model_used'] = 'number'
+            else:
+                # No number model, use alphabet if confidence is good
+                if alphabet_conf > 0.6:
+                    results['prediction'] = alphabet_label
+                    results['confidence'] = alphabet_conf
+                    results['model_used'] = 'alphabet'
+            return results
+    
+    # If alphabet didn't give a good result, try number model
+    if number_result and number_result['label']:
+        number_conf = number_result['confidence']
+        number_label = number_result['label']
+        
+        # Use number model if confidence is reasonable
+        # But be more conservative to avoid false positives
+        if number_conf > 0.65:
+            results['prediction'] = number_label
+            results['confidence'] = number_conf
+            results['model_used'] = 'number'
+            return results
+    
+    # Fallback: use alphabet if available (even with lower confidence)
+    if alphabet_result and alphabet_result['label']:
+        alphabet_conf = alphabet_result['confidence']
+        # Only use if confidence is at least moderate
+        if alphabet_conf > 0.5:
+            results['prediction'] = alphabet_result['label']
+            results['confidence'] = alphabet_conf
+            results['model_used'] = 'alphabet'
+            return results
+    
+    # No valid prediction
+    return results
 
 @app.route('/predict', methods=['POST'])
 def predict():
     """Endpoint to predict signs from base64 image"""
     try:
         data = request.get_json()
-        print("RAW incoming data:", data)
-        image_data = data.get('image', '')
-        print("RAW image_data (first 100 chars):", image_data[:100], "length:", len(image_data))
         print("Received prediction request")
         
         if not data or 'image' not in data:
@@ -128,39 +349,41 @@ def predict():
         
         # Process the image
         try:
-            # Get the model from the manager
-            model = model_manager.get_model()
-            if model is None:
+            # Check if models are loaded
+            if not model_manager.is_model_loaded():
                 return jsonify({
                     'success': False,
-                    'error': 'Model not available'
+                    'error': 'Models not available'
                 }), 500
             
             # Convert base64 to image
             image_data = data.get('image', '')
             if not image_data or len(image_data) < 10:
                 return jsonify({'success': False, 'error': 'Image data is empty or invalid'}), 400
+            
             if ',' in image_data:
                 image_data = image_data.split(',', 1)[1]
+            
             try:
                 image_bytes = base64.b64decode(image_data)
                 image = Image.open(io.BytesIO(image_bytes))
                 image_np = np.array(image)
             except Exception as e:
                 print(f'Error decoding image: {e}')
-                import traceback; traceback.print_exc()
+                import traceback
+                traceback.print_exc()
                 return jsonify({'success': False, 'error': f'Image decode error: {str(e)}'}), 400
             
             # Convert to RGB (important for MediaPipe)
             image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
             
-            # Create a new MediaPipe Hands instance for each request to avoid timestamp issues
+            # Create a new MediaPipe Hands instance for each request
             with mp_hands.Hands(
-                static_image_mode=True,  # Always use static mode for single images
+                static_image_mode=True,
                 max_num_hands=1,
                 min_detection_confidence=0.5
             ) as hands:
-                # Process with MediaPipe - use a fresh copy of the image
+                # Process with MediaPipe
                 results = hands.process(image_rgb.copy())
             
             if results.multi_hand_landmarks:
@@ -181,28 +404,56 @@ def predict():
                 _, buffer = cv2.imencode('.jpg', cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
                 annotated_image_base64 = base64.b64encode(buffer).decode('utf-8')
                 
-                landmarks = []
-                for hand_landmarks in results.multi_hand_landmarks:
+                # Get handedness if available
+                handedness = None
+                if results.multi_handedness:
+                    handedness = results.multi_handedness[0].classification[0].label
+                
+                # Use the first detected hand
+                hand_landmarks = results.multi_hand_landmarks[0]
+                
+                # Get expected type from request (optional)
+                expected_type = data.get('expectedType', None)
+                if expected_type:
+                    expected_type = expected_type.lower()
+                    if expected_type not in ['alphabet', 'number']:
+                        expected_type = None
+                
+                # Get confidence override for practice mode (optional)
+                confidence_override = data.get('confidenceThreshold', None)
+                
+                print(f"=====> PREDICT: expected_type={expected_type}, handedness={handedness}, confidence_override={confidence_override}", flush=True)
+                
+                # Detect alphabet or number
+                detection_result = detect_alphabet_or_number(image_rgb, hand_landmarks, handedness, expected_type, confidence_override)
+                
+                if detection_result['prediction']:
+                    predicted_character = detection_result['prediction']
+                    confidence = detection_result['confidence']
+                    model_used = detection_result['model_used']
+                    
+                    print(f"Prediction successful: {predicted_character} (confidence: {confidence:.3f}, model: {model_used})")
+                    
+                    # Extract landmarks for response
+                    landmarks = []
                     for landmark in hand_landmarks.landmark:
                         landmarks.append([landmark.x, landmark.y, landmark.z])
-                
-                # Reshape for model input
-                input_data = np.array(landmarks).reshape(1, 21, 3)
-                
-                # Get prediction
-                prediction = model.predict(input_data)
-                predicted_class = np.argmax(prediction, axis=1)[0]
-                predicted_character = classes[predicted_class]
-                
-                print(f"Prediction successful: {predicted_character}")
-                
-                return jsonify({
-                    'success': True,
-                    'prediction': predicted_character,
-                    'confidence': float(np.max(prediction)),
-                    'annotated_image': f'data:image/jpeg;base64,{annotated_image_base64}',
-                    'landmarks': landmarks
-                })
+                    
+                    return jsonify({
+                        'success': True,
+                        'prediction': predicted_character,
+                        'confidence': confidence,
+                        'model_used': model_used,
+                        'annotated_image': f'data:image/jpeg;base64,{annotated_image_base64}',
+                        'landmarks': landmarks,
+                        'all_predictions': detection_result.get('all_predictions', {})
+                    })
+                else:
+                    print("No valid prediction from models")
+                    return jsonify({
+                        'success': False,
+                        'error': 'No valid prediction'
+                    })
             else:
                 print("No hand detected in image")
                 return jsonify({
@@ -228,7 +479,7 @@ def predict():
             'error': str(e)
         }), 500
 
-# Run the app on port 8000 (different from the main app)
+# Run the app on port 8000
 if __name__ == '__main__':
-    print(f"Flask app starting with model_loaded={model_manager.is_model_loaded()}")
+    print(f"Flask app starting with models_loaded={model_manager.is_model_loaded()}")
     app.run(host='0.0.0.0', port=8000, debug=False)

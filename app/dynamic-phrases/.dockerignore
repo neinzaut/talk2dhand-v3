@@ -27,5 +27,5 @@ node_modules/
 *.js
 
 # DO NOT ignore model files - they are required!
-# action.h5 must be included in the Docker image
+# module/islr/model.tflite must be included in the Docker image
 

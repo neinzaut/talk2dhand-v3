@@ -4,6 +4,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAppStore } from "@/store/app-store";
 import { HowToUseModal } from "@/components/how-to-use-modal";
+import { getExpectedType } from "@/lib/utils"
+
 
 type ScreenshotResult = {
   image: string;
@@ -152,12 +154,23 @@ function CameraToSignPage() {
     // Send image to backend for prediction - send only base64 part
     const base64Data = imageDataUrl.split(',')[1];
     
+    // Determine expected type from the current sign
+    const expectedSign = signs[currentRound];
+    const expectedType = getExpectedType(expectedSign);
+    
+    const requestBody: { image: string; expectedType?: string; confidenceThreshold?: number } = { image: base64Data };
+    if (expectedType) {
+      requestBody.expectedType = expectedType;
+      // Lower confidence threshold for practice mode to be more permissive
+      requestBody.confidenceThreshold = 0.05;
+    }
+    
     fetch("http://localhost:8000/predict", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ image: base64Data }),
+      body: JSON.stringify(requestBody),
     })
       .then((response) => response.json())
       .then((data) => {

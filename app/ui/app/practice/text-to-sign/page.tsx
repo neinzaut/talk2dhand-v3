@@ -5,7 +5,7 @@ import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { cn, getExpectedType } from "@/lib/utils"
 import { useAppStore } from "@/store/app-store"
 import { aslData } from "@/store/data/asl-data"
 import { fslData } from "@/store/data/fsl-data"
@@ -157,7 +157,17 @@ export default function TextToSignPage() {
     }
     try {
       const apiUrl = 'http://localhost:8000/predict'
-      const requestBody = { image: imageData.split(',')[1] }
+      
+      // Determine expected type from the current letter
+      const expectedLetter = letters[currentLetterIndex];
+      const expectedType = getExpectedType(expectedLetter);
+      
+      const requestBody: { image: string; expectedType?: string } = { 
+        image: imageData.split(',')[1] 
+      };
+      if (expectedType) {
+        requestBody.expectedType = expectedType;
+      }
 
       const response = await fetch(apiUrl, {
         method: 'POST',

@@ -8,7 +8,7 @@ This directory contains all services for the Talk2DHand sign language learning p
 |---------|------|------------|---------|
 | **UI** | 3000 | Next.js + React | Web application frontend |
 | **Static Signs** | 8000 | Flask + TensorFlow 2.10 | Static character recognition (A-Z, 0-9) |
-| **Dynamic Phrases** | 5008 | Flask + TensorFlow 2.15 | Dynamic phrase recognition (hello, thanks, etc.) |
+| **Dynamic Phrases** | 5008 | Flask + TensorFlow Lite | Dynamic phrase recognition (hello, thanks – ISLR model) |
 
 ## Quick Start
 

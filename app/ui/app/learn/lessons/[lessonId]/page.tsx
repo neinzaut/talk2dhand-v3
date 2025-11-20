@@ -8,7 +8,7 @@ import { useAppStore } from "@/store/app-store"
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { HowToUseModal } from "@/components/how-to-use-modal"
 import { Progress } from "@/components/shared/progress"
-import { cn } from "@/lib/utils"
+import { cn, getExpectedType, getExpectedTypeFromLesson } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import QuizComponent from "@/components/learn/QuizComponent"
@@ -37,6 +37,7 @@ export default function LessonPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const [showSignGifs, setShowSignGifs] = useState(false);
 
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -221,13 +222,30 @@ export default function LessonPage() {
       const isDynamicPhrases = lesson.id === "lesson-3";
       const apiUrl = isDynamicPhrases ? 'http://localhost:5008/predict' : 'http://localhost:8000/predict';
       
+      // Determine expected type for static signs
+      let expectedType: "alphabet" | "number" | null = null;
+      if (!isDynamicPhrases && selectedSignId) {
+        // First try to get from the sign label
+        const sign = lesson.signs.find(s => s.id === selectedSignId);
+        if (sign) {
+          expectedType = getExpectedType(sign.label);
+        }
+        // Fallback to lesson title if sign type couldn't be determined
+        if (!expectedType) {
+          expectedType = getExpectedTypeFromLesson(lesson.title);
+        }
+      }
+      
       const requestBody = isDynamicPhrases 
         ? { 
             image: imageData, 
             clientId: clientId,
             language: currentLanguage === "asl" ? "english" : "filipino"
           }
-        : { image: imageData.split(',')[1] };
+        : { 
+            image: imageData.split(',')[1],
+            ...(expectedType && { expectedType })
+          };
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -279,7 +297,7 @@ export default function LessonPage() {
   // Start/stop detection based on selected sign
   useEffect(() => {
     if (selectedSignId && isCameraReady) {
-      // Use shorter interval for dynamic phrases to capture sequences better
+      // Faster polling for dynamic phrases with reduced backend buffer
       const interval = lesson.id === "lesson-3" ? 500 : 1000;
       detectionIntervalRef.current = setInterval(() => {
         detectSign()
@@ -342,6 +360,7 @@ export default function LessonPage() {
       setTimer(0)
       setAnnotatedImage("")
       setBackendError("")
+      setShowSignGifs(false)
     } else {
       router.back()
     }
@@ -358,6 +377,7 @@ export default function LessonPage() {
       setTimer(0)
       setAnnotatedImage("")
       setBackendError("")
+      setShowSignGifs(false)
     }
   }
 
@@ -425,6 +445,13 @@ export default function LessonPage() {
                         <blockquote className="border-l-4 border-orange-500 bg-orange-50/50 dark:bg-orange-900/10 py-3 px-4 my-6 rounded-r-lg">
                           {children}
                         </blockquote>
+                      ),
+                      img: ({ src, alt }) => (
+                        <img
+                          src={src?.startsWith('/') ? src : `/${src}`}
+                          alt={alt || 'Sign language demonstration'}
+                          className="h-32 w-auto rounded-lg shadow-md my-4 mx-auto object-contain"
+                        />
                       ),
                     }}
                   >
@@ -573,6 +600,21 @@ export default function LessonPage() {
           </div>
         </div>
 
+        {/* Toggle for showing GIFs as hints */}
+        {lesson.id === "lesson-3" && (
+          <div className="flex justify-center mb-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <input
+                type="checkbox"
+                checked={showSignGifs}
+                onChange={() => setShowSignGifs((v) => !v)}
+                className="form-checkbox h-5 w-5 text-blue-600"
+              />
+              <span className="text-base font-medium text-gray-700 dark:text-gray-300">Show GIF hints</span>
+            </label>
+          </div>
+        )}
+
         <div className="grid grid-cols-7 gap-4">
           {lesson.signs.map((sign) => (
             <button
@@ -580,15 +622,21 @@ export default function LessonPage() {
               onClick={() => handleSignSelect(sign.id)}
               disabled={signStatuses[sign.id] === "correct"}
               className={cn(
-                "aspect-square rounded-lg border-4 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed",
+                "aspect-square rounded-lg border-4 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
                 getSignBorderColor(sign.id),
               )}
             >
-              <img
-                src={sign.imageUrl || "/placeholder.svg"}
-                alt={`Sign for ${sign.label}`}
-                className="w-full h-full object-cover rounded"
-              />
+              {lesson.id === "lesson-3" && !showSignGifs ? (
+                <span className="text-lg font-bold text-gray-800 dark:text-gray-200 text-center px-2">
+                  {sign.label}
+                </span>
+              ) : (
+                <img
+                  src={sign.imageUrl || "/placeholder.svg"}
+                  alt={`Sign for ${sign.label}`}
+                  className="w-full h-full object-cover rounded"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -672,6 +720,7 @@ export default function LessonPage() {
                 setTimer(0)
                 setAnnotatedImage("")
                 setBackendError("")
+                setShowSignGifs(false)
               }}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition-all min-w-[200px] justify-start hover:shadow-md",
