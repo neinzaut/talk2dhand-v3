@@ -189,7 +189,7 @@ export function useWhisperRecognition({
       console.log("🎵 Sample rate:", audioBuffer.sampleRate)
       
       // Trim silence from beginning and end
-      const threshold = 0.01
+      const threshold = 0.003
       let start = 0
       let end = audioData.length - 1
       
@@ -203,9 +203,9 @@ export function useWhisperRecognition({
         end--
       }
       
-      // Add small padding
-      start = Math.max(0, start - 800) // 0.05s padding
-      end = Math.min(audioData.length - 1, end + 800)
+      // Add small padding (approx. 0.1s) to avoid trimming spoken letters
+      start = Math.max(0, start - 1600)
+      end = Math.min(audioData.length - 1, end + 1600)
       
       // Extract trimmed audio
       if (start < end) {

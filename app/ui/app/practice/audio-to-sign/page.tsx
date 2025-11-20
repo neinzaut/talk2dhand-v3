@@ -27,6 +27,7 @@ export default function AudioToSignPage() {
   const [detectedText, setDetectedText] = useState<string>("")
   const [textInput, setTextInput] = useState<string>("")
   const [inputMode, setInputMode] = useState<"mic" | "text">("mic")
+  const [lastCheckedSignId, setLastCheckedSignId] = useState<string | null>(null)
   
   // Auto-select first sign on mount to avoid null ID
   useEffect(() => {
@@ -55,6 +56,8 @@ export default function AudioToSignPage() {
     spokenText,
     feedback,
     isListening,
+    isRecording,
+    isProcessing,
     micAllowed,
     isCorrect,
     isModelLoading,
@@ -65,15 +68,15 @@ export default function AudioToSignPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [shuffledSigns, setShuffledSigns] = useState(signs)
 
-  // Update sign status when answer is checked
+  // Update sign status when answer is checked (only for the sign that was actually checked)
   useEffect(() => {
-    if (selectedSignId && isCorrect !== null) {
+    if (selectedSignId && isCorrect !== null && lastCheckedSignId === selectedSignId) {
       setSignStatuses(prev => ({ 
         ...prev, 
         [selectedSignId]: isCorrect ? "correct" : "incorrect" 
       }))
     }
-  }, [isCorrect, selectedSignId])
+  }, [isCorrect, selectedSignId, lastCheckedSignId])
 
   // Microphone speech recognition logic
   const startMic = () => {
@@ -86,11 +89,12 @@ export default function AudioToSignPage() {
       return
     }
     // Show instruction to user
-    toast.info(`🎤 Say: "Letter ${currentSignLabel}"`, { autoClose: 2000 })
+    toast.info(`🎤 Say: "${currentSignLabel}"`, { autoClose: 2000 })
     
     // reset previous feedback and detected text
     setDetectedText("")
     setTextInput("")
+    setLastCheckedSignId(selectedSignId)
     resetFeedback()
     startListening()
   }
@@ -127,7 +131,8 @@ export default function AudioToSignPage() {
     
     console.log("Is correct?", correct)
     
-    // Update sign status
+    // Track which sign was checked and update sign status
+    setLastCheckedSignId(selectedSignId)
     setSignStatuses(prev => ({ 
       ...prev, 
       [selectedSignId]: correct ? "correct" : "incorrect" 
@@ -137,7 +142,7 @@ export default function AudioToSignPage() {
     if (correct) {
       toast.success("✅ Correct!")
     } else {
-      toast.error(`❌ Incorrect. Expected: "${currentSignLabel}" or "Letter ${currentSignLabel}"`)
+      toast.error(`❌ Incorrect. Expected: "${currentSignLabel}"`)
     }
     
     // Clear input
@@ -163,6 +168,7 @@ export default function AudioToSignPage() {
     setDetectedText("")
     setTextInput("")
     setSignStatuses({})
+    setLastCheckedSignId(null)
   }
 
   // Keep shuffledSigns in sync with signs if language changes
@@ -174,20 +180,26 @@ export default function AudioToSignPage() {
       setSelectedSignId(null)
       setDetectedText("")
       setTextInput("")
-      setSignStatuses(prev => ({ ...prev, [signId]: "idle" }))
+      setLastCheckedSignId(null)
+      resetFeedback()
     } else {
       setSelectedSignId(signId)
       setDetectedText("")
       setTextInput("")
-      setSignStatuses(prev => ({ ...prev, [signId]: "idle" }))
+      setLastCheckedSignId(null)
+      resetFeedback()
+      // Don't set status to idle - preserve correct/incorrect status
     }
   }
 
   const getSignBorderColor = (signId: string) => {
+    // Selected sign always gets orange border
+    if (selectedSignId === signId) return "border-orange-500"
+    
+    // Otherwise show correct/incorrect status
     const status = signStatuses[signId]
     if (status === "correct") return "border-green-500"
     if (status === "incorrect") return "border-red-500"
-    if (selectedSignId === signId) return "border-orange-500"
     return "border-gray-300"
   }
 
@@ -248,21 +260,21 @@ export default function AudioToSignPage() {
                   className={`rounded-full p-6 shadow-md transition-all ${
                     isModelLoading
                       ? "bg-gray-300 cursor-not-allowed"
-                      : isListening 
+                      : isRecording 
                       ? "bg-red-500 animate-pulse" 
                       : selectedSignId 
                       ? "bg-blue-500 hover:bg-blue-600 cursor-pointer" 
                       : "bg-gray-300 cursor-not-allowed"
                   }`}
                   onClick={startMic}
-                  disabled={!selectedSignId || isModelLoading || isListening}
+                  disabled={!selectedSignId || isModelLoading || isRecording || isProcessing}
                   aria-label="Start microphone"
                 >
-                  <Mic className={`h-12 w-12 ${isListening ? "text-white" : selectedSignId && !isModelLoading ? "text-white" : "text-gray-500"}`} />
+                  <Mic className={`h-12 w-12 ${isRecording ? "text-white" : selectedSignId && !isModelLoading ? "text-white" : "text-gray-500"}`} />
                 </button>
                 
                 {/* Stop button - only show when recording */}
-                {isListening && (
+                {isRecording && (
                   <button
                     className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition shadow-md"
                     onClick={stopListening}
@@ -274,11 +286,21 @@ export default function AudioToSignPage() {
               </div>
               
               <h2 className="text-xl font-semibold text-gray-700 mt-4">
-                {isListening ? "🎙️ Recording... Click STOP when done!" : `Detected: ${spokenText || detectedText || "..."}`}
+                {isRecording
+                  ? "🎙️ Recording... Click STOP when done!"
+                  : isProcessing
+                  ? "⏳ Processing your answer..."
+                  : `Detected: ${spokenText || detectedText || "..."}`}
               </h2>
+              {isProcessing && (
+                <div className="mt-2 flex items-center gap-2 text-blue-600">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                  <p className="font-semibold text-sm">Hang tight—analyzing what you just said.</p>
+                </div>
+              )}
               <p className="text-gray-500 mt-2 text-center max-w-md">
-                <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>"Letter"</strong> followed by the letter name<br/>
-                (e.g., <strong>"Letter A"</strong>, <strong>"Letter B"</strong>, <strong>"Letter C"</strong>). 
+                <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>only the letter name</strong><br/>
+                (e.g., <strong>"B"</strong>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong>). 
                 Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds. <span className="text-blue-600">Works offline!</span>
               </p>
             </>
@@ -349,6 +371,7 @@ export default function AudioToSignPage() {
               setSelectedSignId(null)
               setDetectedText("")
               setTextInput("")
+              setLastCheckedSignId(null)
               resetFeedback()
             }}
             aria-label="Reset progress"
@@ -401,7 +424,8 @@ export default function AudioToSignPage() {
           <ul className="list-disc ml-6 space-y-2">
             <li>Select a sign from the grid below.</li>
             <li>Click the 🎤 microphone button to start recording.</li>
-            <li><strong>Say JUST the letter name</strong> clearly (e.g., "B", "C", "A" - no prefix needed!).</li>
+            <li><strong>Say just the letter name</strong> clearly (e.g., "B", "Ch", "Ng", "Ñ").</li>
+            <li>For FSL, special digraphs like <strong>Ch</strong>, <strong>Ng</strong>, and <strong>Ñ</strong> are accepted just like single letters.</li>
             <li>Click the <strong>"⏹️ Stop"</strong> button when done, or wait 5 seconds for auto-stop.</li>
             <li>The AI will transcribe and check your answer automatically.</li>
             <li><strong>✨ NEW:</strong> Uses Whisper AI - <strong>works completely offline!</strong></li>
