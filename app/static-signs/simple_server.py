@@ -122,13 +122,14 @@ def health_check():
         'message': "Unified sign recognition server is running"
     })
 
-def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expected_type=None):
+def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expected_type=None, confidence_override=None):
     """
     Detect alphabet or number based on expected type or smart detection.
     
     Args:
         expected_type: 'alphabet' or 'number' - if provided, uses that model directly
                       None - uses smart detection to determine which model to use
+        confidence_override: Optional lower confidence threshold for practice mode
     
     Strategy when expected_type is None:
     1. Try both models and get predictions
@@ -149,6 +150,7 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
     # If expected_type is provided, ONLY use that specific model (no fallback)
     # This prevents letters from being misclassified as numbers or UNKNOWN_NUMBER
     if expected_type == 'alphabet':
+        print(f"=====> Alphabet branch activated", flush=True)
         # ONLY use alphabet model when expected_type is 'alphabet'
         if model_manager.alphabet_loaded and model_manager.alphabet_recognizer:
             try:
@@ -156,7 +158,7 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
                 preprocessed = AlphabetRecognizer.preprocess_landmarks(landmark_points)
                 alphabet_result = model_manager.alphabet_recognizer.predict(preprocessed)
                 
-                print(f"[Alphabet Only] Label: {alphabet_result.get('label')}, Confidence: {alphabet_result.get('confidence', 0):.3f}")
+                print(f"[Alphabet Only] Label: {alphabet_result.get('label')}, Confidence: {alphabet_result.get('confidence', 0):.3f}", flush=True)
                 
                 if alphabet_result['label']:
                     results['all_predictions']['alphabet'] = {
@@ -164,20 +166,24 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
                         'confidence': alphabet_result['confidence']
                     }
                     
+                    # Use confidence override for practice mode, otherwise use default 0.05 (very permissive for alphabet)
+                    alphabet_threshold = confidence_override if confidence_override is not None else 0.05
+                    print(f"[Alphabet Only] Using threshold: {alphabet_threshold}", flush=True)
+                    
                     # Use alphabet prediction if it's actually a letter and confidence is reasonable
-                    if alphabet_result['label'].isalpha() and alphabet_result['confidence'] > 0.25:
-                        print(f"[Alphabet Only] Using: {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})")
+                    if alphabet_result['label'].isalpha() and alphabet_result['confidence'] > alphabet_threshold:
+                        print(f"[Alphabet Only] Using: {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})", flush=True)
                         results['prediction'] = alphabet_result['label']
                         results['confidence'] = alphabet_result['confidence']
                         results['model_used'] = 'alphabet'
                     else:
-                        print(f"[Alphabet Only] Rejected - Not a letter or low confidence")
+                        print(f"[Alphabet Only] Rejected - Not a letter or low confidence", flush=True)
             except Exception as e:
-                print(f"[Alphabet Only] Error: {str(e)}")
+                print(f"[Alphabet Only] Error: {str(e)}", flush=True)
                 import traceback
                 traceback.print_exc()
         else:
-            print(f"[Alphabet Only] Alphabet model not loaded")
+            print(f"[Alphabet Only] Alphabet model not loaded", flush=True)
         
         return results
     
@@ -189,7 +195,7 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
                 preprocessed = NumberRecognizer.preprocess_landmarks(hand_landmarks, image_shape, handedness)
                 number_result = model_manager.number_recognizer.predict(preprocessed)
                 
-                print(f"[Number Only] Label: {number_result.get('label')}, Confidence: {number_result.get('confidence', 0):.3f}")
+                print(f"[Number Only] Label: {number_result.get('label')}, Confidence: {number_result.get('confidence', 0):.3f}", flush=True)
                 
                 if number_result['label']:
                     results['all_predictions']['number'] = {
@@ -197,22 +203,26 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
                         'confidence': number_result['confidence']
                     }
                     
+                    # Use confidence override for practice mode, otherwise use default 0.05 (very permissive for numbers)
+                    number_threshold = confidence_override if confidence_override is not None else 0.05
+                    print(f"[Number Only] Using threshold: {number_threshold}", flush=True)
+                    
                     # Filter out UNKNOWN_NUMBER and use prediction if confidence is reasonable
-                    if number_result['label'] != 'UNKNOWN_NUMBER' and number_result['confidence'] > 0.3:
-                        print(f"[Number Only] Using: {number_result['label']} (conf: {number_result['confidence']:.3f})")
+                    if number_result['label'] != 'UNKNOWN_NUMBER' and number_result['confidence'] > number_threshold:
+                        print(f"[Number Only] Using: {number_result['label']} (conf: {number_result['confidence']:.3f})", flush=True)
                         results['prediction'] = number_result['label']
                         results['confidence'] = number_result['confidence']
                         results['model_used'] = 'number'
                     elif number_result['label'] == 'UNKNOWN_NUMBER':
-                        print(f"[Number Only] Rejected - UNKNOWN_NUMBER")
+                        print(f"[Number Only] Rejected - UNKNOWN_NUMBER", flush=True)
                     else:
-                        print(f"[Number Only] Rejected - Low confidence {number_result['confidence']:.3f}")
+                        print(f"[Number Only] Rejected - Low confidence {number_result['confidence']:.3f}", flush=True)
             except Exception as e:
-                print(f"[Number Only] Error: {str(e)}")
+                print(f"[Number Only] Error: {str(e)}", flush=True)
                 import traceback
                 traceback.print_exc()
         else:
-            print(f"[Number Only] Number model not loaded")
+            print(f"[Number Only] Number model not loaded", flush=True)
         
         return results
     
@@ -409,8 +419,13 @@ def predict():
                     if expected_type not in ['alphabet', 'number']:
                         expected_type = None
                 
+                # Get confidence override for practice mode (optional)
+                confidence_override = data.get('confidenceThreshold', None)
+                
+                print(f"=====> PREDICT: expected_type={expected_type}, handedness={handedness}, confidence_override={confidence_override}", flush=True)
+                
                 # Detect alphabet or number
-                detection_result = detect_alphabet_or_number(image_rgb, hand_landmarks, handedness, expected_type)
+                detection_result = detect_alphabet_or_number(image_rgb, hand_landmarks, handedness, expected_type, confidence_override)
                 
                 if detection_result['prediction']:
                     predicted_character = detection_result['prediction']

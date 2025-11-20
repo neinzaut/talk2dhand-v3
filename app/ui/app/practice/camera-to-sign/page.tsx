@@ -158,9 +158,11 @@ function CameraToSignPage() {
     const expectedSign = signs[currentRound];
     const expectedType = getExpectedType(expectedSign);
     
-    const requestBody: { image: string; expectedType?: string } = { image: base64Data };
+    const requestBody: { image: string; expectedType?: string; confidenceThreshold?: number } = { image: base64Data };
     if (expectedType) {
       requestBody.expectedType = expectedType;
+      // Lower confidence threshold for practice mode to be more permissive
+      requestBody.confidenceThreshold = 0.05;
     }
     
     fetch("http://localhost:8000/predict", {
