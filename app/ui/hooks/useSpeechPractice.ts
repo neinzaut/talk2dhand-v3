@@ -33,13 +33,13 @@ const BASE_VARIANTS: Record<string, string[]> = {
   w: ["w", "double you", "doubleyou", "doubleu", "dubyu"],
   x: ["x", "ex"],
   y: ["y", "why", "wai"],
-  z: ["z", "zee", "zed", "zi"],
+  z: ["z", "zee", "zed", "zi", "zay"],
 }
 
 const FSL_EXTRA_VARIANTS: Record<string, string[]> = {
-  ch: ["ch", "tse", "che", "tsi", "ci", "cha"],
-  ng: ["ng", "eng", "ing", "nga"],
-  ñ: ["ñ", "enye", "enyeh", "n-ye", "enyee", "enyay"],
+  ch: ["ch", "tse", "che", "tsi", "ci", "cha", "chu", "chuh", "c-h", "ciao"],
+  ng: ["ng", "eng", "ing", "nga", "nang", "n-g", "nguh"],
+  ñ: ["ñ", "enye", "enyeh", "n-ye", "enyee", "enyay", "and yeah"],
 }
 
 const buildLetterLookup = (language: "ASL" | "FSL") => {

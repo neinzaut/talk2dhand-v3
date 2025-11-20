@@ -35,8 +35,9 @@ export function useWhisperRecognition({
 
       // Use Whisper base model for better short-phrase detection
       // whisper-tiny.en is too aggressive at filtering, base.en handles short phrases better
-      // Options: "Xenova/whisper-tiny.en", "Xenova/whisper-base.en", "Xenova/whisper-small.en"
-      const modelName = language === "en" ? "Xenova/whisper-base.en" : "Xenova/whisper-base"
+      // For FSL, users still speak letter names in English (e.g., "A", "B", "Ch", "Ng")
+      // so we use the English model for both ASL and FSL
+      const modelName = "Xenova/whisper-base.en"
       
       console.log("🤖 Loading model:", modelName)
       

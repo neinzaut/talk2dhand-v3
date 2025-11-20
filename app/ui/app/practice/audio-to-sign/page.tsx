@@ -20,7 +20,11 @@ export default function AudioToSignPage() {
   // Get all signs from first module, first lesson (alphabets)
   const modules = getCurrentModules()
   const lesson = modules[0]?.lessons[0]
-  const signs = lesson?.signs || []
+  // Filter out FSL-specific letters (ch, ng, ñ) when in ASL mode
+  const allSigns = lesson?.signs || []
+  const signs = currentLanguage === "asl" 
+    ? allSigns.filter(sign => !['ch', 'ng', 'enye'].includes(sign.id))
+    : allSigns
 
   const [selectedSignId, setSelectedSignId] = useState<string | null>(null)
   const [signStatuses, setSignStatuses] = useState<Record<string, SignStatus>>({})
@@ -300,7 +304,7 @@ export default function AudioToSignPage() {
               )}
               <p className="text-gray-500 mt-2 text-center max-w-md">
                 <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>only the letter name</strong><br/>
-                (e.g., <strong>"B"</strong>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong>). 
+                (e.g., <strong>"A"</strong>, <strong>"B"</strong>{currentLanguage === "fsl" && <>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong></>}). 
                 Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds. <span className="text-blue-600">Works offline!</span>
               </p>
             </>
@@ -424,8 +428,10 @@ export default function AudioToSignPage() {
           <ul className="list-disc ml-6 space-y-2">
             <li>Select a sign from the grid below.</li>
             <li>Click the 🎤 microphone button to start recording.</li>
-            <li><strong>Say just the letter name</strong> clearly (e.g., "B", "Ch", "Ng", "Ñ").</li>
-            <li>For FSL, special digraphs like <strong>Ch</strong>, <strong>Ng</strong>, and <strong>Ñ</strong> are accepted just like single letters.</li>
+            <li><strong>Say just the letter name</strong> clearly (e.g., "A", "B"{currentLanguage === "fsl" && <>, "Ch", "Ng", "Ñ"</>}).</li>
+            {currentLanguage === "fsl" && (
+              <li>For FSL, special digraphs like <strong>Ch</strong>, <strong>Ng</strong>, and <strong>Ñ</strong> are accepted just like single letters.</li>
+            )}
             <li>Click the <strong>"⏹️ Stop"</strong> button when done, or wait 5 seconds for auto-stop.</li>
             <li>The AI will transcribe and check your answer automatically.</li>
             <li><strong>✨ NEW:</strong> Uses Whisper AI - <strong>works completely offline!</strong></li>
