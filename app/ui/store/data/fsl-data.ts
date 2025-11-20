@@ -152,8 +152,28 @@ Across the Philippines, you'll see slight **regional variations** — especially
           completed: false,
           progress: 0,
           signs: [
+            { id: "bad", label: "Masama", imageUrl: "/gifs/bad.gif" },
+            { id: "drink", label: "Inumin", imageUrl: "/gifs/drink-c.gif" },
+            { id: "fine", label: "Ayos", imageUrl: "/gifs/fine.gif" },
+            { id: "food", label: "Pagkain", imageUrl: "/gifs/food.gif" },
+            { id: "go", label: "Pumunta", imageUrl: "/gifs/go.gif" },
+            { id: "happy", label: "Masaya", imageUrl: "/gifs/happy.gif" },
+            { id: "have", label: "Mayroon", imageUrl: "/gifs/have.gif" },
+            { id: "he-she-it", label: "Siya", imageUrl: "/gifs/he-she-it.gif" },
             { id: "hello", label: "Kumusta", imageUrl: "/gifs/hello.gif" },
-            { id: "thanks", label: "Salamat", imageUrl: "/gifs/thankyou.gif" },
+            { id: "like", label: "Gusto", imageUrl: "/gifs/like.gif" },
+            { id: "my-mine", label: "Akin", imageUrl: "/gifs/my-mine.gif" },
+            { id: "not", label: "Hindi", imageUrl: "/gifs/not.gif" },
+            { id: "now", label: "Ngayon", imageUrl: "/gifs/now.gif" },
+            { id: "sad", label: "Malungkot", imageUrl: "/gifs/sad.gif" },
+            { id: "see", label: "Makita", imageUrl: "/gifs/see.gif" },
+            { id: "thank-you", label: "Salamat Po", imageUrl: "/gifs/thank-you.gif" },
+            { id: "thankyou", label: "Salamat", imageUrl: "/gifs/thankyou.gif" },
+            { id: "today", label: "Ngayong Araw", imageUrl: "/gifs/today.gif" },
+            { id: "we-us", label: "Tayo/Kami", imageUrl: "/gifs/we-us.gif" },
+            { id: "where", label: "Saan", imageUrl: "/gifs/where.gif" },
+            { id: "will", label: "Gagawin", imageUrl: "/gifs/will.gif" },
+            { id: "you", label: "Ikaw", imageUrl: "/gifs/you.gif" },
           ],
           subLessons: [
             {
@@ -199,10 +219,19 @@ Because Filipino culture values friendliness and emotion, **facial grammar** is 
 
 Narito ang mga animated na halimbawa ng mga pariralang iyong masasanay:
 
-| Tanda | Animasyon |
-| :---- | :----: |
-| **Kumusta** | ![Hello](gifs/hello.gif) |
-| **Salamat** | ![Thank You](gifs/thankyou.gif) |
+| Tanda | Animasyon | Tanda | Animasyon |
+| :---- | :----: | :---- | :----: |
+| **Masama** | ![Bad](/gifs/bad.gif) | **Inumin** | ![Drink](/gifs/drink-c.gif) |
+| **Ayos** | ![Fine](/gifs/fine.gif) | **Pagkain** | ![Food](/gifs/food.gif) |
+| **Pumunta** | ![Go](/gifs/go.gif) | **Masaya** | ![Happy](/gifs/happy.gif) |
+| **Mayroon** | ![Have](/gifs/have.gif) | **Siya** | ![He/She/It](/gifs/he-she-it.gif) |
+| **Kumusta** | ![Hello](/gifs/hello.gif) | **Gusto** | ![Like](/gifs/like.gif) |
+| **Akin** | ![My/Mine](/gifs/my-mine.gif) | **Hindi** | ![Not](/gifs/not.gif) |
+| **Ngayon** | ![Now](/gifs/now.gif) | **Malungkot** | ![Sad](/gifs/sad.gif) |
+| **Makita** | ![See](/gifs/see.gif) | **Salamat Po** | ![Thank You](/gifs/thank-you.gif) |
+| **Salamat** | ![Thanks](/gifs/thankyou.gif) | **Ngayong Araw** | ![Today](/gifs/today.gif) |
+| **Tayo/Kami** | ![We/Us](/gifs/we-us.gif) | **Saan** | ![Where](/gifs/where.gif) |
+| **Gagawin** | ![Will](/gifs/will.gif) | **Ikaw** | ![You](/gifs/you.gif) |
 
 Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang naaangkop na mga pagpapahayag sa mukha. Magsanay ng mga tandang ito nang dahan-dahan sa una, na nakatuon sa wastong anyo at pagpapahayag.
 

@@ -152,8 +152,28 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           completed: false,
           progress: 0,
           signs: [
+            { id: "bad", label: "Bad", imageUrl: "/gifs/bad.gif" },
+            { id: "drink", label: "Drink", imageUrl: "/gifs/drink-c.gif" },
+            { id: "fine", label: "Fine", imageUrl: "/gifs/fine.gif" },
+            { id: "food", label: "Food", imageUrl: "/gifs/food.gif" },
+            { id: "go", label: "Go", imageUrl: "/gifs/go.gif" },
+            { id: "happy", label: "Happy", imageUrl: "/gifs/happy.gif" },
+            { id: "have", label: "Have", imageUrl: "/gifs/have.gif" },
+            { id: "he-she-it", label: "He/She/It", imageUrl: "/gifs/he-she-it.gif" },
             { id: "hello", label: "Hello", imageUrl: "/gifs/hello.gif" },
-            { id: "thanks", label: "Thanks", imageUrl: "/gifs/thankyou.gif" },
+            { id: "like", label: "Like", imageUrl: "/gifs/like.gif" },
+            { id: "my-mine", label: "My/Mine", imageUrl: "/gifs/my-mine.gif" },
+            { id: "not", label: "Not", imageUrl: "/gifs/not.gif" },
+            { id: "now", label: "Now", imageUrl: "/gifs/now.gif" },
+            { id: "sad", label: "Sad", imageUrl: "/gifs/sad.gif" },
+            { id: "see", label: "See", imageUrl: "/gifs/see.gif" },
+            { id: "thank-you", label: "Thank You", imageUrl: "/gifs/thank-you.gif" },
+            { id: "thankyou", label: "Thanks", imageUrl: "/gifs/thankyou.gif" },
+            { id: "today", label: "Today", imageUrl: "/gifs/today.gif" },
+            { id: "we-us", label: "We/Us", imageUrl: "/gifs/we-us.gif" },
+            { id: "where", label: "Where", imageUrl: "/gifs/where.gif" },
+            { id: "will", label: "Will", imageUrl: "/gifs/will.gif" },
+            { id: "you", label: "You", imageUrl: "/gifs/you.gif" },
           ],
           subLessons: [
             {
@@ -188,10 +208,19 @@ Familiar phrases like **HELLO** and **THANK YOU** are widely known, but communit
 
 Below are animated examples of the phrases you'll practice:
 
-| Sign | Animation |
-| :---- | :----: |
-| **Hello** | ![Hello](gifs/hello.gif) |
-| **Thank You** | ![Thank You](gifs/thankyou.gif) |
+| Sign | Animation | Sign | Animation |
+| :---- | :----: | :---- | :----: |
+| **Bad** | ![Bad](/gifs/bad.gif) | **Drink** | ![Drink](/gifs/drink-c.gif) |
+| **Fine** | ![Fine](/gifs/fine.gif) | **Food** | ![Food](/gifs/food.gif) |
+| **Go** | ![Go](/gifs/go.gif) | **Happy** | ![Happy](/gifs/happy.gif) |
+| **Have** | ![Have](/gifs/have.gif) | **He/She/It** | ![He/She/It](/gifs/he-she-it.gif) |
+| **Hello** | ![Hello](/gifs/hello.gif) | **Like** | ![Like](/gifs/like.gif) |
+| **My/Mine** | ![My/Mine](/gifs/my-mine.gif) | **Not** | ![Not](/gifs/not.gif) |
+| **Now** | ![Now](/gifs/now.gif) | **Sad** | ![Sad](/gifs/sad.gif) |
+| **See** | ![See](/gifs/see.gif) | **Thank You** | ![Thank You](/gifs/thank-you.gif) |
+| **Thanks** | ![Thanks](/gifs/thankyou.gif) | **Today** | ![Today](/gifs/today.gif) |
+| **We/Us** | ![We/Us](/gifs/we-us.gif) | **Where** | ![Where](/gifs/where.gif) |
+| **Will** | ![Will](/gifs/will.gif) | **You** | ![You](/gifs/you.gif) |
 
 Notice how the hand movements flow naturally and include appropriate facial expressions. Practice these signs slowly at first, focusing on proper form and expression.
 

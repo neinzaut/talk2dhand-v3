@@ -37,6 +37,7 @@ export default function LessonPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("");
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const [showSignGifs, setShowSignGifs] = useState(false);
 
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -359,6 +360,7 @@ export default function LessonPage() {
       setTimer(0)
       setAnnotatedImage("")
       setBackendError("")
+      setShowSignGifs(false)
     } else {
       router.back()
     }
@@ -375,6 +377,7 @@ export default function LessonPage() {
       setTimer(0)
       setAnnotatedImage("")
       setBackendError("")
+      setShowSignGifs(false)
     }
   }
 
@@ -447,7 +450,7 @@ export default function LessonPage() {
                         <img
                           src={src?.startsWith('/') ? src : `/${src}`}
                           alt={alt || 'Sign language demonstration'}
-                          className="w-64 h-auto rounded-lg shadow-md my-4 mx-auto"
+                          className="h-32 w-auto rounded-lg shadow-md my-4 mx-auto object-contain"
                         />
                       ),
                     }}
@@ -597,6 +600,21 @@ export default function LessonPage() {
           </div>
         </div>
 
+        {/* Toggle for showing GIFs as hints */}
+        {lesson.id === "lesson-3" && (
+          <div className="flex justify-center mb-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <input
+                type="checkbox"
+                checked={showSignGifs}
+                onChange={() => setShowSignGifs((v) => !v)}
+                className="form-checkbox h-5 w-5 text-blue-600"
+              />
+              <span className="text-base font-medium text-gray-700 dark:text-gray-300">Show GIF hints</span>
+            </label>
+          </div>
+        )}
+
         <div className="grid grid-cols-7 gap-4">
           {lesson.signs.map((sign) => (
             <button
@@ -604,15 +622,21 @@ export default function LessonPage() {
               onClick={() => handleSignSelect(sign.id)}
               disabled={signStatuses[sign.id] === "correct"}
               className={cn(
-                "aspect-square rounded-lg border-4 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed",
+                "aspect-square rounded-lg border-4 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
                 getSignBorderColor(sign.id),
               )}
             >
-              <img
-                src={sign.imageUrl || "/placeholder.svg"}
-                alt={`Sign for ${sign.label}`}
-                className="w-full h-full object-cover rounded"
-              />
+              {lesson.id === "lesson-3" && !showSignGifs ? (
+                <span className="text-lg font-bold text-gray-800 dark:text-gray-200 text-center px-2">
+                  {sign.label}
+                </span>
+              ) : (
+                <img
+                  src={sign.imageUrl || "/placeholder.svg"}
+                  alt={`Sign for ${sign.label}`}
+                  className="w-full h-full object-cover rounded"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -696,6 +720,7 @@ export default function LessonPage() {
                 setTimer(0)
                 setAnnotatedImage("")
                 setBackendError("")
+                setShowSignGifs(false)
               }}
               className={cn(
                 "flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition-all min-w-[200px] justify-start hover:shadow-md",
