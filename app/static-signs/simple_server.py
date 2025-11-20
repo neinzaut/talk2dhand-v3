@@ -146,19 +146,17 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
         'all_predictions': {}
     }
     
-    # If expected_type is provided, prioritize that model but fallback to the other if needed
+    # If expected_type is provided, ONLY use that specific model (no fallback)
+    # This prevents letters from being misclassified as numbers or UNKNOWN_NUMBER
     if expected_type == 'alphabet':
-        alphabet_result = None
-        number_result = None
-        
-        # Try alphabet model first
+        # ONLY use alphabet model when expected_type is 'alphabet'
         if model_manager.alphabet_loaded and model_manager.alphabet_recognizer:
             try:
                 landmark_points = AlphabetRecognizer.landmarks_from_mediapipe(image_rgb, hand_landmarks)
                 preprocessed = AlphabetRecognizer.preprocess_landmarks(landmark_points)
                 alphabet_result = model_manager.alphabet_recognizer.predict(preprocessed)
                 
-                print(f"[Alphabet Detection] Label: {alphabet_result.get('label')}, Confidence: {alphabet_result.get('confidence', 0):.3f}")
+                print(f"[Alphabet Only] Label: {alphabet_result.get('label')}, Confidence: {alphabet_result.get('confidence', 0):.3f}")
                 
                 if alphabet_result['label']:
                     results['all_predictions']['alphabet'] = {
@@ -166,119 +164,55 @@ def detect_alphabet_or_number(image_rgb, hand_landmarks, handedness=None, expect
                         'confidence': alphabet_result['confidence']
                     }
                     
-                    # Use alphabet if confidence is reasonable (lowered threshold)
-                    if alphabet_result['confidence'] > 0.3:
-                        # Prefer alphabet predictions that are actually letters
-                        if alphabet_result['label'].isalpha():
-                            print(f"[Alphabet Detection] Using alphabet model: {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})")
-                            results['prediction'] = alphabet_result['label']
-                            results['confidence'] = alphabet_result['confidence']
-                            results['model_used'] = 'alphabet'
-                            return results
-                        else:
-                            print(f"[Alphabet Detection] Label '{alphabet_result['label']}' is not a letter, skipping")
+                    # Use alphabet prediction if it's actually a letter and confidence is reasonable
+                    if alphabet_result['label'].isalpha() and alphabet_result['confidence'] > 0.25:
+                        print(f"[Alphabet Only] Using: {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})")
+                        results['prediction'] = alphabet_result['label']
+                        results['confidence'] = alphabet_result['confidence']
+                        results['model_used'] = 'alphabet'
                     else:
-                        print(f"[Alphabet Detection] Confidence {alphabet_result['confidence']:.3f} below threshold 0.3")
-                else:
-                    print(f"[Alphabet Detection] No label returned from model")
+                        print(f"[Alphabet Only] Rejected - Not a letter or low confidence")
             except Exception as e:
-                print(f"Error in alphabet prediction: {str(e)}")
+                print(f"[Alphabet Only] Error: {str(e)}")
                 import traceback
                 traceback.print_exc()
-        
-        # Fallback: try number model if alphabet didn't work
-        if not results['prediction'] and model_manager.number_loaded and model_manager.number_recognizer:
-            try:
-                print(f"[Alphabet Detection] Trying number model as fallback...")
-                image_shape = image_rgb.shape
-                preprocessed = NumberRecognizer.preprocess_landmarks(hand_landmarks, image_shape, handedness)
-                number_result = model_manager.number_recognizer.predict(preprocessed)
-                
-                if number_result['label']:
-                    results['all_predictions']['number'] = {
-                        'label': number_result['label'],
-                        'confidence': number_result['confidence']
-                    }
-                    
-                    # Use number if confidence is good
-                    if number_result['confidence'] > 0.5:
-                        print(f"[Alphabet Detection] Using number model (fallback): {number_result['label']} (conf: {number_result['confidence']:.3f})")
-                        results['prediction'] = number_result['label']
-                        results['confidence'] = number_result['confidence']
-                        results['model_used'] = 'number'
-                        return results
-            except Exception as e:
-                print(f"Error in number prediction (fallback): {str(e)}")
-                import traceback
-                traceback.print_exc()
-        
-        # If we still have an alphabet result (even with low confidence), use it as last resort
-        if not results['prediction'] and alphabet_result and alphabet_result['label']:
-            print(f"[Alphabet Detection] Using alphabet model (last resort): {alphabet_result['label']} (conf: {alphabet_result['confidence']:.3f})")
-            results['prediction'] = alphabet_result['label']
-            results['confidence'] = alphabet_result['confidence']
-            results['model_used'] = 'alphabet'
-            return results
-        
-        if not results['prediction']:
-            print(f"[Alphabet Detection] No valid prediction found after all attempts")
+        else:
+            print(f"[Alphabet Only] Alphabet model not loaded")
         
         return results
     
     if expected_type == 'number':
-        alphabet_result = None
-        number_result = None
-        
-        # Try number model first
+        # ONLY use number model when expected_type is 'number'
         if model_manager.number_loaded and model_manager.number_recognizer:
             try:
                 image_shape = image_rgb.shape
                 preprocessed = NumberRecognizer.preprocess_landmarks(hand_landmarks, image_shape, handedness)
                 number_result = model_manager.number_recognizer.predict(preprocessed)
                 
+                print(f"[Number Only] Label: {number_result.get('label')}, Confidence: {number_result.get('confidence', 0):.3f}")
+                
                 if number_result['label']:
                     results['all_predictions']['number'] = {
                         'label': number_result['label'],
                         'confidence': number_result['confidence']
                     }
                     
-                    # Use number if confidence is reasonable
-                    if number_result['confidence'] > 0.3:
+                    # Filter out UNKNOWN_NUMBER and use prediction if confidence is reasonable
+                    if number_result['label'] != 'UNKNOWN_NUMBER' and number_result['confidence'] > 0.3:
+                        print(f"[Number Only] Using: {number_result['label']} (conf: {number_result['confidence']:.3f})")
                         results['prediction'] = number_result['label']
                         results['confidence'] = number_result['confidence']
                         results['model_used'] = 'number'
-                        return results
+                    elif number_result['label'] == 'UNKNOWN_NUMBER':
+                        print(f"[Number Only] Rejected - UNKNOWN_NUMBER")
+                    else:
+                        print(f"[Number Only] Rejected - Low confidence {number_result['confidence']:.3f}")
             except Exception as e:
-                print(f"Error in number prediction: {str(e)}")
-        
-        # Fallback: try alphabet model if number didn't work
-        if not results['prediction'] and model_manager.alphabet_loaded and model_manager.alphabet_recognizer:
-            try:
-                landmark_points = AlphabetRecognizer.landmarks_from_mediapipe(image_rgb, hand_landmarks)
-                preprocessed = AlphabetRecognizer.preprocess_landmarks(landmark_points)
-                alphabet_result = model_manager.alphabet_recognizer.predict(preprocessed)
-                
-                if alphabet_result['label']:
-                    results['all_predictions']['alphabet'] = {
-                        'label': alphabet_result['label'],
-                        'confidence': alphabet_result['confidence']
-                    }
-                    
-                    # Use alphabet if confidence is good and it's actually a letter
-                    if alphabet_result['confidence'] > 0.5 and alphabet_result['label'].isalpha():
-                        results['prediction'] = alphabet_result['label']
-                        results['confidence'] = alphabet_result['confidence']
-                        results['model_used'] = 'alphabet'
-                        return results
-            except Exception as e:
-                print(f"Error in alphabet prediction (fallback): {str(e)}")
-        
-        # If we still have a number result (even with low confidence), use it as last resort
-        if not results['prediction'] and number_result and number_result['label']:
-            results['prediction'] = number_result['label']
-            results['confidence'] = number_result['confidence']
-            results['model_used'] = 'number'
-            return results
+                print(f"[Number Only] Error: {str(e)}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"[Number Only] Number model not loaded")
         
         return results
     
