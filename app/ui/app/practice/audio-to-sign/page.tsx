@@ -28,7 +28,24 @@ export default function AudioToSignPage() {
   const [textInput, setTextInput] = useState<string>("")
   const [inputMode, setInputMode] = useState<"mic" | "text">("mic")
   
+  // Auto-select first sign on mount to avoid null ID
+  useEffect(() => {
+    if (!selectedSignId && signs.length > 0) {
+      console.log("🎯 Auto-selecting first sign:", signs[0].id)
+      setSelectedSignId(signs[0].id)
+    }
+  }, [signs, selectedSignId])
+  
+  // Log when selected sign changes (not on every render)
+  useEffect(() => {
+    if (selectedSignId) {
+      const sign = signs.find(s => s.id === selectedSignId)
+      console.log("🏷️ Selected sign changed:", sign?.label, "for ID:", selectedSignId)
+    }
+  }, [selectedSignId, signs])
+  
   // speech hook will handle mic and recognition
+  // Memoize to prevent unnecessary recalculations
   const currentSignLabel = (() => {
     const s = signs.find(s => s.id === selectedSignId)
     return s?.label || ""
@@ -68,6 +85,9 @@ export default function AudioToSignPage() {
       toast.error("Please select a sign before using the microphone.")
       return
     }
+    // Show instruction to user
+    toast.info(`🎤 Say: "Letter ${currentSignLabel}"`, { autoClose: 2000 })
+    
     // reset previous feedback and detected text
     setDetectedText("")
     setTextInput("")
@@ -92,7 +112,18 @@ export default function AudioToSignPage() {
     
     const normalizedInput = textInput.trim().toLowerCase()
     const normalizedAnswer = currentSignLabel.trim().toLowerCase()
-    const correct = normalizedInput === normalizedAnswer || normalizedAnswer.includes(normalizedInput)
+    
+    // Check for "letter X" format or just "X"
+    const letterPattern = /^letter\s+([a-z0-9]+)$/i
+    const match = normalizedInput.match(letterPattern)
+    
+    let correct = false
+    if (match) {
+      correct = match[1].toLowerCase() === normalizedAnswer
+    } else {
+      // Allow just the letter too
+      correct = normalizedInput === normalizedAnswer
+    }
     
     console.log("Is correct?", correct)
     
@@ -106,7 +137,7 @@ export default function AudioToSignPage() {
     if (correct) {
       toast.success("✅ Correct!")
     } else {
-      toast.error(`❌ Incorrect. You typed: "${textInput}". Correct: "${currentSignLabel}"`)
+      toast.error(`❌ Incorrect. Expected: "${currentSignLabel}" or "Letter ${currentSignLabel}"`)
     }
     
     // Clear input
@@ -246,8 +277,9 @@ export default function AudioToSignPage() {
                 {isListening ? "🎙️ Recording... Click STOP when done!" : `Detected: ${spokenText || detectedText || "..."}`}
               </h2>
               <p className="text-gray-500 mt-2 text-center max-w-md">
-                <strong>How to use:</strong> Select a sign, click 🎤, then say <strong>just the letter</strong> (e.g., "B"). 
-                Click <strong>Stop</strong> when done or wait 5 seconds. <span className="text-blue-600">Works offline!</span>
+                <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>"Letter"</strong> followed by the letter name<br/>
+                (e.g., <strong>"Letter A"</strong>, <strong>"Letter B"</strong>, <strong>"Letter C"</strong>). 
+                Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds. <span className="text-blue-600">Works offline!</span>
               </p>
             </>
           )}

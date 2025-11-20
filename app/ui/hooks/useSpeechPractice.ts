@@ -82,11 +82,22 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     console.log("Cleaned input:", cleanInput)
     console.log("Cleaned answer:", cleanAnswer)
 
-    // Check for exact match or if answer is contained in input
-    const correct =
-      cleanInput === cleanAnswer || 
-      cleanInput.includes(cleanAnswer) ||
-      cleanAnswer.includes(cleanInput)
+    // Expected format: "letter [X]"
+    const expectedPhrase = `letter ${cleanAnswer}`
+    console.log("Expected phrase:", expectedPhrase)
+    
+    // Check if input matches "letter [X]" format
+    const letterPattern = /^letter\s+([a-z0-9]+)$/i
+    const match = cleanInput.match(letterPattern)
+    
+    let correct = false
+    if (match) {
+      const spokenLetter = match[1].toLowerCase()
+      correct = spokenLetter === cleanAnswer
+      console.log("Extracted letter:", spokenLetter, "| Expected:", cleanAnswer)
+    } else {
+      console.log("Input doesn't match 'letter X' format")
+    }
 
     console.log("Is correct?", correct)
     setIsCorrect(correct)
@@ -95,8 +106,12 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
       setFeedback("✅ Correct!")
       toast.success("✅ Correct!")
     } else {
-      setFeedback(`❌ Incorrect. Correct answer: ${correctAnswer}`)
-      toast.error(`❌ Incorrect. You said: "${input}". Correct: "${correctAnswer}"`)
+      setFeedback(`❌ Incorrect. Say: "Letter ${correctAnswer}"`)
+      if (match) {
+        toast.error(`❌ Incorrect. You said: "Letter ${match[1]}". Expected: "Letter ${correctAnswer}"`)
+      } else {
+        toast.error(`❌ Please say: "Letter ${correctAnswer}"`)
+      }
     }
   }
 
@@ -109,6 +124,13 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     if (!micAllowed) {
       console.log("❌ Mic not allowed")
       toast.error("⚠️ Microphone permission not granted.")
+      return
+    }
+    
+    // Prevent recording when no answer is set (avoids auto-restart bug)
+    if (!correctAnswer || correctAnswer.trim() === "") {
+      console.log("❌ No correct answer set")
+      toast.error("⚠️ Please select a sign first.")
       return
     }
 

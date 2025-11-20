@@ -33,15 +33,23 @@ export function useWhisperRecognition({
       console.log("🤖 Loading Whisper model... This may take a minute on first load.")
       toast.info("🤖 Loading speech recognition model... Please wait.")
 
-      // Use Whisper tiny model for faster loading (distil-whisper for even smaller)
-      // Options: "Xenova/whisper-tiny", "Xenova/whisper-tiny.en", "Xenova/distil-whisper-large-v3"
-      const modelName = language === "en" ? "Xenova/whisper-tiny.en" : "Xenova/whisper-tiny"
+      // Use Whisper base model for better short-phrase detection
+      // whisper-tiny.en is too aggressive at filtering, base.en handles short phrases better
+      // Options: "Xenova/whisper-tiny.en", "Xenova/whisper-base.en", "Xenova/whisper-small.en"
+      const modelName = language === "en" ? "Xenova/whisper-base.en" : "Xenova/whisper-base"
+      
+      console.log("🤖 Loading model:", modelName)
       
       transcriber.current = await pipeline(
         "automatic-speech-recognition",
         modelName,
-        { quantized: true } // Use quantized model for smaller size
+        { 
+          quantized: true, // Use quantized model for smaller size
+          // revision: "main", // Use latest version
+        }
       )
+      
+      console.log("✅ Model loaded, type:", typeof transcriber.current)
 
       console.log("✅ Whisper model loaded successfully!")
       toast.success("✅ Speech recognition ready!")
@@ -174,56 +182,129 @@ export function useWhisperRecognition({
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
       
       // Get audio data as Float32Array (required by Whisper)
-      const audioData = audioBuffer.getChannelData(0)
+      let audioData = audioBuffer.getChannelData(0)
       
       console.log("🎵 Audio data length:", audioData.length)
       console.log("🎵 Audio duration:", audioBuffer.duration, "seconds")
       console.log("🎵 Sample rate:", audioBuffer.sampleRate)
       
-      // Check if audio is too short
-      if (audioData.length < 1600) { // Less than 0.1 seconds at 16kHz
-        console.warn("⚠️ Audio too short:", audioData.length, "samples")
-        toast.warning("⚠️ Audio too short. Please speak longer.")
+      // Trim silence from beginning and end
+      const threshold = 0.01
+      let start = 0
+      let end = audioData.length - 1
+      
+      // Find first non-silent sample
+      while (start < audioData.length && Math.abs(audioData[start]) < threshold) {
+        start++
+      }
+      
+      // Find last non-silent sample
+      while (end > start && Math.abs(audioData[end]) < threshold) {
+        end--
+      }
+      
+      // Add small padding
+      start = Math.max(0, start - 800) // 0.05s padding
+      end = Math.min(audioData.length - 1, end + 800)
+      
+      // Extract trimmed audio
+      if (start < end) {
+        audioData = audioData.slice(start, end + 1)
+        console.log("✂️ Trimmed audio from", start, "to", end, "= new length:", audioData.length, "samples")
+      }
+      
+      // Check if audio is too short (allow 0.3 seconds minimum for "Letter A")
+      if (audioData.length < 4800) { // Less than 0.3 seconds at 16kHz
+        console.warn("⚠️ Audio too short:", audioData.length, "samples (", audioBuffer.duration.toFixed(2), "seconds)")
+        toast.warning("⚠️ Audio too short. Please say 'Letter' + the letter.")
         setIsProcessing(false)
         return
       }
 
       // Check if audio is silent (all zeros or very low amplitude)
       const maxAmplitude = Math.max(...Array.from(audioData).map(Math.abs))
+      const avgAmplitude = Array.from(audioData).reduce((sum, val) => sum + Math.abs(val), 0) / audioData.length
       console.log("🔊 Max amplitude:", maxAmplitude)
+      console.log("🔊 Avg amplitude:", avgAmplitude)
+      
+      // Normalize audio to use full dynamic range (helps Whisper detect speech)
+      if (maxAmplitude > 0.01) {
+        const normalized = new Float32Array(audioData.length)
+        const normFactor = 0.95 / maxAmplitude // Normalize to 95% to avoid clipping
+        for (let i = 0; i < audioData.length; i++) {
+          normalized[i] = audioData[i] * normFactor
+        }
+        audioData = normalized
+        console.log("📊 Normalized audio, peak factor:", normFactor.toFixed(3))
+      }
       
       if (maxAmplitude < 0.01) {
-        console.warn("⚠️ Audio appears to be silent")
+        console.warn("⚠️ Audio appears to be silent (max amplitude too low)")
         toast.warning("⚠️ No speech detected. Please speak louder.")
+        setIsProcessing(false)
+        return
+      }
+      
+      if (avgAmplitude < 0.001) {
+        console.warn("⚠️ Audio appears to be mostly silent (avg amplitude too low)")
+        toast.warning("⚠️ Audio too quiet. Please speak louder.")
         setIsProcessing(false)
         return
       }
 
       console.log("🤖 Running Whisper transcription...")
+      console.log("🎵 Passing audio to Whisper - length:", audioData.length, "samples")
+      console.log("🎵 Audio format: Float32Array, first few samples:", audioData.slice(0, 10))
       
-      // Run Whisper transcription
-      const result = await model(audioData, {
-        language: language === "en" ? "english" : undefined,
-        task: "transcribe",
-        return_timestamps: false,
-        chunk_length_s: 30,
-        stride_length_s: 5,
-      }) as any
+      // Run Whisper transcription with optimized settings for short phrases
+      try {
+        const result = await model(audioData, {
+          language: "english", // Always use English for ASL/FSL letters
+          task: "transcribe",
+          return_timestamps: false,
+          chunk_length_s: 10, // Shorter chunks for better short-phrase detection
+          stride_length_s: 2,
+          initial_prompt: "Letter A. Letter B. Letter C.", // Hint at expected format
+          // Parameters to improve short phrase detection
+          max_new_tokens: 30, // Limit output length for short phrases
+          temperature: 0.0, // Deterministic output (no randomness)
+          compression_ratio_threshold: 1.8, // Lower threshold to accept more results
+          logprob_threshold: -0.5, // Lower threshold to accept more results
+          no_speech_threshold: 0.3, // Lower threshold (was 0.6) - more lenient on silence detection
+        }) as any
+        
+        console.log("✅ Whisper completed successfully")
 
-      console.log("📋 Raw Whisper result:", result)
-      
-      const text = ((result.text || result[0]?.text || "") as string).trim()
-      console.log("📝 Transcription result:", text)
+        console.log("📋 Raw Whisper result:", result)
+        console.log("📋 Result type:", typeof result)
+        console.log("📋 Result keys:", result ? Object.keys(result) : "null")
+        
+        // Extract text more carefully
+        let text = ""
+        if (typeof result === "string") {
+          text = result.trim()
+        } else if (result && typeof result === "object") {
+          text = (result.text || result[0]?.text || "").toString().trim()
+        }
+        
+        console.log("📝 Transcription result:", text)
+        console.log("📝 Text length:", text.length)
 
-      setTranscript(text)
-      setIsProcessing(false)
+        setTranscript(text)
+        setIsProcessing(false)
 
-      if (text) {
-        toast.success(`✅ Detected: "${text}"`)
-        if (onResult) onResult(text)
-      } else {
-        console.warn("⚠️ Empty transcription result")
-        toast.warning("⚠️ No speech detected. Please try speaking more clearly.")
+        if (text && text.length > 0) {
+          console.log("✅ Successfully transcribed:", text)
+          toast.success(`✅ Detected: "${text}"`)
+          if (onResult) onResult(text)
+        } else {
+          console.warn("⚠️ Empty transcription result")
+          console.warn("⚠️ Audio was:", audioData.length, "samples at", audioBuffer.sampleRate, "Hz")
+          toast.warning("⚠️ No speech detected. Please say 'Letter' + the letter name clearly.")
+        }
+      } catch (transcribeErr) {
+        console.error("❌ Whisper transcription error:", transcribeErr)
+        throw transcribeErr
       }
 
     } catch (err) {
