@@ -19,9 +19,9 @@ COPY requirements.txt .
 
 # Install Python dependencies with increased timeout and in stages
 # Install large packages separately to handle network timeouts
-RUN pip install --no-cache-dir --timeout=1000 tensorflow==2.10.0
-RUN pip install --no-cache-dir --timeout=1000 mediapipe==0.10.9
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org tensorflow==2.10.0
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org mediapipe==0.10.9
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 # Copy application files
 COPY . .

@@ -18,9 +18,10 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 
 # Install Python dependencies with increased timeout and in stages
-RUN pip install --no-cache-dir --timeout=1000 tensorflow==2.15.0
-RUN pip install --no-cache-dir --timeout=1000 mediapipe==0.10.9
-RUN pip install --no-cache-dir -r requirements.txt
+# Use separate commands to isolate failures and allow caching
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org tensorflow==2.15.0
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org mediapipe==0.10.9
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 # Copy application files (includes module/islr assets)
 COPY . .
