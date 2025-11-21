@@ -158,6 +158,20 @@ function CameraToSignPage() {
     const expectedSign = signs[currentRound];
     const expectedType = getExpectedType(expectedSign);
     
+    // FSL-specific letter mappings (FSL letters that map to ASL equivalents)
+    const fslLetterMapping: Record<string, string> = {
+      'CH': 'H',      // CH maps to H
+      'Ñ': 'P',       // Ñ (enye) maps to P
+      'NG': 'V',      // NG maps to V
+    };
+    
+    // Reverse mapping for display purposes
+    const fslDisplayMapping: Record<string, string> = {
+      'H': 'CH',
+      'P': 'Ñ',
+      'V': 'NG',
+    };
+    
     const requestBody: { image: string; expectedType?: string; confidenceThreshold?: number } = { image: base64Data };
     if (expectedType) {
       requestBody.expectedType = expectedType;
@@ -181,6 +195,11 @@ function CameraToSignPage() {
           predicted = data.prediction;
           landmarks = data.landmarks;
           console.log("[Capture] Hand landmarks:", landmarks);
+          
+          // If we're expecting an FSL special letter and detected its mapped equivalent, display the FSL letter
+          if (fslLetterMapping[expectedSign] && predicted === fslLetterMapping[expectedSign]) {
+            predicted = fslDisplayMapping[predicted] || predicted;
+          }
         } else {
           console.log("[Capture] No hand detected:", data.error);
         }
@@ -190,7 +209,14 @@ function CameraToSignPage() {
           { image: imageDataUrl, expected: signs[currentRound], predicted },
         ]);
         
-        if (predicted === signs[currentRound]) {
+        // Check if prediction matches expected (considering FSL mappings)
+        let isCorrect = predicted === signs[currentRound];
+        if (!isCorrect && fslLetterMapping[expectedSign]) {
+          // Check if the raw prediction matches the mapped letter
+          isCorrect = data.prediction === fslLetterMapping[expectedSign];
+        }
+        
+        if (isCorrect) {
           setScore((s) => s + 1);
         }
 
