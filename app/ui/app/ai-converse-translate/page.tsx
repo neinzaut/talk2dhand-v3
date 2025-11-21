@@ -172,7 +172,9 @@ export default function AIConversePage() {
 
     try {
       setIsProcessing(true)
-      const response = await fetch("/api/ai-converse-translate", {
+      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      
+      const response = await fetch(`${backendUrl}/infer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,7 +184,10 @@ export default function AIConversePage() {
         }),
       })
 
-      if (!response.ok) throw new Error("Detection failed")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
+        throw new Error(errorData.detail || "Detection failed")
+      }
 
       const data = await response.json()
       setCurrentSign(data.result)
@@ -200,6 +205,7 @@ export default function AIConversePage() {
       }
     } catch (error) {
       console.error("Detection error:", error)
+      // Don't show errors for failed detections, just continue listening
     } finally {
       setIsProcessing(false)
     }
@@ -216,7 +222,9 @@ export default function AIConversePage() {
       setIsGettingResponse(true)
       setAiResponse("Thinking...")
 
-      const response = await fetch("/api/ai-converse-translate", {
+      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      
+      const response = await fetch(`${backendUrl}/infer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -225,7 +233,10 @@ export default function AIConversePage() {
         }),
       })
 
-      if (!response.ok) throw new Error("AI response failed")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
+        throw new Error(errorData.detail || "AI response failed")
+      }
 
       const data = await response.json()
       const glossResponse = data.result
