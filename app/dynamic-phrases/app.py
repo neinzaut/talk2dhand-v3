@@ -52,13 +52,49 @@ PROB_THRESHOLD = 0.65  # Slightly lower to be more permissive
 MOVE_THRESHOLD = 0.04  # Reduced from 0.06 to detect smaller movements
 
 SUPPORTED_SIGNS = {
+    "bad": "bad",
+    "drink": "drink",
+    "fine": "fine",
+    "food": "food",
+    "go": "go",
+    "happy": "happy",
+    "have": "have",
+    "hesheit": "hesheit",
     "hello": "hello",
-    "thankyou": "thanks",
+    "like": "like",
+    "minemy": "minemy",
+    "not": "not",
+    "now": "now",
+    "sad": "sad",
+    "see": "see",
+    "thankyou": "thankyou",
+    "weus": "weus",
+    "where": "where",
+    "will": "will",
+    "yourself": "yourself",
 }
 
 TRANSLATIONS = {
+    "bad": {"english": "bad", "filipino": "masama"},
+    "drink": {"english": "drink", "filipino": "inumin"},
+    "fine": {"english": "fine", "filipino": "ayos"},
+    "food": {"english": "food", "filipino": "pagkain"},
+    "go": {"english": "go", "filipino": "pumunta"},
+    "happy": {"english": "happy", "filipino": "masaya"},
+    "have": {"english": "have", "filipino": "mayroon"},
+    "hesheit": {"english": "he/she/it", "filipino": "siya"},
     "hello": {"english": "hello", "filipino": "kamusta"},
-    "thanks": {"english": "thanks", "filipino": "salamat"},
+    "like": {"english": "like", "filipino": "gusto"},
+    "minemy": {"english": "my/mine", "filipino": "akin"},
+    "not": {"english": "not", "filipino": "hindi"},
+    "now": {"english": "now", "filipino": "ngayon"},
+    "sad": {"english": "sad", "filipino": "malungkot"},
+    "see": {"english": "see", "filipino": "makita"},
+    "thankyou": {"english": "thank you", "filipino": "salamat"},
+    "weus": {"english": "we/us", "filipino": "tayo/kami"},
+    "where": {"english": "where", "filipino": "saan"},
+    "will": {"english": "will", "filipino": "gagawin"},
+    "yourself": {"english": "yourself", "filipino": "ikaw"},
 }
 
 
