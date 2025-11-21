@@ -25,17 +25,11 @@ export default function ModuleOverviewPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="default" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-4xl font-bold text-primary">{module.title}</h1>
-        </div>
-        <Button variant="default" className="gap-2 bg-transparent">
-          <HelpCircle className="h-4 w-4" />
-          How to Use?
+      <div className="mb-6 flex items-center gap-4">
+        <Button variant="default" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4" />
         </Button>
+        <h1 className="text-4xl font-bold text-primary">{module.title}</h1>
       </div>
 
       <div className="h-1 bg-primary mb-8" />
