@@ -34,11 +34,11 @@ services:
     networks:
       - talk2dhand-network
 
-  ai-converse-translate-service:
+  ai-converse-translate:
     build:
       context: ./ai-converse-translate
       dockerfile: Dockerfile
-    container_name: ai-converse-translate-service-dev
+    container_name: ai-converse-translate-dev
     ports:
       - "8100:8100"
     volumes:

@@ -19,7 +19,7 @@ const navigation = [
   },
   {
     name: "AI Converse",
-    href: "/ai-converse-translate",
+    href: "/ai-converse",
     icon: MessageSquare,
   },
 ]
