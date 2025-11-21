@@ -257,12 +257,42 @@ export default function LessonPage() {
       const data = await response.json();
       
       if (data && data.prediction) {
-        setDetectedSign(data.prediction.toUpperCase());
+        // For dynamic phrases, use english_prediction for comparison (contains the actual sign ID)
+        // For static signs, use prediction directly
+        const predictedSign = isDynamicPhrases 
+          ? (data.english_prediction || data.prediction).toLowerCase()
+          : data.prediction.toLowerCase();
+        let expectedSign = selectedSignId.toLowerCase();
+        
+        // FSL-specific letter mappings (FSL letters that map to ASL equivalents)
+        const fslLetterMapping: Record<string, string> = {
+          'ch': 'h',      // CH maps to H
+          'enye': 'p',    // Ñ (enye) maps to P
+          'ng': 'v',      // NG maps to V
+        };
+        
+        // Reverse mapping for display purposes
+        const fslDisplayMapping: Record<string, string> = {
+          'h': 'CH',
+          'p': 'Ñ',
+          'v': 'NG',
+        };
+        
+        // Determine what to display based on the selected sign
+        let displayText = data.prediction.toUpperCase();
+        if (fslLetterMapping[expectedSign] && predictedSign === fslLetterMapping[expectedSign]) {
+          // If we're expecting an FSL special letter and detected its mapped equivalent, show the FSL letter
+          displayText = fslDisplayMapping[predictedSign] || displayText;
+        }
+        
+        setDetectedSign(displayText);
         setBackendError("");
         if (data.annotated_image) setAnnotatedImage(data.annotated_image);
         
-        const predictedSign = data.prediction.toLowerCase();
-        const expectedSign = selectedSignId.toLowerCase();
+        // If the selected sign is an FSL-specific letter, map it to its ASL equivalent
+        if (fslLetterMapping[expectedSign]) {
+          expectedSign = fslLetterMapping[expectedSign];
+        }
         
         if (predictedSign === expectedSign) {
           setSignStatuses((prev) => ({ ...prev, [selectedSignId]: 'correct' }));
