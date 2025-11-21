@@ -9,9 +9,10 @@ import os
 import sys
 import time
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 from collections import deque
+from functools import lru_cache
 
 import cv2
 import pandas as pd
@@ -50,6 +51,13 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 recognizer = None
 mp_holistic = None
 holistic = None
+
+# API key rotation
+API_KEYS = []
+current_key_index = 0
+
+# Landmark cache (LRU with max 100 entries)
+LANDMARK_CACHE: Dict[str, List[Dict]] = {}
 
 # Recognition constants
 BUFFER_SIZE = 18
@@ -106,11 +114,20 @@ class InferRequest(BaseModel):
     language: Optional[str] = "asl"  # "asl" | "fsl"
 
 
+class LandmarkFrame(BaseModel):
+    """Landmark data for a single frame"""
+    frame: int
+    pose: List[List[float]]
+    left_hand: List[List[float]]
+    right_hand: List[List[float]]
+
+
 class InferResponse(BaseModel):
     """Response model following AI_CONVERSE_TRANSLATE_RULES.md contract"""
     output_type: str  # "asl" | "fsl" | "gloss"
     result: str
     confidence: float
+    landmarks: Optional[List[Dict]] = None
 
 
 class ConversationState:
@@ -131,9 +148,23 @@ conversation_state = ConversationState()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and cleanup resources"""
-    global recognizer, mp_holistic, holistic
+    global recognizer, mp_holistic, holistic, API_KEYS, current_key_index
     
     logger.info("Initializing AI Converse Translate Service...")
+    
+    # Load all API keys from environment
+    for i in range(1, 11):
+        key_name = f'GOOGLE_API_KEY_{i}' if i > 1 else 'GOOGLE_API_KEY'
+        key = os.getenv(key_name)
+        if key:
+            API_KEYS.append(key)
+    
+    if not API_KEYS:
+        logger.error("No API keys found in environment")
+        raise ValueError("At least one GOOGLE_API_KEY must be set")
+    
+    logger.info(f"Loaded {len(API_KEYS)} API keys for rotation")
+    current_key_index = 0
     
     try:
         # Initialize ISLR model
@@ -333,21 +364,54 @@ def recognize_sign_from_frame(frame_data: str, language: str = "asl") -> Dict[st
         raise e
 
 
+def extract_upper_body_landmarks(landmark_data: LandmarkData) -> Dict:
+    """Extract upper body landmarks (pose 0-16, hands) from LandmarkData"""
+    pose_upper = []
+    if landmark_data.poseLandmarks and len(landmark_data.poseLandmarks) > 16:
+        for i in range(17):  # Pose landmarks 0-16 (upper body)
+            lm = landmark_data.poseLandmarks[i]
+            pose_upper.append([float(lm.x), float(lm.y), float(lm.z)])
+    
+    left_hand = []
+    if landmark_data.leftHandLandmarks:
+        for lm in landmark_data.leftHandLandmarks[:21]:
+            left_hand.append([float(lm.x), float(lm.y), float(lm.z)])
+    
+    right_hand = []
+    if landmark_data.rightHandLandmarks:
+        for lm in landmark_data.rightHandLandmarks[:21]:
+            right_hand.append([float(lm.x), float(lm.y), float(lm.z)])
+    
+    return {
+        "pose": pose_upper,
+        "left_hand": left_hand,
+        "right_hand": right_hand
+    }
+
+
 def get_gemini_response(message: str) -> str:
-    """Get Gemini AI response in ASL gloss format"""
-    try:
-        import google.generativeai as genai
-        from google.generativeai.types import HarmCategory, HarmBlockThreshold
-        
-        # Get API key from environment
-        api_key = os.getenv('GOOGLE_API_KEY')
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment")
-        
-        genai.configure(api_key=api_key)
-        
-        # System instruction for ASL gloss responses
-        system_instruction = """FINAL SYSTEM INSTRUCTION (RESPOND IN STRICT ASL GLOSS)
+    """Get Gemini AI response in ASL gloss format with API key rotation"""
+    global current_key_index
+    
+    import google.generativeai as genai
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    
+    if not API_KEYS:
+        raise ValueError("No API keys available")
+    
+    # Try each API key in rotation
+    attempts = len(API_KEYS)
+    last_error = None
+    
+    for attempt in range(attempts):
+        try:
+            api_key = API_KEYS[current_key_index]
+            logger.info(f"Using API key #{current_key_index + 1} (attempt {attempt + 1}/{attempts})")
+            
+            genai.configure(api_key=api_key)
+            
+            # System instruction for ASL gloss responses
+            system_instruction = """FINAL SYSTEM INSTRUCTION (RESPOND IN STRICT ASL GLOSS)
 Your task is to respond to the meaning or intent of the user's input using correct ASL GLOSS.
 You do NOT reconstruct the user's sentence.
 You give a meaningful reply, but your reply must follow ASL grammar rules.
@@ -419,35 +483,58 @@ You do not rewrite the input
 You produce a meaningful ASL gloss response
 You output ONLY the ASL gloss"""
         
-        # Create model
-        model = genai.GenerativeModel(
-            model_name='gemini-2.0-flash-exp',
-            system_instruction=system_instruction,
-            safety_settings={
+            # Create model with system instruction
+            model = genai.GenerativeModel(
+                model_name='gemini-2.0-flash-exp',
+                system_instruction=system_instruction
+            )
+            
+            # Configure generation parameters
+            generation_config = genai.GenerationConfig(
+                temperature=0.2,
+                top_k=40,
+                top_p=0.95,
+                max_output_tokens=1024,
+            )
+            
+            safety_settings = {
                 HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            },
-            generation_config={
-                "temperature": 0.2,
-                "top_k": 40,
-                "top_p": 0.95,
-                "max_output_tokens": 1024,
-            },
-        )
-        
-        # Generate response
-        response = model.generate_content(f"User message: {message}")
-        asl_response = response.text.strip()
-        
-        logger.info(f"User: {message} -> Gemini: {asl_response}")
-        
-        return asl_response
-        
-    except Exception as e:
-        logger.error(f"Gemini API error: {e}")
-        raise e
+            }
+            
+            # Generate response
+            response = model.generate_content(
+                f"User message: {message}",
+                generation_config=generation_config,
+                safety_settings=safety_settings
+            )
+            asl_response = response.text.strip()
+            
+            logger.info(f"User: {message} -> Gemini (key #{current_key_index + 1}): {asl_response}")
+            
+            return asl_response
+            
+        except Exception as e:
+            error_str = str(e).lower()
+            is_rate_limit = '429' in str(e) or 'quota' in error_str or 'rate limit' in error_str
+            
+            if is_rate_limit and attempt < attempts - 1:
+                logger.warning(f"Rate limit hit on API key #{current_key_index + 1}: {e}")
+                # Rotate to next key
+                current_key_index = (current_key_index + 1) % len(API_KEYS)
+                logger.info(f"Rotating to API key #{current_key_index + 1}")
+                last_error = e
+                continue
+            else:
+                logger.error(f"Gemini API error on key #{current_key_index + 1}: {e}")
+                raise e
+    
+    # If all keys exhausted
+    if last_error:
+        raise Exception(f"All {len(API_KEYS)} API keys exhausted due to rate limits")
+    raise Exception("Failed to get AI response")
 
 
 @app.post("/infer", response_model=InferResponse)
@@ -472,10 +559,16 @@ async def infer(request: InferRequest):
         elif request.input_type == "text":
             # Gemini AI conversation
             gloss_response = get_gemini_response(request.payload)
+            
+            # Extract landmarks for gloss words (returning empty for now - will be populated later)
+            # This allows frontend to fallback to text display
+            landmarks = []
+            
             return InferResponse(
                 output_type="gloss",
                 result=gloss_response,
-                confidence=1.0
+                confidence=1.0,
+                landmarks=landmarks
             )
         
         else:

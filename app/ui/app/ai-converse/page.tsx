@@ -3,21 +3,32 @@
 import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
-import { Wifi, WifiOff, Trash2, Video, MessageSquare } from "lucide-react"
+import { 
+  Wifi, WifiOff, Trash2, Video, Send, X
+} from "lucide-react"
 import { useAppStore } from "@/store/app-store"
+import { SignAnimationPlayer } from "@/components/ai-converse/SignAnimationPlayer"
 
-interface ConversationEntry {
+interface Message {
   id: string
+  type: "user" | "ai"
+  content: string
   timestamp: number
-  recognizedSign: string
-  aiResponse: string
-  confidence: number
+  gloss?: string
 }
 
-const STORAGE_KEY = "talk2dhand-ai-converse-history"
-const MAX_HISTORY = 50
+interface DetectedWord {
+  word: string
+  confidence: number
+  timestamp: number
+}
 
-export default function AIConversePage() {
+const MESSAGES_KEY = "talk2dhand-ai-messages"
+const MAX_MESSAGES = 50
+const MAX_DETECTED_WORDS = 10
+
+// Ensure the header and footer stick to the top and bottom respectively
+const AIConversePage = () => {
   const currentLanguage = useAppStore((state) => state.currentLanguage)
 
   // Online/Offline state
@@ -35,45 +46,45 @@ export default function AIConversePage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [lastStableSign, setLastStableSign] = useState<string | null>(null)
 
-  // Conversation state
-  const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([])
-  const [aiResponse, setAiResponse] = useState<string>("")
+  // Detected words buffer with selection
+  const [detectedWords, setDetectedWords] = useState<DetectedWord[]>([])
+  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set())
+  const [selectedWordsOrder, setSelectedWordsOrder] = useState<string[]>([])
+
+  // Message composition
+  const [messageInput, setMessageInput] = useState<string>("")
+  const [messages, setMessages] = useState<Message[]>([])
   const [isGettingResponse, setIsGettingResponse] = useState(false)
+  const [currentGloss, setCurrentGloss] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const historyEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Load conversation history from localStorage
+  // Clear messages on mount (hard refresh)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const parsed = JSON.parse(stored) as ConversationEntry[]
-        setConversationHistory(parsed.slice(-MAX_HISTORY))
-      }
-    } catch (error) {
-      console.error("Failed to load conversation history:", error)
-    }
+    localStorage.removeItem(MESSAGES_KEY)
+    setMessages([])
   }, [])
 
-  // Save conversation history to localStorage (with 50-item limit)
+  // Save messages to localStorage
   useEffect(() => {
-    if (conversationHistory.length > 0) {
+    if (messages.length > 0) {
       try {
-        const limited = conversationHistory.slice(-MAX_HISTORY)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(limited))
+        const limited = messages.slice(-MAX_MESSAGES)
+        localStorage.setItem(MESSAGES_KEY, JSON.stringify(limited))
       } catch (error) {
-        console.error("Failed to save conversation history:", error)
+        console.error("Failed to save messages:", error)
       }
     }
-  }, [conversationHistory])
+  }, [messages])
 
-  // Auto-scroll to bottom of conversation
+  // Auto-scroll to bottom
   useEffect(() => {
-    historyEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [conversationHistory])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
   // Online/Offline detection
   useEffect(() => {
@@ -172,7 +183,9 @@ export default function AIConversePage() {
 
     try {
       setIsProcessing(true)
-      const response = await fetch("/api/ai-converse-translate", {
+      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      
+      const response = await fetch(`${backendUrl}/infer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,71 +195,29 @@ export default function AIConversePage() {
         }),
       })
 
-      if (!response.ok) throw new Error("Detection failed")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
+        throw new Error(errorData.detail || "Detection failed")
+      }
 
       const data = await response.json()
       setCurrentSign(data.result)
       setCurrentConfidence(data.confidence)
 
-      // Check if we have a stable, new sign
+      // Add stable signs to detected words
       if (
         data.confidence > 0.6 &&
         data.result !== "Listening..." &&
         data.result !== lastStableSign
       ) {
         setLastStableSign(data.result)
-        // Automatically get AI response
-        await getAIResponse(data.result)
+        addDetectedWord(data.result, data.confidence)
       }
     } catch (error) {
       console.error("Detection error:", error)
+      // Continue listening silently on errors
     } finally {
       setIsProcessing(false)
-    }
-  }
-
-  // Get AI response from Gemini
-  const getAIResponse = async (recognizedSign: string) => {
-    if (!isOnline) {
-      setAiResponse("⚠️ WiFi needed for AI responses")
-      return
-    }
-
-    try {
-      setIsGettingResponse(true)
-      setAiResponse("Thinking...")
-
-      const response = await fetch("/api/ai-converse-translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          input_type: "text",
-          payload: recognizedSign,
-        }),
-      })
-
-      if (!response.ok) throw new Error("AI response failed")
-
-      const data = await response.json()
-      const glossResponse = data.result
-
-      setAiResponse(glossResponse)
-
-      // Add to conversation history
-      const newEntry: ConversationEntry = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
-        recognizedSign,
-        aiResponse: glossResponse,
-        confidence: currentConfidence,
-      }
-
-      setConversationHistory((prev) => [...prev, newEntry])
-    } catch (error) {
-      console.error("AI response error:", error)
-      setAiResponse("Error getting AI response")
-    } finally {
-      setIsGettingResponse(false)
     }
   }
 
@@ -266,55 +237,351 @@ export default function AIConversePage() {
     }
   }, [isCameraReady, currentLanguage])
 
-  // Clear conversation history
-  const clearHistory = () => {
-    if (confirm("Clear all conversation history?")) {
-      setConversationHistory([])
-      localStorage.removeItem(STORAGE_KEY)
-      setAiResponse("")
-      setLastStableSign(null)
+  // Add word to detected words buffer
+  const addDetectedWord = (word: string, confidence: number) => {
+    if (confidence < 0.5) return
+    
+    setDetectedWords((prev) => {
+      if (prev.some((w) => w.word.toLowerCase() === word.toLowerCase())) {
+        return prev
+      }
+      
+      const newWords = [
+        ...prev,
+        { word, confidence, timestamp: Date.now() }
+      ].slice(-MAX_DETECTED_WORDS)
+      
+      return newWords
+    })
+  }
+
+  // Toggle word selection with order tracking
+  const toggleWordSelection = (word: string) => {
+    setSelectedWords((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(word)) {
+        newSet.delete(word)
+        const newOrder = selectedWordsOrder.filter((w) => w !== word)
+        setSelectedWordsOrder(newOrder)
+        // Update text field
+        setMessageInput(newOrder.join(" "))
+      } else {
+        newSet.add(word)
+        const newOrder = [...selectedWordsOrder, word]
+        setSelectedWordsOrder(newOrder)
+        // Update text field
+        setMessageInput(newOrder.join(" "))
+      }
+      return newSet
+    })
+  }
+
+  // Clear detected words
+  const clearDetectedWords = () => {
+    setDetectedWords([])
+    setSelectedWords(new Set())
+    setSelectedWordsOrder([])
+    setMessageInput("")
+  }
+
+  // Clear selected words
+  const clearSelectedWords = () => {
+    setSelectedWords(new Set())
+    setSelectedWordsOrder([])
+    setMessageInput("")
+  }
+
+  // Send message
+  const sendMessage = async () => {
+    const trimmedInput = messageInput.trim()
+    if (!trimmedInput || isGettingResponse) return
+
+    // Add user message
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      type: "user",
+      content: trimmedInput,
+      timestamp: Date.now(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setMessageInput("")
+
+    // Get AI response
+    if (!isOnline) {
+      const errorMessage: Message = {
+        id: `ai-${Date.now()}`,
+        type: "ai",
+        content: "⚠️ WiFi needed for AI responses",
+        timestamp: Date.now(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+      return
+    }
+
+    try {
+      setIsGettingResponse(true)
+
+      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      
+      const response = await fetch(`${backendUrl}/infer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input_type: "text",
+          payload: trimmedInput,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
+        const errorMsg = errorData.detail || "AI response failed"
+        console.error("Backend error:", errorMsg)
+        throw new Error(errorMsg)
+      }
+
+      const data = await response.json()
+      const glossResponse = data.result
+
+      const aiMessage: Message = {
+        id: `ai-${Date.now()}`,
+        type: "ai",
+        content: glossResponse,
+        gloss: glossResponse,
+        timestamp: Date.now(),
+      }
+
+      setMessages((prev) => [...prev, aiMessage])
+      setCurrentGloss(glossResponse)
+    } catch (error) {
+      console.error("AI response error:", error)
+      const errorText = error instanceof Error ? error.message : "Error getting AI response"
+      const isRateLimit = errorText.includes("429") || errorText.includes("quota") || errorText.includes("rate limit")
+      
+      const errorMessage: Message = {
+        id: `ai-${Date.now()}`,
+        type: "ai",
+        content: isRateLimit 
+          ? "⚠️ Rate limit reached. All API keys are temporarily exhausted. Please wait a moment and try again."
+          : `Error: ${errorText}`,
+        timestamp: Date.now(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsGettingResponse(false)
+    }
+  }
+
+  // Handle keyboard shortcuts
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  // Clear all messages
+  const clearAllMessages = () => {
+    if (confirm("Clear all messages?")) {
+      setMessages([])
+      localStorage.removeItem(MESSAGES_KEY)
+      setCurrentGloss(null)
     }
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">AI Converse</h1>
-        <p className="text-muted-foreground">
-          Practice sign language conversations with AI assistance
-        </p>
-      </div>
-
-      {/* Online/Offline Indicator */}
-      {!isOnline && (
-        <Card className="mb-4 p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-            <WifiOff className="h-5 w-5" />
-            <span className="font-medium">⚠️ WiFi needed for AI responses</span>
+      <header className="sticky top-0 bg-white shadow-md z-10">
+        <div className="border-b bg-white px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">AI Converse</h1>
+              <p className="text-sm text-muted-foreground">
+                Practice sign language conversations with AI assistance
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isOnline ? (
+                <Wifi className="h-5 w-5 text-green-600" />
+              ) : (
+                <WifiOff className="h-5 w-5 text-red-600" />
+              )}
+            </div>
           </div>
-        </Card>
+        </div>
+      </header>
+
+      {/* Offline Warning */}
+      {!isOnline && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+          <div className="flex items-center gap-2 text-amber-800">
+            <WifiOff className="h-4 w-4" />
+            <span className="text-sm font-medium">⚠️ WiFi needed for AI responses</span>
+          </div>
+        </div>
       )}
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Panel: Camera & Recognition */}
-        <div className="space-y-4">
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Video className="h-5 w-5" />
-              <h2 className="text-xl font-semibold">Sign Recognition</h2>
+      <main className="flex-grow overflow-hidden flex">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col overflow-hidden mr-96">
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <Video className="h-16 w-16 mb-4 text-gray-300" />
+                <p className="text-lg">No messages yet. Start a conversation!</p>
+                <p className="text-sm mt-2">Sign something or type a message below</p>
+              </div>
+            ) : (
+              <>
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-2xl rounded-2xl px-4 py-3 ${
+                        message.type === "user"
+                          ? "bg-blue-500 text-white"
+                          : "bg-white border shadow-sm"
+                      }`}
+                    >
+                      {message.type === "ai" && message.gloss ? (
+                        <div className="space-y-3">
+                          {/* 3D Avatar Placeholder */}
+                          <div className="bg-gray-100 rounded-lg p-8 flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-gray-300">
+                            <Video className="h-12 w-12 text-gray-400 mb-3" />
+                            <p className="text-sm text-gray-600 text-center font-medium">3D Avatar</p>
+                            <p className="text-xs text-gray-500 text-center mt-1">Avatar will appear here and sign the response</p>
+                          </div>
+                          {/* Gloss Text Animation */}
+                          <SignAnimationPlayer 
+                            gloss={message.gloss} 
+                            autoPlay={false}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
+                      <div
+                        className={`text-xs mt-1 ${
+                          message.type === "user" ? "text-blue-100" : "text-muted-foreground"
+                        }`}
+                      >
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Detected Words + Input Bar */}
+          <div className="border-t bg-white">
+            {/* Detected Words Row */}
+            {detectedWords.length > 0 && (
+              <div className="border-b bg-gray-50 px-6 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Detected Signs ({detectedWords.length}) - Click to add to message
+                  </span>
+                  <div className="flex gap-2">
+                    {selectedWords.size > 0 && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={clearSelectedWords}
+                        className="h-6 text-xs"
+                      >
+                        Clear Selected
+                      </Button>
+                    )}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={clearDetectedWords}
+                      className="h-6 text-xs"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {detectedWords.map((word, index) => {
+                    const isSelected = selectedWords.has(word.word)
+                    const selectionOrder = isSelected 
+                      ? selectedWordsOrder.indexOf(word.word) + 1 
+                      : null
+                    
+                    return (
+                      <button
+                        key={`${word.word}-${index}`}
+                        onClick={() => toggleWordSelection(word.word)}
+                        className={`relative px-3 py-1 rounded-full text-sm transition-colors ${
+                          isSelected
+                            ? "bg-blue-500 text-white"
+                            : "bg-white border hover:border-blue-300"
+                        }`}
+                      >
+                        {isSelected && selectionOrder && (
+                          <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                            {selectionOrder}
+                          </span>
+                        )}
+                        {word.word}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Input Area */}
+            <div className="p-4">
+              <div className="flex gap-2">
+                <textarea
+                  ref={textareaRef}
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message or use detected signs..."
+                  className="flex-1 resize-none rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                  disabled={isGettingResponse}
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!messageInput.trim() || isGettingResponse}
+                  size="lg"
+                  className="px-6"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Camera Feed (Fixed Right) */}
+        <Card className="fixed right-0 top-0 bottom-0 w-96 rounded-none border-l flex flex-col" style={{marginTop: 'var(--header-height, 73px)'}}>
+          {/* Header */}
+          <div className="flex items-center gap-2 p-4 border-b">
+            <Video className="h-5 w-5" />
+            <h3 className="font-semibold">Sign Recognition</h3>
+          </div>
 
             {/* Camera View */}
-            <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4">
+            <div className="relative bg-black aspect-video">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-full object-cover"
-                style={{ display: isCameraReady ? "block" : "none" }}
+                className={`w-full h-full object-cover ${isCameraReady ? 'block' : 'hidden'}`}
               />
               <canvas ref={canvasRef} className="hidden" />
 
@@ -331,7 +598,7 @@ export default function AIConversePage() {
                   )}
                   {cameraError && (
                     <div className="text-center p-4">
-                      <p className="text-red-400 mb-2">{cameraError}</p>
+                      <p className="text-red-400 text-sm mb-2">{cameraError}</p>
                       <Button onClick={initCamera} size="sm">
                         Try Again
                       </Button>
@@ -340,7 +607,7 @@ export default function AIConversePage() {
                 </div>
               )}
 
-              {/* Online indicator overlay */}
+              {/* Online indicator */}
               <div className="absolute top-2 right-2">
                 {isOnline ? (
                   <Wifi className="h-5 w-5 text-green-400" />
@@ -351,103 +618,38 @@ export default function AIConversePage() {
             </div>
 
             {/* Current Sign Display */}
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <div className="text-sm text-muted-foreground mb-1">
+            <div className="p-4 bg-gray-50">
+              <div className="text-xs text-muted-foreground mb-1">
                 Detected Sign:
               </div>
-              <div className="text-2xl font-bold mb-2">{currentSign}</div>
+              <div className="text-xl font-bold mb-2">{currentSign}</div>
               {currentConfidence > 0 && (
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
-                    style={{ width: `${currentConfidence * 100}%` }}
+                    style={{width: `${currentConfidence * 100}%`}}
                   />
                 </div>
               )}
             </div>
-          </Card>
 
-          {/* AI Response Panel */}
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MessageSquare className="h-5 w-5" />
-              <h2 className="text-xl font-semibold">AI Response</h2>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-6 min-h-[100px] flex items-center justify-center">
-              <div className="text-center">
-                {isGettingResponse ? (
-                  <div className="text-muted-foreground">Thinking...</div>
-                ) : aiResponse ? (
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {aiResponse}
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground">
-                    Sign something to start a conversation
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Right Panel: Conversation History */}
-        <div className="space-y-4">
-          <Card className="p-6 h-[calc(100vh-200px)] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Conversation History</h2>
+            {/* Clear Button */}
+            <div className="p-4 border-t mt-auto">
               <Button
-                variant="ghost"
+                variant="default"
                 size="sm"
-                onClick={clearHistory}
-                disabled={conversationHistory.length === 0}
+                onClick={clearAllMessages}
+                disabled={messages.length === 0}
+                className="w-full"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Clear
+                Clear All
               </Button>
             </div>
-
-            {/* History List */}
-            <div className="flex-1 overflow-y-auto space-y-3">
-              {conversationHistory.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  No conversations yet. Start signing!
-                </div>
-              ) : (
-                conversationHistory.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
-                  >
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {new Date(entry.timestamp).toLocaleTimeString()}
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground">
-                          You signed:
-                        </div>
-                        <div className="text-lg font-semibold">
-                          {entry.recognizedSign}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground">
-                          AI responded:
-                        </div>
-                        <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                          {entry.aiResponse}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={historyEndRef} />
-            </div>
           </Card>
-        </div>
-      </div>
+      </main>
     </div>
   )
 }
+
+export default AIConversePage

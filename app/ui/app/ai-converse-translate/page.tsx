@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
-import { Wifi, WifiOff, Trash2, Video, MessageSquare } from "lucide-react"
+import { Wifi, WifiOff, Trash2, Video, MessageSquare, RotateCcw } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
+import { SignAnimationPlayer } from "@/components/ai-converse/SignAnimationPlayer"
 
 interface ConversationEntry {
   id: string
@@ -39,6 +40,7 @@ export default function AIConversePage() {
   const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([])
   const [aiResponse, setAiResponse] = useState<string>("")
   const [isGettingResponse, setIsGettingResponse] = useState(false)
+  const [replayGloss, setReplayGloss] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -309,8 +311,8 @@ export default function AIConversePage() {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Panel: Camera & Recognition */}
-        <div className="space-y-4">
+        {/* Left Panel: Camera + Recognition + AI Response */}
+        <div className="space-y-6">{/* Camera Card */}
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Video className="h-5 w-5" />
@@ -384,20 +386,22 @@ export default function AIConversePage() {
               <MessageSquare className="h-5 w-5" />
               <h2 className="text-xl font-semibold">AI Response</h2>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-6 min-h-[100px] flex items-center justify-center">
-              <div className="text-center">
-                {isGettingResponse ? (
-                  <div className="text-muted-foreground">Thinking...</div>
-                ) : aiResponse ? (
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {aiResponse}
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground">
-                    Sign something to start a conversation
-                  </div>
-                )}
-              </div>
+            <div className="min-h-[100px]">
+              {isGettingResponse ? (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  Thinking...
+                </div>
+              ) : (replayGloss || aiResponse) ? (
+                <SignAnimationPlayer 
+                  gloss={replayGloss || aiResponse} 
+                  autoPlay={true}
+                  onComplete={() => setReplayGloss(null)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground text-center px-4">
+                  Sign something to start a conversation
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -443,8 +447,23 @@ export default function AIConversePage() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs font-medium text-muted-foreground">
-                          AI responded:
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs font-medium text-muted-foreground">
+                            AI responded:
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setReplayGloss(entry.aiResponse)
+                              window.scrollTo({ top: 0, behavior: "smooth" })
+                            }}
+                            title="Replay signs"
+                            className="h-6 px-2"
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Replay
+                          </Button>
                         </div>
                         <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                           {entry.aiResponse}
