@@ -34,6 +34,26 @@ services:
     networks:
       - talk2dhand-network
 
+  ai-converse-translate:
+    build:
+      context: ./ai-converse-translate
+      dockerfile: Dockerfile
+    container_name: ai-converse-translate-dev
+    ports:
+      - "8100:8100"
+    volumes:
+      # Mount shared ISLR model from dynamic-phrases (read-only)
+      - ./dynamic-phrases/module/islr:/app/shared-models/islr:ro
+      # Enable hot-reload for development
+      - ./ai-converse-translate/app.py:/app/app.py
+      - ./ai-converse-translate/.env:/app/.env
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - talk2dhand-network
+
 networks:
   talk2dhand-network:
     driver: bridge
