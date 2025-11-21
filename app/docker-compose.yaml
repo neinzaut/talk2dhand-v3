@@ -35,6 +35,23 @@ services:
     networks:
       - talk2dhand-network
 
+  ai-converse-translate-service:
+    build:
+      context: ./ai-converse-translate
+      dockerfile: Dockerfile
+    container_name: ai-converse-translate-service
+    ports:
+      - "8100:8100"
+    volumes:
+      # Mount shared ISLR model from dynamic-phrases (read-only)
+      - ./dynamic-phrases/module/islr:/app/shared-models/islr:ro
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - talk2dhand-network
+
   ui:
     build:
       context: ./ui
@@ -51,10 +68,12 @@ services:
       # Backend API URLs (accessible via Docker network)
       - NEXT_PUBLIC_STATIC_SIGNS_API=http://static-signs:8000
       - NEXT_PUBLIC_DYNAMIC_PHRASES_API=http://dynamic-phrases:5008
+      - NEXT_PUBLIC_AI_CONVERSE_API=http://ai-converse-translate-service:8100
       - NODE_ENV=production
     depends_on:
       - static-signs
       - dynamic-phrases
+      - ai-converse-translate-service
     restart: unless-stopped
     networks:
       - talk2dhand-network
