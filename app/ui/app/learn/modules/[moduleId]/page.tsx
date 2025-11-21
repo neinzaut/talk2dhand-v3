@@ -45,8 +45,12 @@ export default function ModuleOverviewPage() {
           <Card key={lesson.id}>
             <CardContent className="flex items-center justify-between p-6">
               <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-xl border-4 border-orange-500 bg-white">
-                  <div className="text-center text-lg font-bold text-black whitespace-pre-line">{lesson.icon}</div>
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl border-4 border-orange-500 bg-white overflow-hidden">
+                  {lesson.thumbnail ? (
+                    <img src={lesson.thumbnail} alt={lesson.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="text-center text-lg font-bold text-black whitespace-pre-line">{lesson.icon}</div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">{lesson.title}</h3>

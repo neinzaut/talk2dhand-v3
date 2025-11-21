@@ -42,6 +42,7 @@ export interface Lesson {
   title: string
   subtitle: string
   icon: string
+  thumbnail?: string
   completed: boolean
   progress: number
   signs: Sign[]

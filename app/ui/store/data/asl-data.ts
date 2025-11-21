@@ -13,6 +13,7 @@ export const aslData: LanguageData = {
           title: "Lesson 1: Alphabets",
           subtitle: "Learn how to sign letters!",
           icon: "aα\naA",
+          thumbnail: "/icons/alphabets.png",
           completed: true,
           progress: 100,
           signs: [
@@ -92,6 +93,7 @@ When fingerspelling, keep your hand at **chest to shoulder height**, relaxed, an
           title: "Lesson 2: Numbers",
           subtitle: "Learn how to sign numbers!",
           icon: "1️⃣2️⃣\n3️⃣4️⃣",
+          thumbnail: "/icons/numbers.png",
           completed: false,
           progress: 60,
           signs: [
@@ -149,6 +151,7 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           title: "Lesson 3: Phrases",
           subtitle: "Learn how to sign words or phrases!",
           icon: "❓",
+          thumbnail: "/icons/phrases.png",
           completed: false,
           progress: 0,
           signs: [
@@ -243,6 +246,7 @@ Notice how the hand movements flow naturally and include appropriate facial expr
           title: "Lesson 4: Grammar",
           subtitle: "Learn grammar and syntax in sign!",
           icon: "📝",
+          thumbnail: "/icons/grammar.png",
           completed: false,
           progress: 0,
           signs: [],
