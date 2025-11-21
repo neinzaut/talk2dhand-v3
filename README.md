@@ -139,6 +139,8 @@ docker-compose up -d
 
 Access the application at http://localhost:3000.
 
+**Important:** Ensure you have a `.env` file in `app/ai-converse-translate/` with your `GOOGLE_API_KEY` for the AI Converse Translate service to work properly in Docker. See [AI Converse Translate README](app/ai-converse-translate/README.md) for details.
+
 ## Documentation
 
 - **[DOCKER_GUIDE.md](app/DOCKER_GUIDE.md)** - Complete setup guide

@@ -211,6 +211,22 @@ Both setups require the same model files:
 - `static-signs/hand_landmarks.h5` ✅
 - `dynamic-phrases/action.h5` ✅
 
+### Environment Files Missing
+**AI Converse Translate requires a `.env` file** in `app/ai-converse-translate/`:
+
+```powershell
+# Create .env file with your Google API key
+cd app\ai-converse-translate
+echo GOOGLE_API_KEY=your_google_api_key_here > .env
+```
+
+Without this file, the AI Converse Translate service will fail to start with:
+```
+ERROR: GOOGLE_API_KEY not found in environment
+```
+
+Get your API key from: https://makersuite.google.com/app/apikey
+
 ### Network Issues
 Both setups use the same Docker network but different connection methods:
 
