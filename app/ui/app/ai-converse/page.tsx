@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { 
-  Wifi, WifiOff, Trash2, Video, Send, X
+  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle
 } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
-import { SignAnimationPlayer } from "@/components/ai-converse/SignAnimationPlayer"
+import { StickFigureAvatar } from "@/components/ai-converse/StickFigureAvatar"
+import { HowToUseModal } from "@/components/how-to-use-modal"
 
 interface Message {
   id: string
@@ -30,6 +31,8 @@ const MAX_DETECTED_WORDS = 10
 // Ensure the header and footer stick to the top and bottom respectively
 const AIConversePage = () => {
   const currentLanguage = useAppStore((state) => state.currentLanguage)
+  const [howToOpen, setHowToOpen] = useState(false)
+  const clientId = useRef("ai-converse-" + Date.now()).current
 
   // Online/Offline state
   const [isOnline, setIsOnline] = useState(true)
@@ -183,35 +186,38 @@ const AIConversePage = () => {
 
     try {
       setIsProcessing(true)
-      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      const backendUrl = process.env.NEXT_PUBLIC_DYNAMIC_PHRASES_API || "http://localhost:5008"
       
-      const response = await fetch(`${backendUrl}/infer`, {
+      const response = await fetch(`${backendUrl}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          input_type: "sign-frame",
-          payload: imageData,
-          language: currentLanguage,
+          image: imageData,
+          clientId: clientId,
+          language: "english",
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
-        throw new Error(errorData.detail || "Detection failed")
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        throw new Error(errorData.error || "Detection failed")
       }
 
       const data = await response.json()
-      setCurrentSign(data.result)
-      setCurrentConfidence(data.confidence)
+      const recognizedSign = data.english_prediction || ""
+      const confidence = data.confidence || 0
+      
+      setCurrentSign(recognizedSign || "Listening...")
+      setCurrentConfidence(confidence)
 
       // Add stable signs to detected words
       if (
-        data.confidence > 0.6 &&
-        data.result !== "Listening..." &&
-        data.result !== lastStableSign
+        confidence > 0.65 &&
+        recognizedSign &&
+        recognizedSign !== lastStableSign
       ) {
-        setLastStableSign(data.result)
-        addDetectedWord(data.result, data.confidence)
+        setLastStableSign(recognizedSign)
+        addDetectedWord(recognizedSign, confidence)
       }
     } catch (error) {
       console.error("Detection error:", error)
@@ -390,7 +396,7 @@ const AIConversePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <header className="sticky top-0 bg-white shadow-md z-10">
         <div className="border-b bg-white px-6 py-4">
@@ -401,13 +407,15 @@ const AIConversePage = () => {
                 Practice sign language conversations with AI assistance
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              {isOnline ? (
-                <Wifi className="h-5 w-5 text-green-600" />
-              ) : (
-                <WifiOff className="h-5 w-5 text-red-600" />
-              )}
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setHowToOpen(true)}
+              className="gap-2"
+            >
+              <HelpCircle className="h-5 w-5" />
+              How to Use
+            </Button>
           </div>
         </div>
       </header>
@@ -423,14 +431,25 @@ const AIConversePage = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-grow overflow-hidden flex">
+      <main className="h-auto flex overflow-hidden">
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden mr-96">
+        <div className="bottom-0 left-0 w-full flex flex-col">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                <Video className="h-16 w-16 mb-4 text-gray-300" />
+                {/* Empty state stick figure SVG */}
+                <svg width="120" height="120" viewBox="0 0 120 120" className="mb-4 opacity-30">
+                  <circle cx="60" cy="20" r="12" fill="#9CA3AF" />
+                  <line x1="60" y1="32" x2="60" y2="70" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="45" y1="40" x2="75" y2="40" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="45" y1="40" x2="38" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="38" y1="60" x2="35" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="75" y1="40" x2="82" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="82" y1="60" x2="85" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="35" cy="80" r="5" fill="#9CA3AF" />
+                  <circle cx="85" cy="80" r="5" fill="#9CA3AF" />
+                </svg>
                 <p className="text-lg">No messages yet. Start a conversation!</p>
                 <p className="text-sm mt-2">Sign something or type a message below</p>
               </div>
@@ -450,14 +469,8 @@ const AIConversePage = () => {
                     >
                       {message.type === "ai" && message.gloss ? (
                         <div className="space-y-3">
-                          {/* 3D Avatar Placeholder */}
-                          <div className="bg-gray-100 rounded-lg p-8 flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-gray-300">
-                            <Video className="h-12 w-12 text-gray-400 mb-3" />
-                            <p className="text-sm text-gray-600 text-center font-medium">3D Avatar</p>
-                            <p className="text-xs text-gray-500 text-center mt-1">Avatar will appear here and sign the response</p>
-                          </div>
-                          {/* Gloss Text Animation */}
-                          <SignAnimationPlayer 
+                          {/* Stick Figure Avatar */}
+                          <StickFigureAvatar 
                             gloss={message.gloss} 
                             autoPlay={false}
                           />
@@ -566,8 +579,8 @@ const AIConversePage = () => {
           </div>
         </div>
 
-        {/* Camera Feed (Fixed Right) */}
-        <Card className="fixed right-0 top-0 bottom-0 w-96 rounded-none border-l flex flex-col" style={{marginTop: 'var(--header-height, 73px)'}}>
+        {/* Camera Feed (Right Panel) */}
+        <Card className="w-80 rounded-none border-l flex flex-col overflow-y-auto">
           {/* Header */}
           <div className="flex items-center gap-2 p-4 border-b">
             <Video className="h-5 w-5" />
@@ -625,12 +638,26 @@ const AIConversePage = () => {
               <div className="text-xl font-bold mb-2">{currentSign}</div>
               {currentConfidence > 0 && (
                 <div className="w-full bg-gray-200 rounded-full h-2">
+                  {/* eslint-disable-next-line react/forbid-dom-props */}
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{width: `${currentConfidence * 100}%`}}
                   />
                 </div>
               )}
+            </div>
+
+            {/* Live Avatar Display */}
+            <div className="p-4 border-t">
+              <div className="text-xs text-muted-foreground mb-2">
+                Live Sign Preview:
+              </div>
+              <div className="bg-white rounded-lg border aspect-video flex items-center justify-center">
+                <StickFigureAvatar 
+                  gloss={currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""} 
+                  autoPlay={true}
+                />
+              </div>
             </div>
 
             {/* Clear Button */}
@@ -648,6 +675,23 @@ const AIConversePage = () => {
             </div>
           </Card>
       </main>
+
+      {/* How To Use Modal */}
+      <HowToUseModal
+        open={howToOpen}
+        onOpenChange={setHowToOpen}
+      >
+        <div className="text-base space-y-4 pt-4">
+          <h3 className="font-bold text-lg mb-2">How to Use AI Converse</h3>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Click &apos;Start Camera&apos; to enable your webcam</li>
+            <li>Perform signs from the dynamic phrases set (hello, thankyou, food, drink, etc.)</li>
+            <li>Detected signs appear above the input - click them to build your message</li>
+            <li>Send your message to get an AI response with animated stick-figure avatar</li>
+            <li>Your conversation history is displayed in the chat area</li>
+          </ol>
+        </div>
+      </HowToUseModal>
     </div>
   )
 }

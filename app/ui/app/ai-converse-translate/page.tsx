@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
-import { Wifi, WifiOff, Trash2, Video, MessageSquare, RotateCcw } from "lucide-react"
+import { Trash2, Video, MessageSquare, RotateCcw, HelpCircle, Wifi, WifiOff } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
-import { SignAnimationPlayer } from "@/components/ai-converse/SignAnimationPlayer"
+import { StickFigureAvatar } from "@/components/ai-converse/StickFigureAvatar"
+import { HowToUseModal } from "@/components/how-to-use-modal"
 
 interface ConversationEntry {
   id: string
@@ -20,6 +21,8 @@ const MAX_HISTORY = 50
 
 export default function AIConversePage() {
   const currentLanguage = useAppStore((state) => state.currentLanguage)
+  const [howToOpen, setHowToOpen] = useState(false)
+  const clientId = useRef("ai-converse-" + Date.now()).current
 
   // Online/Offline state
   const [isOnline, setIsOnline] = useState(true)
@@ -174,36 +177,39 @@ export default function AIConversePage() {
 
     try {
       setIsProcessing(true)
-      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      const backendUrl = process.env.NEXT_PUBLIC_DYNAMIC_PHRASES_API || "http://localhost:5008"
       
-      const response = await fetch(`${backendUrl}/infer`, {
+      const response = await fetch(`${backendUrl}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          input_type: "sign-frame",
-          payload: imageData,
-          language: currentLanguage,
+          image: imageData,
+          clientId: clientId,
+          language: "english",
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
-        throw new Error(errorData.detail || "Detection failed")
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        throw new Error(errorData.error || "Detection failed")
       }
 
       const data = await response.json()
-      setCurrentSign(data.result)
-      setCurrentConfidence(data.confidence)
+      const recognizedSign = data.english_prediction || ""
+      const confidence = data.confidence || 0
+      
+      setCurrentSign(recognizedSign || "Listening...")
+      setCurrentConfidence(confidence)
 
       // Check if we have a stable, new sign
       if (
-        data.confidence > 0.6 &&
-        data.result !== "Listening..." &&
-        data.result !== lastStableSign
+        confidence > 0.65 &&
+        recognizedSign &&
+        recognizedSign !== lastStableSign
       ) {
-        setLastStableSign(data.result)
+        setLastStableSign(recognizedSign)
         // Automatically get AI response
-        await getAIResponse(data.result)
+        await getAIResponse(recognizedSign)
       }
     } catch (error) {
       console.error("Detection error:", error)
@@ -290,27 +296,46 @@ export default function AIConversePage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">AI Converse</h1>
-        <p className="text-muted-foreground">
-          Practice sign language conversations with AI assistance
-        </p>
+    <div className="h-screen flex flex-col">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-40 bg-background border-b">
+        <div className="container mx-auto px-6 py-4 max-w-7xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">AI Converse</h1>
+              <p className="text-muted-foreground">
+                Practice sign language conversations with AI assistance
+              </p>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setHowToOpen(true)}
+              className="gap-2"
+            >
+              <HelpCircle className="h-5 w-5" />
+              How to Use
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Online/Offline Indicator */}
       {!isOnline && (
-        <Card className="mb-4 p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-            <WifiOff className="h-5 w-5" />
-            <span className="font-medium">⚠️ WiFi needed for AI responses</span>
-          </div>
-        </Card>
+        <div className="container mx-auto px-6 pt-4 max-w-7xl">
+          <Card className="p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+              <MessageSquare className="h-5 w-5" />
+              <span className="font-medium">⚠️ WiFi needed for AI responses</span>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="flex-1 overflow-hidden">
+        <div className="container mx-auto px-6 py-6 max-w-7xl h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
         {/* Left Panel: Camera + Recognition + AI Response */}
         <div className="space-y-6">{/* Camera Card */}
           <Card className="p-6">
@@ -321,6 +346,7 @@ export default function AIConversePage() {
 
             {/* Camera View */}
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4">
+              {/* eslint-disable-next-line react/forbid-dom-props */}
               <video
                 ref={videoRef}
                 autoPlay
@@ -371,6 +397,7 @@ export default function AIConversePage() {
               <div className="text-2xl font-bold mb-2">{currentSign}</div>
               {currentConfidence > 0 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  {/* eslint-disable-next-line react/forbid-dom-props */}
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{ width: `${currentConfidence * 100}%` }}
@@ -392,14 +419,31 @@ export default function AIConversePage() {
                   Thinking...
                 </div>
               ) : (replayGloss || aiResponse) ? (
-                <SignAnimationPlayer 
+                <StickFigureAvatar 
                   gloss={replayGloss || aiResponse} 
                   autoPlay={true}
                   onComplete={() => setReplayGloss(null)}
                 />
               ) : (
-                <div className="flex items-center justify-center h-[300px] text-muted-foreground text-center px-4">
-                  Sign something to start a conversation
+                <div className="flex flex-col items-center justify-center h-[300px] text-center px-4">
+                  {/* Empty state stick figure SVG */}
+                  <svg width="120" height="120" viewBox="0 0 120 120" className="mb-4 opacity-30">
+                    <circle cx="60" cy="20" r="12" fill="#9CA3AF" />
+                    <line x1="60" y1="32" x2="60" y2="70" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="45" y1="40" x2="75" y2="40" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="45" y1="40" x2="38" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="38" y1="60" x2="35" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="75" y1="40" x2="82" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="82" y1="60" x2="85" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                    <circle cx="35" cy="80" r="5" fill="#9CA3AF" />
+                    <circle cx="85" cy="80" r="5" fill="#9CA3AF" />
+                  </svg>
+                  <p className="text-muted-foreground text-lg font-medium">
+                    Avatar will sign responses here
+                  </p>
+                  <p className="text-muted-foreground text-sm mt-2">
+                    Start chatting!
+                  </p>
                 </div>
               )}
             </div>
@@ -407,12 +451,12 @@ export default function AIConversePage() {
         </div>
 
         {/* Right Panel: Conversation History */}
-        <div className="space-y-4">
-          <Card className="p-6 h-[calc(100vh-200px)] flex flex-col">
+        <div className="flex flex-col h-full">
+          <Card className="p-6 flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Conversation History</h2>
               <Button
-                variant="ghost"
+                variant="default"
                 size="sm"
                 onClick={clearHistory}
                 disabled={conversationHistory.length === 0}
@@ -452,7 +496,7 @@ export default function AIConversePage() {
                             AI responded:
                           </div>
                           <Button
-                            variant="ghost"
+                            variant="default"
                             size="sm"
                             onClick={() => {
                               setReplayGloss(entry.aiResponse)
@@ -477,7 +521,26 @@ export default function AIConversePage() {
             </div>
           </Card>
         </div>
+          </div>
+        </div>
       </div>
+
+      {/* How To Use Modal */}
+      <HowToUseModal
+        open={howToOpen}
+        onOpenChange={setHowToOpen}
+      >
+        <div className="text-base space-y-4 pt-4">
+          <h3 className="font-bold text-lg mb-2">How to Use AI Converse</h3>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Click &apos;Start Camera&apos; to enable your webcam</li>
+            <li>Perform signs from the dynamic phrases set (hello, thankyou, food, drink, etc.)</li>
+            <li>The AI will recognize your signs and respond with sign language animations</li>
+            <li>Watch the stick-figure avatar demonstrate the AI&apos;s response</li>
+            <li>Your conversation history is saved automatically</li>
+          </ol>
+        </div>
+      </HowToUseModal>
     </div>
   )
 }
