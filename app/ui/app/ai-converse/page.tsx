@@ -580,7 +580,7 @@ const AIConversePage = () => {
         </div>
 
         {/* Camera Feed (Right Panel) */}
-        <Card className="w-80 rounded-none border-l flex flex-col overflow-y-auto">
+        <Card className="w-95 rounded-none border-l flex flex-col overflow-y-auto">
           {/* Header */}
           <div className="flex items-center gap-2 p-4 border-b">
             <Video className="h-5 w-5" />
