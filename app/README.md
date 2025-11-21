@@ -9,6 +9,7 @@ This directory contains all services for the Talk2DHand sign language learning p
 | **UI** | 3000 | Next.js + React | Web application frontend |
 | **Static Signs** | 8000 | Flask + TensorFlow 2.10 | Static character recognition (A-Z, 0-9) |
 | **Dynamic Phrases** | 5008 | Flask + TensorFlow Lite | Dynamic phrase recognition (hello, thanks – ISLR model) |
+| **AI Converse Translate** | 8100 | FastAPI + Gemini AI | AI-powered sign recognition & conversation responses |
 
 ## Quick Start
 
@@ -39,6 +40,7 @@ docker-compose down
 - UI: http://localhost:3000
 - Static Signs API: http://localhost:8000/health
 - Dynamic Phrases API: http://localhost:5008/predict
+- AI Converse Translate API: http://localhost:8100/health
 
 **For detailed documentation, see [DOCKER_SETUP.md](DOCKER_SETUP.md)**
 

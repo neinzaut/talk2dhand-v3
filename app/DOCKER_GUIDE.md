@@ -18,35 +18,43 @@ Talk2DHand provides two Docker configurations that work independently without co
 
 ### Production Setup
 ```
-┌─────────────────────────────────────────────────────────┐
-│                Docker Network (talk2dhand-network)     │
-├─────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ UI Container │  │ Static Signs │  │Dynamic Phrases│ │
-│  │   :3000      │  │   :8000      │  │   :5008      │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘ │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                Docker Network (talk2dhand-network)                 │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│  │ UI Container │  │ Static Signs │  │Dynamic Phrases│             │
+│  │   :3000      │  │   :8000      │  │   :5008      │             │
+│  └──────┬───────┘  └──────────────┘  └──────────────┘             │
+│         │                                                           │
+│         │          ┌────────────────────────────────┐              │
+│         └──────────│ AI Converse Translate          │              │
+│                    │ (FastAPI + Gemini AI)          │              │
+│                    │ :8100                          │              │
+│                    └────────────────────────────────┘              │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Development Setup
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Host Machine                                            │
-│  ┌──────────────┐                                      │
-│  │ UI (Native)  │  ← Hot reload enabled                │
-│  │   :3000      │                                      │
-│  └──────────────┘                                      │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ Host Machine                                                        │
+│  ┌──────────────┐                                                   │
+│  │ UI (Native)  │  ← Hot reload enabled                             │
+│  │   :3000      │                                                   │
+│  └──────────────┘                                                   │
+└─────────────────────────────────────────────────────────────────────┘
            │
-           ▼ (connects to localhost:8000, :5008)
-┌─────────────────────────────────────────────────────────┐
-│                Docker Network (talk2dhand-network)     │
-├─────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐                   │
-│  │ Static Signs │  │Dynamic Phrases│ ← Hot reload      │
-│  │   :8000      │  │   :5008      │   enabled         │
-│  └──────────────┘  └──────────────┘                   │
-└─────────────────────────────────────────────────────────┘
+           ▼ (connects to localhost:8000, :5008, :8100)
+┌─────────────────────────────────────────────────────────────────────┐
+│                Docker Network (talk2dhand-network)                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐     │
+│  │ Static Signs │  │Dynamic Phrase│  │ AI Converse Translate  │     │
+│  │   :8000      │  │   :5008      │  │   :8100                │     │
+│  └──────────────┘  └──────────────┘  └────────────────────────┘     │
+│                                                                     │
+│  ← Hot reload enabled for all services                              │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Container Naming Strategy
@@ -58,6 +66,7 @@ The two setups use **different container names** to prevent conflicts:
 | UI | `talk2dhand-ui` | N/A (native) |
 | Static Signs | `talk2dhand-static-signs` | `talk2dhand-static-signs-dev` |
 | Dynamic Phrases | `talk2dhand-dynamic-phrases` | `talk2dhand-dynamic-phrases-dev` |
+| AI Converse Translate | `talk2dhand-ai-converse-translate` | `talk2dhand-ai-converse-translate-dev` |
 
 ## Setup Instructions
 
@@ -73,6 +82,7 @@ docker-compose up -d
 # - UI: http://localhost:3000
 # - Static Signs API: http://localhost:8000  
 # - Dynamic Phrases API: http://localhost:5008
+# - AI Converse Translate API: http://localhost:8100
 
 # Stop all services
 docker-compose down
@@ -105,6 +115,7 @@ npm run dev
 # - UI: http://localhost:3000 (with hot reload)
 # - Static Signs API: http://localhost:8000
 # - Dynamic Phrases API: http://localhost:5008
+# - AI Converse Translate API: http://localhost:8100
 ```
 
 ## Key Differences
@@ -113,7 +124,7 @@ npm run dev
 |---------|------------|-------------|
 | **UI Hot Reload** | ❌ | ✅ |
 | **Backend Hot Reload** | ❌ | ✅ |
-| **Container Count** | 3 | 2 |
+| **Container Count** | 4 | 3 |
 | **Startup Time** | Slower | Faster |
 | **Resource Usage** | Higher | Lower |
 | **Network Config** | Internal Docker | Localhost |
@@ -125,6 +136,7 @@ npm run dev
 environment:
   - NEXT_PUBLIC_STATIC_SIGNS_API=http://static-signs:8000
   - NEXT_PUBLIC_DYNAMIC_PHRASES_API=http://dynamic-phrases:5008
+  - NEXT_PUBLIC_AI_CONVERSE_API=http://ai-converse-translate:8100
   - NODE_ENV=production
 ```
 
@@ -132,6 +144,7 @@ environment:
 The UI automatically uses localhost URLs when running natively:
 - `http://localhost:8000` for static signs
 - `http://localhost:5008` for dynamic phrases
+- `http://localhost:8100` for AI converse translate
 
 ## Switching Between Setups
 
@@ -169,13 +182,14 @@ volumes:
 ## Troubleshooting
 
 ### Port Conflicts
-Both setups use the same ports (3000, 8000, 5008). Make sure to stop one before starting the other:
+Both setups use the same ports (3000, 8000, 5008, 8100). Make sure to stop one before starting the other:
 
 ```powershell
 # Check what's using ports
 netstat -ano | findstr ":3000"
 netstat -ano | findstr ":8000"
 netstat -ano | findstr ":5008"
+netstat -ano | findstr ":8100"
 
 # Stop all Talk2DHand containers
 docker stop $(docker ps -q --filter "name=talk2dhand")
@@ -261,6 +275,57 @@ docker-compose up -d static-signs
 4. **Use the PowerShell scripts** for convenience
 5. **Check container status** with `docker ps` when troubleshooting
 
+## Building Individual Services
+
+You can build and run specific services without starting the entire stack:
+
+### Development Mode
+```powershell
+# Build and start a single service
+docker-compose -f docker-compose.dev.yaml up --build <service-name>
+
+# Examples:
+docker-compose -f docker-compose.dev.yaml up --build static-signs
+docker-compose -f docker-compose.dev.yaml up --build dynamic-phrases
+docker-compose -f docker-compose.dev.yaml up --build ai-converse-translate
+
+# Run in detached mode
+docker-compose -f docker-compose.dev.yaml up -d static-signs
+
+# Rebuild without cache
+docker-compose -f docker-compose.dev.yaml build --no-cache static-signs
+docker-compose -f docker-compose.dev.yaml up -d static-signs
+```
+
+### Production Mode
+```powershell
+# Build and start a single service
+docker-compose up --build <service-name>
+
+# Examples:
+docker-compose up --build ui
+docker-compose up --build static-signs
+docker-compose up --build dynamic-phrases
+docker-compose up --build ai-converse-translate
+
+# Rebuild specific service
+docker-compose build static-signs
+docker-compose up -d static-signs
+```
+
+### Stopping Individual Services
+```powershell
+# Stop a specific service
+docker-compose stop <service-name>
+
+# Remove a specific container
+docker-compose rm -f <service-name>
+
+# Example: Restart just the AI service
+docker-compose stop ai-converse-translate
+docker-compose up -d ai-converse-translate
+```
+
 ## Commands Reference
 
 ```powershell
@@ -272,13 +337,22 @@ docker-compose up -d static-signs
 docker-compose -f docker-compose.dev.yaml up -d    # Backend only
 docker-compose -f docker-compose.dev.yaml down     # Stop backend
 
+# Development (Single Service)
+docker-compose -f docker-compose.dev.yaml up --build <service-name>  # Build & run one
+docker-compose -f docker-compose.dev.yaml stop <service-name>         # Stop one
+
 # Production
 docker-compose up -d                         # Start all
 docker-compose down                          # Stop all
 
+# Production (Single Service)
+docker-compose up --build <service-name>     # Build & run one
+docker-compose stop <service-name>           # Stop one
+
 # Monitoring
 docker-compose ps                            # Check status
 docker-compose logs -f                       # Watch logs
+docker-compose logs -f <service-name>        # Watch specific service logs
 docker stats                                 # Resource usage
 
 # Cleanup

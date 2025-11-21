@@ -17,7 +17,9 @@ app/ui/
 │   │   └── lessons/[lessonId]/page.tsx
 │   ├── practice/          # Practice exercises
 │   │   └── page.tsx
-│   ├── ai-converse/       # AI conversation practice
+│   ├── ai-converse/       # AI conversation practice (legacy)
+│   │   └── page.tsx
+│   ├── ai-converse-translate/ # AI conversation with Gemini (new)
 │   │   └── page.tsx
 │   └── globals.css        # Global styles with Tailwind
 ├── components/            # React components
@@ -184,11 +186,27 @@ const pathname = usePathname()  // Get current route for active state
 
 ### AI Converse Page (`app/ai-converse/page.tsx`)
 
-**No Props** - Server Component
+**No Props** - Client Component (`"use client"`)
 
-**Status**: Placeholder page
+**Purpose**: Real-time sign language recognition with AI-powered conversational responses
 
-**Displays**: Title and description only
+**Features**:
+- Live camera feed for sign language input
+- Real-time sign recognition using ISLR model (via Dynamic Phrases API)
+- AI-powered conversational responses in ASL gloss format (Gemini 2.0 Flash)
+- Conversation history with timestamps and confidence scores
+- Offline sign recognition; online AI responses
+- Stick figure avatar for visualizing AI responses
+- Dual language support (ASL/FSL)
+
+**Backend Integration**:
+- Sign Recognition: `POST http://localhost:5008/predict`
+- AI Responses: `POST http://localhost:8100/infer` (via Next.js API route)
+
+**State Management**:
+- LocalStorage for conversation history persistence
+- Real-time camera and MediaPipe processing
+- Network status detection for online/offline features
 
 ---
 

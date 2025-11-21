@@ -4,19 +4,25 @@ A gamified platform for learning American Sign Language (ASL) and Filipino Sign 
 
 ## Architecture
 
-Talk2DHand consists of three main services:
+Talk2DHand consists of four main services:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                Docker Network (bridge)                  │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │  UI Service  │  │ Static Signs │  │Dynamic Phrase│   │
-│  │  (Next.js)   │──│  (Flask)     │──│  (Flask)     │   │
-│  │  Port: 3000  │  │  Port: 8000  │  │  Port: 5008  │   │
-│  └──────────────┘  └──────────────┘  └──────────────┘   │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                    Docker Network (bridge)                         │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │  UI Service  │  │ Static Signs │  │Dynamic Phrase│              │
+│  │  (Next.js)   │──│  (Flask)     │──│  (Flask)     │              │
+│  │  Port: 3000  │  │  Port: 8000  │  │  Port: 5008  │              │
+│  └──────┬───────┘  └──────────────┘  └──────────────┘              │
+│         │                                   |                      │
+│         │          ┌────────────────────────────────┐              │
+│         └──────────│ AI Converse Translate          │              │
+│                    │ (FastAPI + Gemini AI)          │              │
+│                    │ Port: 8100                     │              │
+│                    └────────────────────────────────┘              │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Technology Stack
@@ -31,8 +37,10 @@ Talk2DHand consists of three main services:
 ### Backend Services
 - Python 3.10-3.11
 - Flask
-- TensorFlow 2.10.0 / 2.15.0
+- FastAPI (AI Converse Translate)
+- TensorFlow 2.10.0 / 2.15.0 / TFLite
 - MediaPipe (Hands & Holistic)
+- Google Gemini 2.0 Flash (AI responses)
 
 ### DevOps
 - Docker & Docker Compose
