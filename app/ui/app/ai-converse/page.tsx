@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { 
-  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle
+  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle, RotateCcw
 } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
 import { StickFigureAvatar } from "@/components/ai-converse/StickFigureAvatar"
@@ -59,6 +59,8 @@ const AIConversePage = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [isGettingResponse, setIsGettingResponse] = useState(false)
   const [currentGloss, setCurrentGloss] = useState<string | null>(null)
+  const [avatarSpeed, setAvatarSpeed] = useState(1)
+  const [shouldReplayAvatar, setShouldReplayAvatar] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -605,6 +607,7 @@ const AIConversePage = () => {
                       onClick={initCamera}
                       disabled={isInitializing}
                       size="lg"
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
                     >
                       {isInitializing ? "Starting Camera..." : "Start Camera"}
                     </Button>
@@ -612,7 +615,7 @@ const AIConversePage = () => {
                   {cameraError && (
                     <div className="text-center p-4">
                       <p className="text-red-400 text-sm mb-2">{cameraError}</p>
-                      <Button onClick={initCamera} size="sm">
+                      <Button onClick={initCamera} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
                         Try Again
                       </Button>
                     </div>
@@ -648,30 +651,70 @@ const AIConversePage = () => {
             </div>
 
             {/* Live Avatar Display */}
-            <div className="p-4 border-t">
+            <div className="p-4 border-t flex-1 flex flex-col">
               <div className="text-xs text-muted-foreground mb-2">
                 Live Sign Preview:
               </div>
-              <div className="bg-white rounded-lg border aspect-video flex items-center justify-center">
+              <div className="bg-white rounded-lg border aspect-video flex items-center justify-center mb-3">
                 <StickFigureAvatar 
                   gloss={currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""} 
                   autoPlay={true}
+                  key={shouldReplayAvatar ? Date.now() : currentSign}
                 />
               </div>
-            </div>
-
-            {/* Clear Button */}
-            <div className="p-4 border-t mt-auto">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={clearAllMessages}
-                disabled={messages.length === 0}
-                className="w-full"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
+              
+              {/* Animation Controls */}
+              <div className="space-y-2">
+                {/* Current Word Display */}
+                <div className="bg-gray-50 rounded-lg p-2 text-center">
+                  <div className="text-xs text-muted-foreground mb-1">Current Sign:</div>
+                  <div className="text-lg font-bold text-blue-600">
+                    {currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : "—"}
+                  </div>
+                </div>
+                
+                {/* Playback Controls */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setShouldReplayAvatar(!shouldReplayAvatar)}
+                    disabled={!currentSign || currentSign === "Waiting..." || currentSign === "Listening..."}
+                    className="flex-1"
+                    title="Replay animation"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Replay
+                  </Button>
+                  
+                  {/* Speed Controls */}
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg px-2 py-1">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setAvatarSpeed(Math.max(0.5, avatarSpeed - 0.25))}
+                      disabled={avatarSpeed <= 0.5}
+                      className="h-7 w-7 p-0"
+                      title="Slow down"
+                    >
+                      −
+                    </Button>
+                    <span className="text-xs font-medium min-w-[3rem] text-center">
+                      {avatarSpeed}x
+                    </span>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setAvatarSpeed(Math.min(2, avatarSpeed + 0.25))}
+                      disabled={avatarSpeed >= 2}
+                      className="h-7 w-7 p-0"
+                      title="Speed up"
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </Card>
       </main>
