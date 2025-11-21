@@ -13,6 +13,7 @@ export const fslData: LanguageData = {
           title: "Lesson 1: Alpabeto",
           subtitle: "Matuto kung paano mag-sign ng mga titik!",
           icon: "aα\naA",
+          thumbnail: "/icons/alphabets.png",
           completed: true,
           progress: 100,
           signs: [
@@ -89,6 +90,7 @@ FSL signers also tend to be **more expressive in their rhythm and movement**. Wh
           title: "Lesson 2: Mga Numero",
           subtitle: "Matuto kung paano mag-sign ng mga numero!",
           icon: "1️⃣2️⃣\n3️⃣4️⃣",
+          thumbnail: "/icons/numbers.png",
           completed: false,
           progress: 25,
           signs: [
@@ -149,6 +151,7 @@ Across the Philippines, you'll see slight **regional variations** — especially
           title: "Lesson 3: Mga Parirala",
           subtitle: "Matuto kung paano mag-sign ng mga salita!",
           icon: "❓",
+          thumbnail: "/icons/phrases.png",
           completed: false,
           progress: 0,
           signs: [
@@ -254,6 +257,7 @@ Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang
           title: "Lesson 4: Gramatika",
           subtitle: "Matuto ng gramatika sa sign language!",
           icon: "📝",
+          thumbnail: "/icons/grammar.png",
           completed: false,
           progress: 0,
           signs: [],
