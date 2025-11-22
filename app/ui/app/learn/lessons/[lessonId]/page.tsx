@@ -723,14 +723,12 @@ export default function LessonPage() {
           </Button>
           <h1 className="text-4xl font-bold text-primary">{lesson.title.split(":")[1]?.trim() || lesson.title}</h1>
         </div>
-        <Button 
-          variant="default" 
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md px-6 py-2" 
+        <button 
+          className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-4 py-2 rounded font-semibold transition shadow"
           onClick={() => setIsModalOpen(true)}
         >
-          <HelpCircle className="h-5 w-5" />
           How to Use?
-        </Button>
+        </button>
       </div>
 
       {/* SubLesson Navigation */}
@@ -812,7 +810,40 @@ export default function LessonPage() {
           </Button>
       </div>
 
-      <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <div className="text-base space-y-3 pt-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+              <span className="text-2xl">📚</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Learn</p>
+                <p className="text-sm text-gray-700">Read content, watch videos, and understand sign concepts before practicing</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+              <span className="text-2xl">📹</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Practice</p>
+                <p className="text-sm text-gray-700">Use your camera to perform signs and get real-time feedback</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+              <span className="text-2xl">🎯</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Quiz</p>
+                <p className="text-sm text-gray-700">Test your knowledge with multiple choice questions to reinforce learning</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+              <span className="text-2xl">📊</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Track Progress</p>
+                <p className="text-sm text-gray-700">Complete all sections to finish the lesson and advance to the next one</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </HowToUseModal>
     </div>
   )
 }

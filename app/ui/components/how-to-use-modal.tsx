@@ -25,30 +25,36 @@ export function HowToUseModal({ open, onOpenChange, children }: HowToUseModalPro
         <DialogHeader>
           <DialogTitle className="text-2xl">How to Use?</DialogTitle>
           {children || (
-            <div className="text-base space-y-4 pt-4">
-              <div>
-                <p className="font-bold text-lg mb-2">Quiz Rules</p>
-                <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                  <li>You will be shown 10 sign language gestures</li>
-                  <li>Each question has 4 possible answers</li>
-                  <li>You have 10 seconds to answer each question</li>
-                  <li>Score is based on correct answers only</li>
-                </ol>
-              </div>
-
-              <div>
-                <p className="font-bold text-lg mb-2">Interface Guide</p>
-                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                  <li>
-                    <span className="font-bold">Progress Bar</span> - Shows your position in the quiz
-                  </li>
-                  <li>
-                    <span className="font-bold">Timer</span> - Countdown for each question
-                  </li>
-                  <li>
-                    <span className="font-bold">Score</span> - Shown at the end with detailed review
-                  </li>
-                </ul>
+            <div className="text-base space-y-3 pt-4">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                  <span className="text-2xl">📚</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-1">Quiz Format</p>
+                    <p className="text-sm text-gray-700">10 sign language gestures • 4 answer choices each • 10 seconds per question</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                  <span className="text-2xl">📊</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-1">Progress Bar</p>
+                    <p className="text-sm text-gray-700">Track your position in the quiz as you answer each question</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+                  <span className="text-2xl">⏱️</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-1">Timer Countdown</p>
+                    <p className="text-sm text-gray-700">Beat the clock! Answer before time runs out</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                  <span className="text-2xl">🏆</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 mb-1">Final Score</p>
+                    <p className="text-sm text-gray-700">See your results with detailed review at the end</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}

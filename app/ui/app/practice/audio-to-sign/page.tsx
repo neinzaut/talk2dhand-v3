@@ -213,7 +213,7 @@ export default function AudioToSignPage() {
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Audio to Sign</h1>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="bg-blue-100 text-blue-600 px-4 py-2 rounded hover:bg-blue-200 transition font-semibold"
           onClick={() => setIsModalOpen(true)}
         >
           How to Use
@@ -427,32 +427,36 @@ export default function AudioToSignPage() {
       </div>
 
       <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <div className="text-base space-y-4 pt-4">
-          <div>
-            <p className="font-bold text-lg mb-2">🎙️ Voice Recognition (Offline AI)</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Select a sign, click 🎤 microphone, say the letter clearly</li>
-              <li>AI transcribes and checks automatically (uses Whisper AI)</li>
-              <li>First use: downloads ~50MB model (1-2 min), then cached</li>
-              <li>Stop button or 5-second auto-stop available</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-bold text-lg mb-2">⌨️ Text Input Mode</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Select a sign and type the letter name</li>
-              <li>Press Enter or click Check to verify</li>
-              <li>Perfect for silent practice</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-bold text-lg mb-2">Tips</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Use <Shuffle className="inline h-3 w-3 align-text-bottom" /> to shuffle the grid</li>
-              <li>Green = correct, Red = incorrect, Orange = selected</li>
-            </ul>
+        <div className="text-base space-y-3 pt-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+              <span className="text-2xl">🎤</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Voice Recognition Mode</p>
+                <p className="text-sm text-gray-700">Select a sign, click 🎤, say the letter clearly. AI transcribes automatically using Whisper AI!</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+              <span className="text-2xl">⌨️</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Text Input Mode</p>
+                <p className="text-sm text-gray-700">Type the letter name and press Enter or click Check. Perfect for silent practice!</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+              <span className="text-2xl">🤖</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">First-time Setup</p>
+                <p className="text-sm text-gray-700">Downloads ~50MB AI model (1-2 min), then cached for offline use</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+              <span className="text-2xl">💡</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Pro Tips</p>
+                <p className="text-sm text-gray-700">Use <Shuffle className="inline h-3 w-3 align-text-bottom" /> to shuffle • Colors: 🟢 Correct, 🔴 Incorrect, 🟠 Selected</p>
+              </div>
+            </div>
           </div>
         </div>
       </HowToUseModal>
