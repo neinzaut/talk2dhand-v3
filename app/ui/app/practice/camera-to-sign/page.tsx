@@ -267,103 +267,174 @@ function CameraToSignPage() {
   }, [signList]);
 
   return (
-    <div className="flex flex-col items-center min-h-[80vh] justify-center py-8">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center">
-        {/* How to Use Button */}
-        <button
-          className="absolute top-4 right-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold px-4 py-2 rounded-full text-sm shadow"
-          onClick={() => setHowToOpen(true)}
-        >
-          How to Use?
-        </button>
-        <HowToUseModal open={howToOpen} onOpenChange={setHowToOpen}>
-          <div className="text-base space-y-4 pt-4">
-            <div>
-              <p className="font-bold text-lg mb-2">How to Use Camera Recognition Practice</p>
-              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                <li>You will be shown 5 letters or numbers</li>
-                <li>Use your camera to perform the sign shown on screen</li>
-                <li>You have 5 seconds to answer each question</li>
-                <li>Score is based on correct answers only</li>
-              </ul>
-            </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Camera-to-Sign</h1>
+      </header>
 
-            <div>
-              <p className="font-bold text-lg mb-2">Interface Guide</p>
-              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                <li>
-                  <span className="font-semibold">Prompt Card</span> - Letters or numbers you have to perform
-                </li>
-                <li>
-                  <span className="font-semibold">Timer</span> - Countdown for each question
-                </li>
-                <li>
-                  <span className="font-semibold">Score</span> - Shown at the end with detailed review
-                </li>
-              </ul>
-            </div>
-          </div>
-        </HowToUseModal>
-        <h1 className="text-3xl font-bold mb-2">Camera-to-Sign</h1>
-        <p className="text-base text-muted-foreground mb-4 text-center">
-          Use your camera to perform a sign shown on screen. You have 5 seconds for each. At the end, see your score and feedback!
-        </p>
+      <div className="bg-white rounded-lg shadow-md p-6">
         {!showResults ? (
-          <div className="flex flex-col items-center w-full">
+          <>
             {!started ? (
-              <button
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded text-xl mb-6 mt-2"
-                onClick={handleStart}
-                disabled={signList.length === 0}
-              >
-                Start
-              </button>
+              <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                {/* Left side - Instructions */}
+                <div className="lg:w-1/3 space-y-4 flex flex-col pt-12">
+                  <div className="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-500">
+                    <h3 className="text-xl font-bold text-blue-900 mb-3">📋 Instructions</h3>
+                    <ul className="space-y-2 text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold">1.</span>
+                        <span>Click <strong>Start</strong> to begin the challenge</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold">2.</span>
+                        <span>Allow camera access when prompted</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold">3.</span>
+                        <span>Perform each sign shown within 5 seconds</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold">4.</span>
+                        <span>Review your results and try again!</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-purple-50 rounded-lg p-6 border-l-4 border-purple-500">
+                    <h3 className="text-xl font-bold text-purple-900 mb-3">💡 Tips for Success</h3>
+                    <ul className="space-y-2 text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600">✓</span>
+                        <span>Ensure good lighting on your hands</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600">✓</span>
+                        <span>Position your hand in the center of the frame</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600">✓</span>
+                        <span>Hold the sign steady for recognition</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-600">✓</span>
+                        <span>Use a plain background when possible</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Right side - Start button */}
+                <div className="lg:w-2/3 flex flex-col">
+                  <div className="text-center space-y-6 py-12 flex flex-col items-center justify-center h-full">
+                    <div className="text-8xl mb-4">📹</div>
+                    <h2 className="text-2xl font-bold text-gray-800">Ready to Practice?</h2>
+                    <p className="text-gray-600 max-w-md">
+                      Click the button below to start your camera practice session
+                    </p>
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-12 rounded-lg text-xl shadow-lg transition-all hover:scale-105"
+                      onClick={handleStart}
+                      disabled={signList.length === 0}
+                    >
+                      Start Practice
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <>
-                {round < signs.length && (
-                  <>
-                    <div className="mb-2 text-lg font-semibold">
-                      Sign {round + 1} of {signs.length}
-                    </div>
-                    <div className="mb-3 text-5xl font-bold text-blue-600 bg-blue-50 rounded-lg px-8 py-4 shadow">
-                      {signs[round]}
-                    </div>
-                  </>
-                )}
-                <div className="mb-3 text-lg">Show this sign to your camera!</div>
+              <div className="flex flex-col items-center max-w-lg mx-auto space-y-6">
+                <div className="text-center w-full">
+                  <div className="text-lg text-gray-600 mb-2">
+                    Sign {round + 1} of {signs.length}
+                  </div>
+                  <div className="bg-blue-500 rounded-xl px-8 py-4 shadow-lg inline-block mb-4">
+                    <span className="text-6xl font-bold text-white">{signs[round]}</span>
+                  </div>
+                </div>
+
+                <p className="text-lg text-gray-700 text-center">Show this sign to your camera!</p>
+
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-80 h-60 rounded-lg bg-black object-cover mb-4"
+                  className="w-full aspect-video rounded-lg bg-black object-cover shadow-lg border-4 border-blue-300"
                 />
-                <canvas ref={canvasRef} style={{ display: "none" }} />
-                <div className="text-lg font-mono mb-2">Time left: <span className="font-bold">{countdown > 0 ? countdown : 0}</span>s</div>
-              </>
+                <canvas ref={canvasRef} className="hidden" />
+                
+                <div className="text-2xl font-mono text-gray-700">
+                  Time left: <span className="text-blue-600">{countdown > 0 ? countdown : 0}s</span>
+                </div>
+              </div>
             )}
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col items-center w-full">
-            <h2 className="text-2xl font-bold mb-4">Results</h2>
-            <div className="mb-4 text-lg">Score: <span className="font-bold">{score} / {signs.length}</span></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-semibold mb-4 text-gray-800">Results</h2>
+              <div className="text-xl mb-3 text-gray-700">
+                {score === signs.length ? (
+                  <span className="text-green-600">Perfect Score!</span>
+                ) : score >= signs.length * 0.7 ? (
+                  <span className="text-blue-600">Great Job!</span>
+                ) : score >= signs.length * 0.5 ? (
+                  <span className="text-orange-600">Good Effort!</span>
+                ) : (
+                  <span className="text-gray-600">Keep Practicing!</span>
+                )}
+              </div>
+              <div className="text-2xl font-semibold text-blue-600">
+                Score: {score} / {signs.length}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 w-full">
               {screenshots.map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center bg-white rounded-lg shadow p-4 border border-blue-100 max-w-xs">
-                  <div className="font-bold text-lg mb-2">Item {idx + 1}</div>
-                  <img src={item.image} alt={`Sign ${idx + 1}`} className="w-40 h-32 object-contain border-2 border-blue-300 mb-2" />
-                  <div className="mb-1">Expected: <span className="font-bold">{item.expected}</span></div>
-                  <div>Predicted: <span className={item.predicted === item.expected ? "font-bold text-green-600" : "font-bold text-red-600"}>{item.predicted}</span></div>
-                  {item.predicted !== item.expected && (
-                    <div className="mt-1 text-sm text-red-500">Mismatch</div>
-                  )}
+                <div 
+                  key={idx} 
+                  className={`flex flex-col items-center rounded-lg shadow p-4 border-2 ${
+                    item.predicted === item.expected 
+                      ? 'border-green-400' 
+                      : 'border-red-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">
+                      {item.predicted === item.expected ? '✅' : '❌'}
+                    </span>
+                    <span className="text-lg text-gray-800">Sign {idx + 1}</span>
+                  </div>
+                  
+                  <img 
+                    src={item.image} 
+                    alt={`Sign ${idx + 1}`} 
+                    className="w-full h-40 object-contain rounded-lg border-2 border-gray-300 mb-3 bg-white"
+                  />
+                  
+                  <div className="space-y-1 text-center w-full">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm text-gray-600">Expected:</span>
+                      <span className="font-bold text-lg text-gray-800">{item.expected}</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm text-gray-600">You signed:</span>
+                      <span className={`font-bold text-lg ${
+                        item.predicted === item.expected ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {item.predicted}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
+
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded mt-2"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-10 rounded-lg text-lg shadow transition"
               onClick={handleRestart}
             >
-              Restart
+              Try Again
             </button>
           </div>
         )}
