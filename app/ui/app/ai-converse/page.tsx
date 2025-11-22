@@ -491,49 +491,39 @@ const AIConversePage = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <header className="sticky top-0 bg-white shadow-md z-10">
-        <div className="border-b bg-white px-6 py-4">
+        {/* Tab Navigation */}
+        <div className="border-b bg-white px-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">AI Converse</h1>
-              <p className="text-sm text-muted-foreground">
-                Practice sign language conversations with AI assistance
-              </p>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setActiveTab("converse")}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "converse"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                }`}
+              >
+                AI Converse
+              </button>
+              <button
+                onClick={() => setActiveTab("translate")}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "translate"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                }`}
+              >
+                AI Translate
+              </button>
             </div>
             <Button
               variant="default"
               size="sm"
               onClick={() => setHowToOpen(true)}
-              className="gap-2"
+              className="bg-blue-100 text-blue-600 hover:bg-blue-200 font-semibold"
             >
-              <HelpCircle className="h-5 w-5" />
               How to Use
             </Button>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="border-b bg-white px-6">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setActiveTab("converse")}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "converse"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              AI Converse
-            </button>
-            <button
-              onClick={() => setActiveTab("translate")}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "translate"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              AI Translate
-            </button>
           </div>
         </div>
       </header>
@@ -894,7 +884,9 @@ const AIConversePage = () => {
                 value={translateInput}
                 onChange={(e) => setTranslateInput(e.target.value)}
                 onKeyDown={handleTranslateKeyPress}
-                placeholder="Type anything in English or Tagalog and press Enter..."
+                placeholder={currentLanguage === "asl" 
+                  ? "Type in English (e.g., Hello, how are you today?)..." 
+                  : "Type in Filipino (e.g., Kamusta ka ngayong araw?)..."}
                 className="flex-1 resize-none border rounded-lg p-4 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isTranslating || !isOnline}
               />
@@ -1003,15 +995,37 @@ const AIConversePage = () => {
         open={howToOpen}
         onOpenChange={setHowToOpen}
       >
-        <div className="text-base space-y-4 pt-4">
-          <h3 className="font-bold text-lg mb-2">How to Use AI Converse</h3>
-          <ol className="list-decimal list-inside space-y-2">
-            <li>Click &apos;Start Camera&apos; to enable your webcam</li>
-            <li>Perform signs from the dynamic phrases set (hello, thankyou, food, drink, etc.)</li>
-            <li>Detected signs appear above the input - click them to build your message</li>
-            <li>Send your message to get an AI response with animated stick-figure avatar</li>
-            <li>Your conversation history is displayed in the chat area</li>
-          </ol>
+        <div className="text-base space-y-3 pt-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+              <span className="text-2xl">💬</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Converse Tab</p>
+                <p className="text-sm text-gray-700">Start camera → Perform signs → Click detected words to build message → Send to get AI response with animated avatar</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+              <span className="text-2xl">🔤</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Translate Tab</p>
+                <p className="text-sm text-gray-700">Type text in English (ASL) or Filipino (FSL) → Get sign language gloss translation → Watch animated demonstration</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+              <span className="text-2xl">🌐</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Language Selection</p>
+                <p className="text-sm text-gray-700">Use the dropdown in top navigation to switch between ASL (🇺🇸) and FSL (🇵🇭)</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+              <span className="text-2xl">⚡</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Playback Controls</p>
+                <p className="text-sm text-gray-700">Adjust animation speed, replay, or navigate through sign sequences</p>
+              </div>
+            </div>
+          </div>
         </div>
       </HowToUseModal>
     </div>
