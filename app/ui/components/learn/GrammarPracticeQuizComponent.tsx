@@ -169,48 +169,88 @@ const GrammarPracticeComponent: React.FC<GrammarPracticeComponentProps> = ({
   if (isComplete) {
     const totalCorrect = Object.values(itemScores).filter((score) => score === true).length
     const percentage = practiceItems.length > 0 ? Math.round((totalCorrect / practiceItems.length) * 100) : 0
-    const getPerformanceMessage = () => {
-      if (percentage === 100) return "Perfect! You mastered this lesson! 🎉"
-      if (percentage >= 80) return "Excellent work! Keep it up! 🌟"
-      if (percentage >= 60) return "Good effort! Practice more to improve! 💪"
-      return "Keep practicing! You'll improve! 📚"
-    }
+    const isPerfect = percentage === 100;
+    const isGreat = percentage >= 80;
+    const isGood = percentage >= 60;
 
     return (
-      <Card className="w-full bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg">
+      <Card className={`w-full bg-white border-0 shadow-lg ${
+        isPerfect ? 'ring-4 ring-yellow-300' :
+        isGreat ? 'ring-4 ring-blue-300' :
+        isGood ? 'ring-4 ring-green-300' :
+        'ring-2 ring-gray-200'
+      }`}>
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl md:text-3xl">Practice Complete!</CardTitle>
+          <div className="flex justify-center mb-4">
+            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${
+              isPerfect ? 'bg-yellow-100' :
+              isGreat ? 'bg-blue-100' :
+              isGood ? 'bg-green-100' :
+              'bg-gray-100'
+            } shadow-lg`}>
+              <span className={`text-4xl font-bold ${
+                isPerfect ? 'text-yellow-600' :
+                isGreat ? 'text-blue-600' :
+                isGood ? 'text-green-600' :
+                'text-gray-600'
+              }`}>{percentage}%</span>
+            </div>
+          </div>
+          <CardTitle className={`text-3xl font-black ${
+            isPerfect ? 'text-yellow-600' :
+            isGreat ? 'text-blue-600' :
+            isGood ? 'text-green-600' :
+            'text-gray-700'
+          }`}>
+            {isPerfect ? '🎉 Perfect! 🎉' :
+             isGreat ? '🌟 Excellent! 🌟' :
+             isGood ? '👍 Good Job! 👍' :
+             'Keep Practicing!'}
+          </CardTitle>
+          <p className="text-gray-600 mt-2">
+            {isPerfect ? 'You mastered this lesson!' :
+             isGreat ? 'Keep up the great work!' :
+             isGood ? 'Practice more to improve!' :
+             "You'll improve with practice!"}
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <div className="mb-4 inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600">
-              <span className="text-4xl font-bold text-white">{percentage}%</span>
-            </div>
-            <p className="text-lg font-semibold text-gray-800 mb-2">
-              {totalCorrect} / {practiceItems.length} Correct
+            <p className={`text-2xl font-bold mb-2 ${
+              isPerfect ? 'text-yellow-600' :
+              isGreat ? 'text-blue-600' :
+              isGood ? 'text-green-600' :
+              'text-gray-700'
+            }`}>
+              {totalCorrect} / {practiceItems.length}
             </p>
-            <p className="text-xl text-gray-700 font-medium">{getPerformanceMessage()}</p>
+            <p className="text-sm text-gray-500">Questions Correct</p>
           </div>
 
-          <div className="bg-white rounded-lg p-4 space-y-2">
-            <h3 className="font-semibold text-gray-800 mb-3">Summary</h3>
+          <div className={`rounded-lg p-5 ${
+            isPerfect ? 'bg-yellow-50' :
+            isGreat ? 'bg-blue-50' :
+            isGood ? 'bg-green-50' :
+            'bg-gray-50'
+          }`}>
+            <h3 className="font-semibold text-gray-800 mb-4 text-center">📊 Summary</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{totalCorrect}</div>
-                <div className="text-sm text-gray-600">Correct</div>
+              <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                <div className="text-3xl font-black text-green-600">{totalCorrect}</div>
+                <div className="text-sm text-gray-600 font-medium mt-1">✅ Correct</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+              <div className="text-center bg-white rounded-lg p-4 shadow-sm">
+                <div className="text-3xl font-black text-red-600">
                   {practiceItems.length - totalCorrect}
                 </div>
-                <div className="text-sm text-gray-600">To Improve</div>
+                <div className="text-sm text-gray-600 font-medium mt-1">❌ Incorrect</div>
               </div>
             </div>
           </div>
 
           <Button
             onClick={handleReset}
-            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-6 rounded-lg transition-all hover:shadow-lg"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 rounded-lg transition-all hover:shadow-lg"
           >
             <RotateCw className="w-5 h-5 mr-2" />
             Try Again
@@ -239,7 +279,7 @@ const GrammarPracticeComponent: React.FC<GrammarPracticeComponentProps> = ({
 
       {/* Main Practice Card */}
       <Card className="w-full shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+        <CardHeader className="bg-blue-50 border-b border-gray-200">
           <CardTitle className="text-gray-800">Sentence #{currentIndex + 1}</CardTitle>
           <p className="text-sm text-gray-600 font-normal mt-2">
             Write the correct {language.toUpperCase()} gloss for this sentence
@@ -247,7 +287,7 @@ const GrammarPracticeComponent: React.FC<GrammarPracticeComponentProps> = ({
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           {/* Sentence Display */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6 border-2 border-blue-200">
+          <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
             <p className="text-gray-600 text-sm font-semibold mb-1">English Sentence:</p>
             <p className="text-2xl font-bold text-gray-900 leading-relaxed">
               {currentItem?.sentence}
@@ -360,14 +400,14 @@ const GrammarPracticeComponent: React.FC<GrammarPracticeComponentProps> = ({
             {!isAnswered ? (
               <Button
                 onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-all hover:shadow-md"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-all hover:shadow-md"
               >
                 Check Answer
               </Button>
             ) : (
               <Button
                 onClick={handleNext}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-all hover:shadow-md"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-all hover:shadow-md"
               >
                 {currentIndex === practiceItems.length - 1 ? "See Results" : "Next"}
               </Button>

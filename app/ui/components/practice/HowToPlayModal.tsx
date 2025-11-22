@@ -10,7 +10,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ open, onClose })
   if (!open) return null;
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
-      <div className="bg-white p-8 rounded-lg shadow-lg space-y-6 max-w-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]" data-state="open">
+      <div className="bg-white p-8 rounded-lg shadow-lg space-y-6 max-w-lg duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95" data-state="open">
         <h2 className="text-2xl font-bold text-center">How to Play</h2>
         <div className="space-y-3">
           <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
