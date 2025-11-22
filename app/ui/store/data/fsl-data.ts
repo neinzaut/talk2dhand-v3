@@ -6,7 +6,7 @@ export const fslData: LanguageData = {
       id: "module-1",
       title: "Module 1",
       description: "Basics of Filipino Sign Language",
-      progress: 25,
+      progress: 0,
       lessons: [
         {
           id: "lesson-1",

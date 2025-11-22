@@ -6,7 +6,7 @@ export const aslData: LanguageData = {
       id: "module-1",
       title: "Module 1",
       description: "Basics of American Sign Language",
-      progress: 40,
+      progress: 0,
       lessons: [
         {
           id: "lesson-1",

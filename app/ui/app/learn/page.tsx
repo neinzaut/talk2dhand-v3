@@ -3,14 +3,14 @@
 import { Card, CardContent } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { Progress } from "@/components/shared/progress"
-import { DailyQuestCard } from "@/components/daily-quest-card"
+import { StatsOverviewCard } from "@/components/stats-overview-card"
 import { LeaderboardCard } from "@/components/leaderboard-card"
 import { CheckCircle2, Circle } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
 import Link from "next/link"
 
 export default function LearnPage() {
-  const { streak, totalXP, getCurrentModules, getCurrentLeaderboard, getCurrentLesson } = useAppStore()
+  const { streak, totalXP, getCurrentModules, getCurrentLeaderboard, getCurrentLesson, isStreakActive } = useAppStore()
   const modules = getCurrentModules()
   const leaderboard = getCurrentLeaderboard()
   const currentModule = modules[0]
@@ -40,10 +40,14 @@ export default function LearnPage() {
               <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200">
                 <CardContent className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-orange-500 bg-white">
-                      <div className="text-center text-sm font-bold text-black whitespace-pre-line">
-                        {currentLesson.icon}
-                      </div>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-orange-500 bg-white overflow-hidden">
+                      {currentLesson.thumbnail ? (
+                        <img src={currentLesson.thumbnail} alt={currentLesson.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="text-center text-sm font-bold text-black whitespace-pre-line">
+                          {currentLesson.icon}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-xl font-bold">{currentLesson.title.split(":")[0]}</h3>
@@ -73,11 +77,8 @@ export default function LearnPage() {
             <CardContent className="p-6">
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-orange-500 bg-white">
-                    <div className="text-center text-sm font-bold text-black">
-                      <div>aα</div>
-                      <div>aA</div>
-                    </div>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl border-4 border-orange-500 bg-white overflow-hidden">
+                    <img src="/icons/icon-challenge.png" alt={currentModule.title} className="h-full w-full object-cover" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold">{currentModule.title}</h3>
@@ -136,7 +137,7 @@ export default function LearnPage() {
 
       {/* Right Sidebar */}
       <aside className="w-80 space-y-6">
-        <DailyQuestCard streak={streak} totalXP={totalXP} />
+        <StatsOverviewCard streak={streak} isStreakActive={isStreakActive} />
         <LeaderboardCard leaderboard={leaderboard} />
       </aside>
     </div>

@@ -2,24 +2,6 @@
 
 export type Language = "asl" | "fsl"
 
-export interface AppState {
-  streak: number
-  totalXP: number
-  currentLanguage: Language
-  currentLessonId: string
-  isQuizActive: boolean
-  languageData: Record<Language, LanguageData>
-  incrementStreak: () => void
-  addXP: (amount: number) => void
-  setLanguage: (language: Language) => void
-  setQuizActive: (isActive: boolean) => void
-  getCurrentModules: () => Module[]
-  getCurrentLeaderboard: () => LeaderboardEntry[]
-  setCurrentLesson: (lessonId: string) => void
-  getCurrentLesson: () => Lesson | null
-  updateLessonProgress: (lessonId: string, progress: number) => void
-}
-
 export interface Sign {
   id: string
   label: string
@@ -69,12 +51,49 @@ export interface LanguageData {
   leaderboard: LeaderboardEntry[]
 }
 
+export interface Badge {
+  id: string
+  moduleId: string
+  languageCode: Language
+  name: string
+  description: string
+  icon: string
+  earnedAt: number
+}
+
+export interface XPNotification {
+  amount: number
+  timestamp: number
+}
+
+export interface LevelUpNotification {
+  newLevel: number
+  timestamp: number
+}
+
 export interface AppState {
   // User data
   streak: number
   totalXP: number
   currentLanguage: Language
-  currentLessonId: string | null
+  currentLessonId: string
+  
+  // Language-specific XP and levels
+  aslXP: number
+  aslLevel: number
+  aslCurrentLevelXP: number
+  aslXpToNextLevel: number
+  fslXP: number
+  fslLevel: number
+  fslCurrentLevelXP: number
+  fslXpToNextLevel: number
+  
+  // Gamification
+  isStreakActive: boolean
+  badges: Badge[]
+  xpNotificationQueue: XPNotification[]
+  levelUpQueue: LevelUpNotification[]
+  badgeNotificationQueue: Badge[]
 
   // Language-specific data
   languageData: Record<Language, LanguageData>
@@ -91,5 +110,15 @@ export interface AppState {
   completeLesson: (lessonId: string) => void
   completeSubLesson: (lessonId: string, subLessonId: string) => void
   getSubLessonById: (lessonId: string, subLessonId: string) => SubLesson | null
+  awardBadge: (badge: Badge) => void
+  dequeueXPNotification: () => void
+  dequeueLevelUpNotification: () => void
+  dequeueBadgeNotification: () => void
+  getCurrentLanguageStats: () => {
+    xp: number
+    level: number
+    currentLevelXP: number
+    xpToNextLevel: number
+  }
 }
 

@@ -1,13 +1,32 @@
 "use client"
 
-import { Flame, ChevronDown } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/shared/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shared/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/shared/avatar"
 import { useAppStore, type Language } from "@/store/app-store"
 
 export function AppHeader() {
-  const { streak, currentLanguage, setLanguage, isQuizActive } = useAppStore()
+  const { streak, currentLanguage, setLanguage, isStreakActive } = useAppStore()
+  const [prevStreak, setPrevStreak] = useState(streak)
+  const [prevStreakActive, setPrevStreakActive] = useState(isStreakActive)
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  // Animate when streak updates or when streak activates for the first time
+  useEffect(() => {
+    if ((streak !== prevStreak && streak > prevStreak) || (!prevStreakActive && isStreakActive)) {
+      setIsAnimating(true)
+      const timer = setTimeout(() => {
+        setIsAnimating(false)
+        setPrevStreak(streak)
+        setPrevStreakActive(isStreakActive)
+      }, 600)
+      return () => clearTimeout(timer)
+    }
+    setPrevStreak(streak)
+    setPrevStreakActive(isStreakActive)
+  }, [streak, prevStreak, isStreakActive, prevStreakActive])
 
   const languages = [
     { code: "asl" as Language, flag: "🇺🇸", name: "American Sign Language" },
@@ -25,19 +44,40 @@ export function AppHeader() {
 
       {/* Right section with streak, language selector, and avatar */}
       <div className="flex items-center gap-4">
-        {/* Streak */}
-        <div className="flex items-center gap-2">
-          <Flame className="h-5 w-5 text-orange-500" />
-          <span className="text-lg font-bold">{streak}</span>
+        {/* Streak - Pill tag */}
+        <div className="flex items-center gap-2.5 rounded-full bg-gray-100 px-4 py-1.5">
+          <div
+            className={`transition-all duration-300 ${
+              isAnimating
+                ? "scale-125 brightness-125 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]"
+                : "scale-100"
+            }`}
+          >
+            <img
+              src="/icons/streak.png"
+              alt="Streak"
+              className={`h-5 w-5 transition-all duration-300 ${
+                isAnimating ? "animate-pulse" : ""
+              }`}
+            />
+          </div>
+          <span
+            className={`text-base text-gray-700 transition-all duration-300 ${
+              isAnimating
+                ? "scale-110 text-orange-600"
+                : "scale-100"
+            }`}
+          >
+            {streak}
+          </span>
         </div>
 
         {/* Language Selector */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild disabled={isQuizActive}>
+          <DropdownMenuTrigger asChild>
             <Button 
               variant="default" 
-              className={`gap-2 bg-transparent ${isQuizActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isQuizActive}
+              className="gap-2 bg-transparent"
             >
               <img 
                 src={`/icons/icon-${currentLang.code}.png`} 
