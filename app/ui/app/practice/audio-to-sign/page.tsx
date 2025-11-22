@@ -303,10 +303,10 @@ export default function AudioToSignPage() {
                   <p className="font-semibold text-sm">Hang tight—analyzing what you just said.</p>
                 </div>
               )}
-              <p className="text-gray-500 mt-2 text-center max-w-md">
-                <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>only the letter name</strong><br/>
-                (e.g., <strong>"A"</strong>, <strong>"B"</strong>{currentLanguage === "fsl" && <>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong></>}). 
-                Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds. <span className="text-blue-600">Works offline!</span>
+              <p className="text-gray-500 mt-2 text-center text-sm max-w-md">
+                Ensure microphone access is enabled. Select a sign, click 🎤, then clearly say <strong>only the letter name</strong> 
+                &nbsp;(e.g., <strong>"A"</strong>, <strong>"B"</strong>{currentLanguage === "fsl" && <>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong></>}). <br/>
+                Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds.
               </p>
             </>
           )}
@@ -425,12 +425,6 @@ export default function AudioToSignPage() {
           </div>
         )}
       </div>
-
-      {/* <div className="mt-4">
-        {!micAllowed && <p className="text-red-500 font-bold text-lg">{feedback}</p>}
-        {spokenText && <p className="text-blue-700 font-semibold text-lg">You said: "{spokenText}"</p>}
-        {feedback && micAllowed && <p className="text-gray-800 font-semibold text-lg">{feedback}</p>}
-      </div> */}
 
       <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <div className="text-base space-y-4 pt-4">
