@@ -174,7 +174,7 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
             { id: "weus", label: "We/Us", imageUrl: "/gifs/we-us.gif" },
             { id: "where", label: "Where", imageUrl: "/gifs/where.gif" },
             { id: "will", label: "Will", imageUrl: "/gifs/will.gif" },
-            { id: "yourself", label: "Yourself", imageUrl: "/gifs/you.gif" },
+            { id: "yourself", label: "Yourself", imageUrl: "/gifs/yourself.gif" },
           ],
           subLessons: [
             {
@@ -221,7 +221,7 @@ Below are animated examples of the phrases you'll practice:
 | **See** | ![See](/gifs/see.gif) | **Thank You** | ![Thank You](/gifs/thank-you.gif) |
 | **Thanks** | ![Thanks](/gifs/thankyou.gif) | **Today** | ![Today](/gifs/today.gif) |
 | **We/Us** | ![We/Us](/gifs/we-us.gif) | **Where** | ![Where](/gifs/where.gif) |
-| **Will** | ![Will](/gifs/will.gif) | **You** | ![You](/gifs/you.gif) |
+| **Will** | ![Will](/gifs/will.gif) | **You** | ![You](/gifs/yourself.gif) |
 
 Notice how the hand movements flow naturally and include appropriate facial expressions. Practice these signs slowly at first, focusing on proper form and expression.
 

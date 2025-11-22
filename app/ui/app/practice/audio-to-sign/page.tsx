@@ -32,6 +32,7 @@ export default function AudioToSignPage() {
   const [textInput, setTextInput] = useState<string>("")
   const [inputMode, setInputMode] = useState<"mic" | "text">("mic")
   const [lastCheckedSignId, setLastCheckedSignId] = useState<string | null>(null)
+  const [showDebugInfo, setShowDebugInfo] = useState(false)
   
   // Auto-select first sign on mount to avoid null ID
   useEffect(() => {
@@ -212,7 +213,7 @@ export default function AudioToSignPage() {
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Audio to Sign</h1>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="bg-blue-100 text-blue-600 px-4 py-2 rounded hover:bg-blue-200 transition font-semibold"
           onClick={() => setIsModalOpen(true)}
         >
           How to Use
@@ -302,10 +303,10 @@ export default function AudioToSignPage() {
                   <p className="font-semibold text-sm">Hang tight—analyzing what you just said.</p>
                 </div>
               )}
-              <p className="text-gray-500 mt-2 text-center max-w-md">
-                <strong>How to use:</strong> Select a sign, click 🎤, then clearly say <strong>only the letter name</strong><br/>
-                (e.g., <strong>"A"</strong>, <strong>"B"</strong>{currentLanguage === "fsl" && <>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong></>}). 
-                Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds. <span className="text-blue-600">Works offline!</span>
+              <p className="text-gray-500 mt-2 text-center text-sm max-w-md">
+                Ensure microphone access is enabled. Select a sign, click 🎤, then clearly say <strong>only the letter name</strong> 
+                &nbsp;(e.g., <strong>"A"</strong>, <strong>"B"</strong>{currentLanguage === "fsl" && <>, <strong>"Ch"</strong>, <strong>"Ng"</strong>, <strong>"Ñ"</strong></>}). <br/>
+                Click <strong>⏹️ Stop</strong> when finished, or it will auto-stop after 5 seconds.
               </p>
             </>
           )}
@@ -397,68 +398,66 @@ export default function AudioToSignPage() {
         ))}
       </div>
         {/* DEBUGGING */}
-      <div className="mt-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
-        <h3 className="font-bold text-lg mb-2">🔍 Detailed Information:</h3>
-        <div className="space-y-1 text-sm">
-          <p><strong>Recognition Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
-          <p><strong>Model Status:</strong> {isModelLoading ? "⏳ Loading..." : "✅ Ready"}</p>
-          <p><strong>Mic Allowed:</strong> {micAllowed ? "✅ Yes" : "❌ No"}</p>
-          <p><strong>Is Listening:</strong> {isListening ? "🎙️ Yes" : "❌ No"}</p>
-          <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Voice" : "⌨️ Keyboard"}</p>
-          <p><strong>Selected Sign:</strong> {selectedSignId || "None"}</p>
-          <p><strong>Target Answer:</strong> {currentSignLabel || "None"}</p>
-          <p><strong>Your Input:</strong> {spokenText || textInput || "..."}</p>
-          <p><strong>Result:</strong> {feedback || "..."}</p>
-          <p><strong>Status:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Correct" : "❌ Incorrect"}</p>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">Check browser console (F12) for detailed logs</p>
+      <div className="mt-6 flex flex-col items-center">
+        <button
+          onClick={() => setShowDebugInfo(!showDebugInfo)}
+          className="text-sm text-gray-400 hover:text-gray-800 pb-2"
+        >
+          {showDebugInfo ? "Hide" : "Show"} More Information
+        </button>
+        
+        {showDebugInfo && (
+          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 w-full">
+            <h3 className="font-bold text-lg mb-2">🔍 Detailed Information:</h3>
+            <div className="space-y-1 text-sm">
+              <p><strong>Recognition Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
+              <p><strong>Model Status:</strong> {isModelLoading ? "⏳ Loading..." : "✅ Ready"}</p>
+              <p><strong>Mic Allowed:</strong> {micAllowed ? "✅ Yes" : "❌ No"}</p>
+              <p><strong>Is Listening:</strong> {isListening ? "🎙️ Yes" : "❌ No"}</p>
+              <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Voice" : "⌨️ Keyboard"}</p>
+              <p><strong>Selected Sign:</strong> {selectedSignId || "None"}</p>
+              <p><strong>Target Answer:</strong> {currentSignLabel || "None"}</p>
+              <p><strong>Your Input:</strong> {spokenText || textInput || "..."}</p>
+              <p><strong>Result:</strong> {feedback || "..."}</p>
+              <p><strong>Status:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Correct" : "❌ Incorrect"}</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Check browser console (F12) for detailed logs</p>
+          </div>
+        )}
       </div>
 
-      {/* <div className="mt-4">
-        {!micAllowed && <p className="text-red-500 font-bold text-lg">{feedback}</p>}
-        {spokenText && <p className="text-blue-700 font-semibold text-lg">You said: "{spokenText}"</p>}
-        {feedback && micAllowed && <p className="text-gray-800 font-semibold text-lg">{feedback}</p>}
-      </div> */}
-
       <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <div className="p-4">
-          <h2 className="text-2xl font-bold mb-2">How to Use Sign Recognition Practice</h2>
-          
-          <h3 className="text-lg font-semibold mt-4 mb-2">🎙️ Voice Recognition Mode (Offline AI!)</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>Select a sign from the grid below.</li>
-            <li>Click the 🎤 microphone button to start recording.</li>
-            <li><strong>Say just the letter name</strong> clearly (e.g., "A", "B"{currentLanguage === "fsl" && <>, "Ch", "Ng", "Ñ"</>}).</li>
-            {currentLanguage === "fsl" && (
-              <li>For FSL, special digraphs like <strong>Ch</strong>, <strong>Ng</strong>, and <strong>Ñ</strong> are accepted just like single letters.</li>
-            )}
-            <li>Click the <strong>"⏹️ Stop"</strong> button when done, or wait 5 seconds for auto-stop.</li>
-            <li>The AI will transcribe and check your answer automatically.</li>
-            <li><strong>✨ NEW:</strong> Uses Whisper AI - <strong>works completely offline!</strong></li>
-            <li><strong>First use:</strong> AI model will download (~50MB, 1-2 min). Cached afterwards.</li>
-          </ul>
-          
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-3">
-            <p className="text-sm"><strong>💡 Pro Tip:</strong> Speak clearly and at normal speed. Whisper handles punctuation automatically, so "B" and "B." are both accepted!</p>
+        <div className="text-base space-y-3 pt-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+              <span className="text-2xl">🎤</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Voice Recognition Mode</p>
+                <p className="text-sm text-gray-700">Select a sign, click 🎤, say the letter clearly. AI transcribes automatically using Whisper AI!</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+              <span className="text-2xl">⌨️</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Text Input Mode</p>
+                <p className="text-sm text-gray-700">Type the letter name and press Enter or click Check. Perfect for silent practice!</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+              <span className="text-2xl">🤖</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">First-time Setup</p>
+                <p className="text-sm text-gray-700">Downloads ~50MB AI model (1-2 min), then cached for offline use</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+              <span className="text-2xl">💡</span>
+              <div>
+                <p className="font-semibold text-gray-800 mb-1">Pro Tips</p>
+                <p className="text-sm text-gray-700">Use <Shuffle className="inline h-3 w-3 align-text-bottom" /> to shuffle • Colors: 🟢 Correct, 🔴 Incorrect, 🟠 Selected</p>
+              </div>
+            </div>
           </div>
-
-          <h3 className="text-lg font-semibold mt-4 mb-2">⌨️ Text Input Mode (Alternative)</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>Select a sign from the grid below.</li>
-            <li>Type the name of the sign in the text box.</li>
-            <li>Press Enter or click the "Check" button to verify your answer.</li>
-            <li>Perfect for silent practice or when voice input is unavailable.</li>
-          </ul>
-
-          <h3 className="text-lg font-semibold mt-4 mb-2">📊 General Tips</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>
-              Use the{' '}
-              <Shuffle className="inline h-4 w-4 text-orange-600 align-text-bottom" />{' '}
-              shuffle button to randomize the grid for more challenge.
-            </li>
-            <li>Green border = correct, red = incorrect, orange = selected.</li>
-          </ul>
         </div>
       </HowToUseModal>
     </div>

@@ -175,7 +175,7 @@ export default function MemoryGamePage() {
         <h1 className="text-4xl font-bold">Memory Game</h1>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow"
+          className="bg-blue-100 hover:bg-blue-200 text-blue-600 px-4 py-2 rounded-lg shadow font-semibold"
         >
           How to Play
         </Button>

@@ -149,8 +149,8 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
   })
 
   useEffect(() => {
-    // Request microphone permission on mount
-    console.log("🎙️ Checking microphone permission...")
+    // Check if getUserMedia is available
+    console.log("🎙️ Checking microphone support...")
     
     if (!navigator?.mediaDevices?.getUserMedia) {
       console.log("❌ getUserMedia not available")
@@ -160,24 +160,20 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
       return
     }
 
-    let mounted = true
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(() => {
-        console.log("✅ Microphone permission granted")
-        if (!mounted) return
-        setMicAllowed(true)
-      })
-      .catch((err) => {
-        console.error("❌ Microphone permission denied:", err)
-        if (!mounted) return
-        setMicAllowed(false)
-        setFeedback("⚠️ Please enable microphone access to use this feature.")
-        toast.error("⚠️ Please enable microphone access to use this feature.")
-      })
-
-    return () => {
-      mounted = false
+    // Check if permission was already granted
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'microphone' as PermissionName })
+        .then((permissionStatus) => {
+          console.log("🎙️ Current microphone permission state:", permissionStatus.state)
+          if (permissionStatus.state === 'granted') {
+            setMicAllowed(true)
+          }
+          // If 'prompt' or 'denied', we'll handle it when user clicks the mic button
+        })
+        .catch((err) => {
+          console.log("ℹ️ Permission query not supported:", err)
+          // Permission API not supported, will request on button click
+        })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -221,23 +217,32 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     }
   }
 
-  const startListening = () => {
+  const startListening = async () => {
     console.log("🎤 startListening called (Whisper mode)")
     console.log("micAllowed:", micAllowed)
     console.log("correctAnswer:", correctAnswer)
     console.log("language:", language)
-    
-    if (!micAllowed) {
-      console.log("❌ Mic not allowed")
-      toast.error("⚠️ Microphone permission not granted.")
-      return
-    }
     
     // Prevent recording when no answer is set (avoids auto-restart bug)
     if (!correctAnswer || correctAnswer.trim() === "") {
       console.log("❌ No correct answer set")
       toast.error("⚠️ Please select a sign first.")
       return
+    }
+
+    // Request microphone permission if not already granted
+    if (!micAllowed) {
+      console.log("🎤 Requesting microphone permission...")
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true })
+        console.log("✅ Microphone permission granted")
+        setMicAllowed(true)
+      } catch (err) {
+        console.error("❌ Microphone permission denied:", err)
+        setFeedback("⚠️ Please enable microphone access to use this feature.")
+        toast.error("⚠️ Microphone access denied. Please allow microphone access in your browser settings.")
+        return
+      }
     }
 
     // Start Whisper recording

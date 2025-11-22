@@ -74,7 +74,8 @@ export function useWhisperRecognition({
       setError(null)
       audioChunksRef.current = []
 
-      // Request microphone access
+      // Request microphone access - this will trigger permission prompt if needed
+      console.log("🎤 Requesting microphone access...")
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -82,6 +83,7 @@ export function useWhisperRecognition({
           sampleRate: 16000,
         } 
       })
+      console.log("✅ Microphone access granted, stream:", stream)
       
       // Create MediaRecorder with best available format
       let mimeType = "audio/webm;codecs=opus"
