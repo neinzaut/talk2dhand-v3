@@ -276,7 +276,34 @@ function CameraToSignPage() {
         >
           How to Use?
         </button>
-        <HowToUseModal open={howToOpen} onOpenChange={setHowToOpen} />
+        <HowToUseModal open={howToOpen} onOpenChange={setHowToOpen}>
+          <div className="text-base space-y-4 pt-4">
+            <div>
+              <p className="font-bold text-lg mb-2">How to Use Camera Recognition Practice</p>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>You will be shown 5 letters or numbers</li>
+                <li>Use your camera to perform the sign shown on screen</li>
+                <li>You have 5 seconds to answer each question</li>
+                <li>Score is based on correct answers only</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-bold text-lg mb-2">Interface Guide</p>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>
+                  <span className="font-semibold">Prompt Card</span> - Letters or numbers you have to perform
+                </li>
+                <li>
+                  <span className="font-semibold">Timer</span> - Countdown for each question
+                </li>
+                <li>
+                  <span className="font-semibold">Score</span> - Shown at the end with detailed review
+                </li>
+              </ul>
+            </div>
+          </div>
+        </HowToUseModal>
         <h1 className="text-3xl font-bold mb-2">Camera-to-Sign</h1>
         <p className="text-base text-muted-foreground mb-4 text-center">
           Use your camera to perform a sign shown on screen. You have 5 seconds for each. At the end, see your score and feedback!

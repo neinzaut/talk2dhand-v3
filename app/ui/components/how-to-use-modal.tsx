@@ -25,10 +25,10 @@ export function HowToUseModal({ open, onOpenChange, children }: HowToUseModalPro
         <DialogHeader>
           <DialogTitle className="text-2xl">How to Use?</DialogTitle>
           {children || (
-            <DialogDescription className="text-base space-y-4 pt-4">
+            <div className="text-base space-y-4 pt-4">
               <div>
-                <h3 className="font-bold text-lg mb-2">Quiz Rules</h3>
-                <ol className="list-decimal list-inside space-y-2">
+                <p className="font-bold text-lg mb-2">Quiz Rules</p>
+                <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
                   <li>You will be shown 10 sign language gestures</li>
                   <li>Each question has 4 possible answers</li>
                   <li>You have 10 seconds to answer each question</li>
@@ -37,8 +37,8 @@ export function HowToUseModal({ open, onOpenChange, children }: HowToUseModalPro
               </div>
 
               <div>
-                <h3 className="font-bold text-lg mb-2">Interface Guide</h3>
-                <ul className="list-disc list-inside space-y-2">
+                <p className="font-bold text-lg mb-2">Interface Guide</p>
+                <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                   <li>
                     <span className="font-bold">Progress Bar</span> - Shows your position in the quiz
                   </li>
@@ -50,7 +50,7 @@ export function HowToUseModal({ open, onOpenChange, children }: HowToUseModalPro
                   </li>
                 </ul>
               </div>
-            </DialogDescription>
+            </div>
           )}
         </DialogHeader>
       </DialogContent>
