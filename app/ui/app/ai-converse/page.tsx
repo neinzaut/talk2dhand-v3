@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { 
-  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle, RotateCcw
+  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle, RotateCcw, SkipBack, SkipForward
 } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
-import { StickFigureAvatar } from "@/components/ai-converse/StickFigureAvatar"
+import { SkeletonPoseViewer } from "@/components/ai-converse/SkeletonPoseViewer"
 import { HowToUseModal } from "@/components/how-to-use-modal"
 
 interface Message {
@@ -61,6 +61,9 @@ const AIConversePage = () => {
   const [currentGloss, setCurrentGloss] = useState<string | null>(null)
   const [avatarSpeed, setAvatarSpeed] = useState(1)
   const [shouldReplayAvatar, setShouldReplayAvatar] = useState(false)
+  const [selectedMessageGloss, setSelectedMessageGloss] = useState<string | null>(null)
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [glossTokens, setGlossTokens] = useState<string[]>([])
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -388,6 +391,27 @@ const AIConversePage = () => {
     }
   }
 
+  // Parse gloss into tokens when selectedMessageGloss changes
+  useEffect(() => {
+    if (selectedMessageGloss) {
+      const tokens = selectedMessageGloss.split(/\s+/).filter(token => token.length > 0)
+      setGlossTokens(tokens)
+      setCurrentWordIndex(0)
+    } else {
+      setGlossTokens([])
+      setCurrentWordIndex(0)
+    }
+  }, [selectedMessageGloss])
+
+  // Navigation handlers
+  const handlePreviousSign = () => {
+    setCurrentWordIndex(prev => Math.max(0, prev - 1))
+  }
+
+  const handleNextSign = () => {
+    setCurrentWordIndex(prev => Math.min(glossTokens.length - 1, prev + 1))
+  }
+
   // Clear all messages
   const clearAllMessages = () => {
     if (confirm("Clear all messages?")) {
@@ -466,16 +490,27 @@ const AIConversePage = () => {
                       className={`max-w-2xl rounded-2xl px-4 py-3 ${
                         message.type === "user"
                           ? "bg-blue-500 text-white"
-                          : "bg-white border shadow-sm"
+                          : "bg-white border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                       }`}
+                      onClick={() => {
+                        if (message.type === "ai" && message.gloss) {
+                          setSelectedMessageGloss(message.gloss)
+                          setCurrentSign(message.gloss.split(/\s+/)[0] || "")
+                          setShouldReplayAvatar(prev => !prev)
+                        }
+                      }}
                     >
                       {message.type === "ai" && message.gloss ? (
                         <div className="space-y-3">
-                          {/* Stick Figure Avatar */}
-                          <StickFigureAvatar 
+                          {/* 2D Skeleton Pose Viewer */}
+                          <SkeletonPoseViewer 
                             gloss={message.gloss} 
-                            autoPlay={false}
+                            autoplay={true}
+                            loop={true}
+                            showCurrentWord={true}
+                            width={400}
                           />
+                          <p className="text-xs text-muted-foreground text-center">Click to preview in Live Sign Preview</p>
                         </div>
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -656,10 +691,15 @@ const AIConversePage = () => {
                 Live Sign Preview:
               </div>
               <div className="bg-white rounded-lg border aspect-video flex items-center justify-center mb-3">
-                <StickFigureAvatar 
-                  gloss={currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""} 
-                  autoPlay={true}
-                  key={shouldReplayAvatar ? Date.now() : currentSign}
+                <SkeletonPoseViewer 
+                  gloss={glossTokens.length > 0 ? glossTokens[currentWordIndex] : (selectedMessageGloss || (currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""))} 
+                  autoplay={true}
+                  loop={false}
+                  showCurrentWord={true}
+                  speed={avatarSpeed}
+                  width={400}
+                  key={glossTokens.length > 0 ? `${currentWordIndex}-${glossTokens[currentWordIndex]}-${shouldReplayAvatar}` : (shouldReplayAvatar ? Date.now() : (selectedMessageGloss || currentSign))}
+                  onCurrentWordChange={(word) => setCurrentSign(word)}
                 />
               </div>
               
@@ -669,8 +709,37 @@ const AIConversePage = () => {
                 <div className="bg-gray-50 rounded-lg p-2 text-center">
                   <div className="text-xs text-muted-foreground mb-1">Current Sign:</div>
                   <div className="text-lg font-bold text-blue-600">
-                    {currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : "—"}
+                    {glossTokens.length > 0 ? glossTokens[currentWordIndex] : (currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : "—")}
                   </div>
+                  {glossTokens.length > 0 && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {currentWordIndex + 1} of {glossTokens.length}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Arrows - Under Current Sign */}
+                <div className="flex items-center justify-center gap-6">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handlePreviousSign}
+                    disabled={glossTokens.length === 0 || currentWordIndex === 0}
+                    className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+                    title="Previous sign"
+                  >
+                    <SkipBack className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleNextSign}
+                    disabled={glossTokens.length === 0 || currentWordIndex >= glossTokens.length - 1}
+                    className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+                    title="Next sign"
+                  >
+                    <SkipForward className="h-6 w-6" />
+                  </Button>
                 </div>
                 
                 {/* Playback Controls */}
@@ -679,7 +748,7 @@ const AIConversePage = () => {
                     variant="default"
                     size="sm"
                     onClick={() => setShouldReplayAvatar(!shouldReplayAvatar)}
-                    disabled={!currentSign || currentSign === "Waiting..." || currentSign === "Listening..."}
+                    disabled={glossTokens.length === 0 && (!currentSign || currentSign === "Waiting..." || currentSign === "Listening...")}
                     className="flex-1"
                     title="Replay animation"
                   >

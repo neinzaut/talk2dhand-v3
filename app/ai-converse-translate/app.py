@@ -410,7 +410,7 @@ def get_gemini_response(message: str) -> str:
             
             genai.configure(api_key=api_key)
             
-            # System instruction for ASL gloss responses
+            # System instruction for ASL gloss responses (unchanged - works perfectly with 2.5-flash)
             system_instruction = """FINAL SYSTEM INSTRUCTION (RESPOND IN STRICT ASL GLOSS)
 Your task is to respond to the meaning or intent of the user's input using correct ASL GLOSS.
 You do NOT reconstruct the user's sentence.
@@ -483,13 +483,13 @@ You do not rewrite the input
 You produce a meaningful ASL gloss response
 You output ONLY the ASL gloss"""
         
-            # Create model with system instruction
+            # Create model with system instruction - UPDATED TO CURRENT STABLE MODEL
             model = genai.GenerativeModel(
-                model_name='gemini-2.0-flash-exp',
+                model_name='gemini-2.5-flash',  # Correct, stable, fast model (November 2025)
                 system_instruction=system_instruction
             )
             
-            # Configure generation parameters
+            # Generation config (unchanged - works great with 2.5-flash)
             generation_config = genai.GenerationConfig(
                 temperature=0.2,
                 top_k=40,
@@ -497,11 +497,13 @@ You output ONLY the ASL gloss"""
                 max_output_tokens=1024,
             )
             
+            # Relaxed safety settings to allow normal conversation
+            # Only block content that is highly likely to be harmful
             safety_settings = {
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
             }
             
             # Generate response
@@ -510,9 +512,32 @@ You output ONLY the ASL gloss"""
                 generation_config=generation_config,
                 safety_settings=safety_settings
             )
+            
+            # Check if response was blocked or empty
+            if not response.candidates:
+                raise Exception("Response was blocked by safety filters. Please try rephrasing your message.")
+            
+            candidate = response.candidates[0]
+            
+            # Check finish reason
+            # 0 = FINISH_REASON_UNSPECIFIED, 1 = STOP (normal), 2 = MAX_TOKENS, 3 = SAFETY, 4 = RECITATION, 5 = OTHER
+            if candidate.finish_reason == 3:  # SAFETY
+                raise Exception("Response was blocked due to safety concerns. Please rephrase your message.")
+            elif candidate.finish_reason == 4:  # RECITATION
+                raise Exception("Response was blocked due to recitation concerns. Please try a different message.")
+            elif candidate.finish_reason not in [1, 2]:  # Not STOP or MAX_TOKENS
+                raise Exception(f"Response generation stopped unexpectedly (reason: {candidate.finish_reason}). Please try again.")
+            
+            # Check if response has valid parts
+            if not candidate.content.parts:
+                raise Exception("No response generated. Please try rephrasing your message.")
+            
             asl_response = response.text.strip()
             
             logger.info(f"User: {message} -> Gemini (key #{current_key_index + 1}): {asl_response}")
+            
+            # Rotate to next key for next call (helps with rate limits)
+            current_key_index = (current_key_index + 1) % len(API_KEYS)
             
             return asl_response
             
@@ -522,7 +547,6 @@ You output ONLY the ASL gloss"""
             
             if is_rate_limit and attempt < attempts - 1:
                 logger.warning(f"Rate limit hit on API key #{current_key_index + 1}: {e}")
-                # Rotate to next key
                 current_key_index = (current_key_index + 1) % len(API_KEYS)
                 logger.info(f"Rotating to API key #{current_key_index + 1}")
                 last_error = e
