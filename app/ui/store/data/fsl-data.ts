@@ -174,7 +174,7 @@ Across the Philippines, you'll see slight **regional variations** — especially
             { id: "weus", label: "Tayo/Kami", imageUrl: "/gifs/we-us.gif" },
             { id: "where", label: "Saan", imageUrl: "/gifs/where.gif" },
             { id: "will", label: "Gagawin", imageUrl: "/gifs/will.gif" },
-            { id: "yourself", label: "Ikaw", imageUrl: "/gifs/you.gif" },
+            { id: "yourself", label: "Ikaw", imageUrl: "/gifs/yourself.gif" },
           ],
           subLessons: [
             {
@@ -232,7 +232,7 @@ Narito ang mga animated na halimbawa ng mga pariralang iyong masasanay:
 | **Makita** | ![See](/gifs/see.gif) | **Salamat Po** | ![Thank You](/gifs/thank-you.gif) |
 | **Salamat** | ![Thanks](/gifs/thankyou.gif) | **Ngayong Araw** | ![Today](/gifs/today.gif) |
 | **Tayo/Kami** | ![We/Us](/gifs/we-us.gif) | **Saan** | ![Where](/gifs/where.gif) |
-| **Gagawin** | ![Will](/gifs/will.gif) | **Ikaw** | ![You](/gifs/you.gif) |
+| **Gagawin** | ![Will](/gifs/will.gif) | **Ikaw** | ![You](/gifs/yourself.gif) |
 
 Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang naaangkop na mga pagpapahayag sa mukha. Magsanay ng mga tandang ito nang dahan-dahan sa una, na nakatuon sa wastong anyo at pagpapahayag.
 
