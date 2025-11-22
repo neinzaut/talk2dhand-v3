@@ -32,6 +32,7 @@ export default function AudioToSignPage() {
   const [textInput, setTextInput] = useState<string>("")
   const [inputMode, setInputMode] = useState<"mic" | "text">("mic")
   const [lastCheckedSignId, setLastCheckedSignId] = useState<string | null>(null)
+  const [showDebugInfo, setShowDebugInfo] = useState(false)
   
   // Auto-select first sign on mount to avoid null ID
   useEffect(() => {
@@ -397,21 +398,32 @@ export default function AudioToSignPage() {
         ))}
       </div>
         {/* DEBUGGING */}
-      <div className="mt-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
-        <h3 className="font-bold text-lg mb-2">🔍 Detailed Information:</h3>
-        <div className="space-y-1 text-sm">
-          <p><strong>Recognition Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
-          <p><strong>Model Status:</strong> {isModelLoading ? "⏳ Loading..." : "✅ Ready"}</p>
-          <p><strong>Mic Allowed:</strong> {micAllowed ? "✅ Yes" : "❌ No"}</p>
-          <p><strong>Is Listening:</strong> {isListening ? "🎙️ Yes" : "❌ No"}</p>
-          <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Voice" : "⌨️ Keyboard"}</p>
-          <p><strong>Selected Sign:</strong> {selectedSignId || "None"}</p>
-          <p><strong>Target Answer:</strong> {currentSignLabel || "None"}</p>
-          <p><strong>Your Input:</strong> {spokenText || textInput || "..."}</p>
-          <p><strong>Result:</strong> {feedback || "..."}</p>
-          <p><strong>Status:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Correct" : "❌ Incorrect"}</p>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">Check browser console (F12) for detailed logs</p>
+      <div className="mt-6 flex flex-col items-center">
+        <button
+          onClick={() => setShowDebugInfo(!showDebugInfo)}
+          className="text-sm text-gray-400 hover:text-gray-800 pb-2"
+        >
+          {showDebugInfo ? "Hide" : "Show"} More Information
+        </button>
+        
+        {showDebugInfo && (
+          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 w-full">
+            <h3 className="font-bold text-lg mb-2">🔍 Detailed Information:</h3>
+            <div className="space-y-1 text-sm">
+              <p><strong>Recognition Engine:</strong> 🤖 Whisper AI (Offline-capable)</p>
+              <p><strong>Model Status:</strong> {isModelLoading ? "⏳ Loading..." : "✅ Ready"}</p>
+              <p><strong>Mic Allowed:</strong> {micAllowed ? "✅ Yes" : "❌ No"}</p>
+              <p><strong>Is Listening:</strong> {isListening ? "🎙️ Yes" : "❌ No"}</p>
+              <p><strong>Input Mode:</strong> {inputMode === "mic" ? "🎤 Voice" : "⌨️ Keyboard"}</p>
+              <p><strong>Selected Sign:</strong> {selectedSignId || "None"}</p>
+              <p><strong>Target Answer:</strong> {currentSignLabel || "None"}</p>
+              <p><strong>Your Input:</strong> {spokenText || textInput || "..."}</p>
+              <p><strong>Result:</strong> {feedback || "..."}</p>
+              <p><strong>Status:</strong> {isCorrect === null ? "Not checked" : isCorrect ? "✅ Correct" : "❌ Incorrect"}</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Check browser console (F12) for detailed logs</p>
+          </div>
+        )}
       </div>
 
       {/* <div className="mt-4">
