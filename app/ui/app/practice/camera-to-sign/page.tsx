@@ -267,7 +267,7 @@ function CameraToSignPage() {
   }, [signList]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Camera-to-Sign</h1>
       </header>
@@ -370,10 +370,10 @@ function CameraToSignPage() {
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-semibold mb-4 text-gray-800">Results</h2>
-              <div className="text-xl mb-3 text-gray-700">
+          <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold mb-3 text-gray-800">Results</h2>
+              <div className="text-lg mb-2 text-gray-700">
                 {score === signs.length ? (
                   <span className="text-green-600">Perfect Score!</span>
                 ) : score >= signs.length * 0.7 ? (
@@ -384,42 +384,42 @@ function CameraToSignPage() {
                   <span className="text-gray-600">Keep Practicing!</span>
                 )}
               </div>
-              <div className="text-2xl font-semibold text-blue-600">
+              <div className="text-xl font-semibold text-blue-600">
                 Score: {score} / {signs.length}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 w-full">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 w-full">
               {screenshots.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex flex-col items-center rounded-lg shadow p-4 border-2 ${
+                  className={`flex flex-col items-center rounded-lg shadow p-3 border-2 ${
                     item.predicted === item.expected 
                       ? 'border-green-400' 
                       : 'border-red-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">
                       {item.predicted === item.expected ? '✅' : '❌'}
                     </span>
-                    <span className="text-lg text-gray-800">Sign {idx + 1}</span>
+                    <span className="text-sm text-gray-700">Sign {idx + 1}</span>
                   </div>
                   
                   <img 
                     src={item.image} 
                     alt={`Sign ${idx + 1}`} 
-                    className="w-full h-40 object-contain rounded-lg border-2 border-gray-300 mb-3 bg-white"
+                    className="w-full h-32 object-contain rounded border border-gray-300 mb-2 bg-white"
                   />
                   
-                  <div className="space-y-1 text-center w-full">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm text-gray-600">Expected:</span>
-                      <span className="font-bold text-lg text-gray-800">{item.expected}</span>
+                  <div className="space-y-0.5 text-center w-full text-xs">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-gray-600">Expected:</span>
+                      <span className="font-semibold text-gray-800">{item.expected}</span>
                     </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm text-gray-600">You signed:</span>
-                      <span className={`font-bold text-lg ${
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-gray-600">You signed:</span>
+                      <span className={`font-semibold ${
                         item.predicted === item.expected ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {item.predicted}
@@ -431,7 +431,7 @@ function CameraToSignPage() {
             </div>
 
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-10 rounded-lg text-lg shadow transition"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-8 rounded-lg text-base shadow transition"
               onClick={handleRestart}
             >
               Try Again
