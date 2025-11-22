@@ -62,34 +62,6 @@ export default function LearnPage() {
           </section>
         )}
 
-
-        {/* Action Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4 flex justify-center">
-                <div className="text-8xl">🤖</div>
-              </div>
-              <h3 className="mb-4 text-center text-2xl font-bold">Converse with AI</h3>
-              <Button className="w-full" size="lg">
-                Explore
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="mb-4 flex justify-center">
-                <div className="text-8xl">💬</div>
-              </div>
-              <h3 className="mb-4 text-center text-2xl font-bold">Daily Practice</h3>
-              <Button className="w-full" size="lg">
-                Practice
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Learn Section */}
         <section>
           <div className="mb-4">
