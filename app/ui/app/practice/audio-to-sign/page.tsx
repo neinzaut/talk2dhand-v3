@@ -421,44 +421,33 @@ export default function AudioToSignPage() {
       </div> */}
 
       <HowToUseModal open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <div className="p-4">
-          <h2 className="text-2xl font-bold mb-2">How to Use Sign Recognition Practice</h2>
-          
-          <h3 className="text-lg font-semibold mt-4 mb-2">🎙️ Voice Recognition Mode (Offline AI!)</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>Select a sign from the grid below.</li>
-            <li>Click the 🎤 microphone button to start recording.</li>
-            <li><strong>Say just the letter name</strong> clearly (e.g., "A", "B"{currentLanguage === "fsl" && <>, "Ch", "Ng", "Ñ"</>}).</li>
-            {currentLanguage === "fsl" && (
-              <li>For FSL, special digraphs like <strong>Ch</strong>, <strong>Ng</strong>, and <strong>Ñ</strong> are accepted just like single letters.</li>
-            )}
-            <li>Click the <strong>"⏹️ Stop"</strong> button when done, or wait 5 seconds for auto-stop.</li>
-            <li>The AI will transcribe and check your answer automatically.</li>
-            <li><strong>✨ NEW:</strong> Uses Whisper AI - <strong>works completely offline!</strong></li>
-            <li><strong>First use:</strong> AI model will download (~50MB, 1-2 min). Cached afterwards.</li>
-          </ul>
-          
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-3">
-            <p className="text-sm"><strong>💡 Pro Tip:</strong> Speak clearly and at normal speed. Whisper handles punctuation automatically, so "B" and "B." are both accepted!</p>
+        <div className="text-base space-y-4 pt-4">
+          <div>
+            <p className="font-bold text-lg mb-2">🎙️ Voice Recognition (Offline AI)</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>Select a sign, click 🎤 microphone, say the letter clearly</li>
+              <li>AI transcribes and checks automatically (uses Whisper AI)</li>
+              <li>First use: downloads ~50MB model (1-2 min), then cached</li>
+              <li>Stop button or 5-second auto-stop available</li>
+            </ul>
           </div>
 
-          <h3 className="text-lg font-semibold mt-4 mb-2">⌨️ Text Input Mode (Alternative)</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>Select a sign from the grid below.</li>
-            <li>Type the name of the sign in the text box.</li>
-            <li>Press Enter or click the "Check" button to verify your answer.</li>
-            <li>Perfect for silent practice or when voice input is unavailable.</li>
-          </ul>
+          <div>
+            <p className="font-bold text-lg mb-2">⌨️ Text Input Mode</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>Select a sign and type the letter name</li>
+              <li>Press Enter or click Check to verify</li>
+              <li>Perfect for silent practice</li>
+            </ul>
+          </div>
 
-          <h3 className="text-lg font-semibold mt-4 mb-2">📊 General Tips</h3>
-          <ul className="list-disc ml-6 space-y-2">
-            <li>
-              Use the{' '}
-              <Shuffle className="inline h-4 w-4 text-orange-600 align-text-bottom" />{' '}
-              shuffle button to randomize the grid for more challenge.
-            </li>
-            <li>Green border = correct, red = incorrect, orange = selected.</li>
-          </ul>
+          <div>
+            <p className="font-bold text-lg mb-2">Tips</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <li>Use <Shuffle className="inline h-3 w-3 align-text-bottom" /> to shuffle the grid</li>
+              <li>Green = correct, Red = incorrect, Orange = selected</li>
+            </ul>
+          </div>
         </div>
       </HowToUseModal>
     </div>
