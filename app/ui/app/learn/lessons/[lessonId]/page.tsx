@@ -20,7 +20,7 @@ export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
   const pathname = usePathname();
-  const { getCurrentModules, completeSubLesson, currentLanguage, setQuizActive } = useAppStore()
+  const { getCurrentModules, completeSubLesson, currentLanguage } = useAppStore()
   const modules = getCurrentModules()
 
   const [currentSubLessonIndex, setCurrentSubLessonIndex] = useState(0)
@@ -392,6 +392,10 @@ export default function LessonPage() {
       setBackendError("")
       setShowSignGifs(false)
     } else {
+      // Award XP for completing the lesson (30 XP)
+      const { addXP } = useAppStore.getState()
+      addXP(30)
+      
       router.back()
     }
   }
@@ -704,15 +708,6 @@ export default function LessonPage() {
         return null
     }
   }
-
-  useEffect(() => {
-    console.log("Current pathname:", pathname);
-
-    return () => {
-      console.log("Navigating away from pathname:", pathname);
-      setQuizActive(false);
-    };
-  }, [pathname, setQuizActive]);
 
   return (
     <div className="p-6">

@@ -6,6 +6,9 @@ import { Suspense } from "react"
 import "./globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
 import { AppHeader } from "@/components/app-header"
+import { XPNotificationQueue } from "@/components/shared/XPNotificationQueue"
+import { LevelUpQueue } from "@/components/shared/LevelUpQueue"
+import { BadgeNotificationQueue } from "@/components/shared/BadgeNotificationQueue"
 
 const fredoka = Fredoka({
   subsets: ["latin"],
@@ -37,6 +40,11 @@ export default function RootLayout({
           <main className="ml-60 pt-16">
             <Suspense fallback={null}>{children}</Suspense>
           </main>
+          
+          {/* Global notification queues */}
+          <XPNotificationQueue />
+          <LevelUpQueue />
+          <BadgeNotificationQueue />
         </div>
         <Analytics />
       </body>

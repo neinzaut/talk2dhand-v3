@@ -25,7 +25,6 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
   onComplete,
   onQuizStateChange 
 }) => {
-  const { setQuizActive } = useAppStore();
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
   const [currentQuizItemIndex, setCurrentQuizItemIndex] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -39,9 +38,8 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
       const items = generateRandomQuestions(signs, currentLanguage);
       console.log("Generated quiz items:", items);
       setQuizItems(items);
-      setQuizActive(true);
     }
-  }, [signs, currentLanguage, setQuizActive]);
+  }, [signs, currentLanguage]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -109,6 +107,10 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
   };
 
   const handleFinishQuiz = () => {
+    // Award XP for completing the quiz (50 XP)
+    const { addXP } = useAppStore.getState()
+    addXP(50)
+    
     // Notify parent that quiz is ending
     onQuizStateChange?.(false);
     if (onComplete) {

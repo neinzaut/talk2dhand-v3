@@ -40,6 +40,7 @@ export default function MemoryGamePage() {
   const [showScoreModal, setShowScoreModal] = useState(false)
   const [roundScore, setRoundScore] = useState(0)
   const [roundScores, setRoundScores] = useState<number[]>([])
+  const [xpAwarded, setXpAwarded] = useState(false)
 
   // Get sign data for current language
   const signData = currentLanguage === "asl"
@@ -168,6 +169,20 @@ export default function MemoryGamePage() {
     }
   }, [timer, gameOver]);
 
+  // Award XP when game completes (all rounds done)
+  useEffect(() => {
+    if (showScoreModal && round === MAX_ROUNDS && gameOver && !xpAwarded) {
+      const totalScore = roundScores.reduce((a, b) => a + b, 0)
+      const maxScore = CARDS_PER_ROUND * MAX_ROUNDS
+      const isPerfect = totalScore === maxScore
+      
+      // Award 25 XP for perfect score, 20 XP for completion
+      const { addXP } = useAppStore.getState()
+      addXP(isPerfect ? 25 : 20)
+      setXpAwarded(true)
+    }
+  }, [showScoreModal, round, gameOver, xpAwarded, roundScores])
+
   return (
     <div className="p-6 max-w-6xl mx-auto relative">
       {/* Title and How to Play button on same row */}
@@ -246,6 +261,7 @@ export default function MemoryGamePage() {
           setShowScoreModal(false);
           setRoundScore(0);
           setRoundScores([]);
+          setXpAwarded(false);
         }}
       />
       {/* How To Play Modal */}
