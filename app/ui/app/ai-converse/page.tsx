@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/shared/card"
 import { Button } from "@/components/shared/button"
 import { 
-  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle, RotateCcw
+  Wifi, WifiOff, Trash2, Video, Send, X, HelpCircle, RotateCcw, SkipBack, SkipForward
 } from "lucide-react"
 import { useAppStore } from "@/store/app-store"
+import { SkeletonPoseViewer } from "@/components/ai-converse/SkeletonPoseViewer"
 import { StickFigureAvatar } from "@/components/ai-converse/StickFigureAvatar"
 import { HowToUseModal } from "@/components/how-to-use-modal"
 
@@ -33,6 +34,15 @@ const AIConversePage = () => {
   const currentLanguage = useAppStore((state) => state.currentLanguage)
   const [howToOpen, setHowToOpen] = useState(false)
   const clientId = useRef("ai-converse-" + Date.now()).current
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"converse" | "translate">("converse")
+
+  // AI Translate state
+  const [translateInput, setTranslateInput] = useState<string>("")
+  const [translatedGloss, setTranslatedGloss] = useState<string>("")
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState<string | null>(null)
 
   // Online/Offline state
   const [isOnline, setIsOnline] = useState(true)
@@ -61,6 +71,9 @@ const AIConversePage = () => {
   const [currentGloss, setCurrentGloss] = useState<string | null>(null)
   const [avatarSpeed, setAvatarSpeed] = useState(1)
   const [shouldReplayAvatar, setShouldReplayAvatar] = useState(false)
+  const [selectedMessageGloss, setSelectedMessageGloss] = useState<string | null>(null)
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [glossTokens, setGlossTokens] = useState<string[]>([])
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -388,12 +401,89 @@ const AIConversePage = () => {
     }
   }
 
+  // Parse gloss into tokens when selectedMessageGloss changes
+  useEffect(() => {
+    if (selectedMessageGloss) {
+      const tokens = selectedMessageGloss.split(/\s+/).filter(token => token.length > 0)
+      setGlossTokens(tokens)
+      setCurrentWordIndex(0)
+    } else {
+      setGlossTokens([])
+      setCurrentWordIndex(0)
+    }
+  }, [selectedMessageGloss])
+
+  // Navigation handlers
+  const handlePreviousSign = () => {
+    setCurrentWordIndex(prev => Math.max(0, prev - 1))
+  }
+
+  const handleNextSign = () => {
+    setCurrentWordIndex(prev => Math.min(glossTokens.length - 1, prev + 1))
+  }
+
   // Clear all messages
   const clearAllMessages = () => {
     if (confirm("Clear all messages?")) {
       setMessages([])
       localStorage.removeItem(MESSAGES_KEY)
       setCurrentGloss(null)
+    }
+  }
+
+  // Translate text to ASL GLOSS
+  const translateToGloss = async () => {
+    const trimmedInput = translateInput.trim()
+    if (!trimmedInput || isTranslating) return
+
+    if (!isOnline) {
+      setTranslateError("⚠️ WiFi needed for translation")
+      return
+    }
+
+    try {
+      setIsTranslating(true)
+      setTranslateError(null)
+
+      const backendUrl = process.env.NEXT_PUBLIC_AI_CONVERSE_API || "http://localhost:8100"
+      
+      const response = await fetch(`${backendUrl}/translate-gloss`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: trimmedInput,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }))
+        const errorMsg = errorData.detail || "Translation failed"
+        console.error("Backend error:", errorMsg)
+        throw new Error(errorMsg)
+      }
+
+      const data = await response.json()
+      const gloss = data.gloss
+
+      setTranslatedGloss(gloss)
+    } catch (error) {
+      console.error("Translation error:", error)
+      const errorText = error instanceof Error ? error.message : "Error translating text"
+      const isRateLimit = errorText.includes("429") || errorText.includes("quota") || errorText.includes("rate limit")
+      
+      setTranslateError(isRateLimit 
+        ? "⚠️ Rate limit reached. All API keys are temporarily exhausted. Please wait a moment and try again."
+        : `Error: ${errorText}`)
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  // Handle Enter key in translate input
+  const handleTranslateKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      translateToGloss()
     }
   }
 
@@ -420,6 +510,32 @@ const AIConversePage = () => {
             </Button>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b bg-white px-6">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab("converse")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "converse"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+              }`}
+            >
+              AI Converse
+            </button>
+            <button
+              onClick={() => setActiveTab("translate")}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "translate"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+              }`}
+            >
+              AI Translate
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Offline Warning */}
@@ -432,7 +548,8 @@ const AIConversePage = () => {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* AI Converse Tab */}
+      {activeTab === "converse" && (
       <main className="h-auto flex overflow-hidden">
         {/* Chat Area */}
         <div className="bottom-0 left-0 w-full flex flex-col">
@@ -466,16 +583,27 @@ const AIConversePage = () => {
                       className={`max-w-2xl rounded-2xl px-4 py-3 ${
                         message.type === "user"
                           ? "bg-blue-500 text-white"
-                          : "bg-white border shadow-sm"
+                          : "bg-white border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                       }`}
+                      onClick={() => {
+                        if (message.type === "ai" && message.gloss) {
+                          setSelectedMessageGloss(message.gloss)
+                          setCurrentSign(message.gloss.split(/\s+/)[0] || "")
+                          setShouldReplayAvatar(prev => !prev)
+                        }
+                      }}
                     >
                       {message.type === "ai" && message.gloss ? (
                         <div className="space-y-3">
-                          {/* Stick Figure Avatar */}
-                          <StickFigureAvatar 
+                          {/* 2D Skeleton Pose Viewer */}
+                          <SkeletonPoseViewer 
                             gloss={message.gloss} 
-                            autoPlay={false}
+                            autoplay={true}
+                            loop={true}
+                            showCurrentWord={true}
+                            width={400}
                           />
+                          <p className="text-xs text-muted-foreground text-center">Click to preview in Live Sign Preview</p>
                         </div>
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -656,10 +784,15 @@ const AIConversePage = () => {
                 Live Sign Preview:
               </div>
               <div className="bg-white rounded-lg border aspect-video flex items-center justify-center mb-3">
-                <StickFigureAvatar 
-                  gloss={currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""} 
-                  autoPlay={true}
-                  key={shouldReplayAvatar ? Date.now() : currentSign}
+                <SkeletonPoseViewer 
+                  gloss={glossTokens.length > 0 ? glossTokens[currentWordIndex] : (selectedMessageGloss || (currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : ""))} 
+                  autoplay={true}
+                  loop={false}
+                  showCurrentWord={true}
+                  speed={avatarSpeed}
+                  width={400}
+                  key={glossTokens.length > 0 ? `${currentWordIndex}-${glossTokens[currentWordIndex]}-${shouldReplayAvatar}` : (shouldReplayAvatar ? Date.now() : (selectedMessageGloss || currentSign))}
+                  onCurrentWordChange={(word) => setCurrentSign(word)}
                 />
               </div>
               
@@ -669,8 +802,37 @@ const AIConversePage = () => {
                 <div className="bg-gray-50 rounded-lg p-2 text-center">
                   <div className="text-xs text-muted-foreground mb-1">Current Sign:</div>
                   <div className="text-lg font-bold text-blue-600">
-                    {currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : "—"}
+                    {glossTokens.length > 0 ? glossTokens[currentWordIndex] : (currentSign !== "Waiting..." && currentSign !== "Listening..." ? currentSign : "—")}
                   </div>
+                  {glossTokens.length > 0 && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {currentWordIndex + 1} of {glossTokens.length}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Arrows - Under Current Sign */}
+                <div className="flex items-center justify-center gap-6">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handlePreviousSign}
+                    disabled={glossTokens.length === 0 || currentWordIndex === 0}
+                    className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+                    title="Previous sign"
+                  >
+                    <SkipBack className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleNextSign}
+                    disabled={glossTokens.length === 0 || currentWordIndex >= glossTokens.length - 1}
+                    className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+                    title="Next sign"
+                  >
+                    <SkipForward className="h-6 w-6" />
+                  </Button>
                 </div>
                 
                 {/* Playback Controls */}
@@ -679,7 +841,7 @@ const AIConversePage = () => {
                     variant="default"
                     size="sm"
                     onClick={() => setShouldReplayAvatar(!shouldReplayAvatar)}
-                    disabled={!currentSign || currentSign === "Waiting..." || currentSign === "Listening..."}
+                    disabled={glossTokens.length === 0 && (!currentSign || currentSign === "Waiting..." || currentSign === "Listening...")}
                     className="flex-1"
                     title="Replay animation"
                   >
@@ -718,6 +880,123 @@ const AIConversePage = () => {
             </div>
           </Card>
       </main>
+      )}
+
+      {/* AI Translate Tab */}
+      {activeTab === "translate" && (
+      <main className="h-auto flex overflow-hidden">
+        <Card className="flex-1 flex flex-col mx-6 my-4">
+          <div className="flex-1 flex gap-4 p-6">
+            {/* Left Side - Text Input */}
+            <div className="flex-1 flex flex-col">
+              <h3 className="text-lg font-semibold mb-3">Enter Text to Translate</h3>
+              <textarea
+                value={translateInput}
+                onChange={(e) => setTranslateInput(e.target.value)}
+                onKeyDown={handleTranslateKeyPress}
+                placeholder="Type anything in English or Tagalog and press Enter..."
+                className="flex-1 resize-none border rounded-lg p-4 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isTranslating || !isOnline}
+              />
+              {translateError && (
+                <div className="mt-2 text-sm text-red-600">{translateError}</div>
+              )}
+              <Button
+                onClick={translateToGloss}
+                disabled={!translateInput.trim() || isTranslating || !isOnline}
+                className="mt-3 w-full"
+              >
+                {isTranslating ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Translating...
+                  </>
+                ) : (
+                  "Translate"
+                )}
+              </Button>
+            </div>
+            
+            {/* Vertical Divider */}
+            <div className="w-px bg-gray-200" />
+            
+            {/* Right Side - 2D Pose Avatar */}
+            <div className="flex-1 flex flex-col">
+              <h3 className="text-lg font-semibold mb-3">Translation</h3>
+              {translatedGloss ? (
+                <>
+                  <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg border mb-3">
+                    <SkeletonPoseViewer
+                      gloss={translatedGloss}
+                      autoplay={true}
+                      loop={true}
+                      showCurrentWord={true}
+                      width={400}
+                      speed={avatarSpeed}
+                      key={translatedGloss}
+                    />
+                  </div>
+                  <div className="bg-white rounded-lg border p-3">
+                    <div className="text-sm text-muted-foreground mb-1">Translation:</div>
+                    <div className="text-base font-mono font-semibold text-blue-600">
+                      {translatedGloss}
+                    </div>
+                  </div>
+                  
+                  {/* Speed Controls */}
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <span className="text-sm text-muted-foreground">Speed:</span>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setAvatarSpeed(Math.max(0.5, avatarSpeed - 0.25))}
+                      disabled={avatarSpeed <= 0.5}
+                      className="h-7 w-7 p-0"
+                      title="Slow down"
+                    >
+                      -
+                    </Button>
+                    <span className="text-sm font-medium min-w-[3rem] text-center">
+                      {avatarSpeed.toFixed(2)}x
+                    </span>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setAvatarSpeed(Math.min(2, avatarSpeed + 0.25))}
+                      disabled={avatarSpeed >= 2}
+                      className="h-7 w-7 p-0"
+                      title="Speed up"
+                    >
+                      +
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center text-muted-foreground bg-gray-50 rounded-lg border">
+                  <div>
+                    <svg width="80" height="80" viewBox="0 0 120 120" className="mx-auto mb-3 opacity-30">
+                      <circle cx="60" cy="20" r="12" fill="#9CA3AF" />
+                      <line x1="60" y1="32" x2="60" y2="70" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <line x1="45" y1="40" x2="75" y2="40" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <line x1="45" y1="40" x2="38" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <line x1="38" y1="60" x2="35" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <line x1="75" y1="40" x2="82" y2="60" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <line x1="82" y1="60" x2="85" y2="80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+                      <circle cx="35" cy="80" r="5" fill="#9CA3AF" />
+                      <circle cx="85" cy="80" r="5" fill="#9CA3AF" />
+                    </svg>
+                    <p>Enter text on the left to see translation</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      </main>
+      )}
 
       {/* How To Use Modal */}
       <HowToUseModal

@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Play, Pause, RotateCcw, SkipBack, SkipForward } from "lucide-react"
-import { parseGloss, getTokenDuration, type GlossToken } from "@/lib/glossParser"
+import { RotateCcw, SkipBack, SkipForward } from "lucide-react"
+import { parseGloss, type GlossToken } from "@/lib/glossParser"
 
 interface SignAnimationPlayerProps {
   gloss: string
@@ -18,7 +18,7 @@ export function SignAnimationPlayer({
   className = "",
 }: SignAnimationPlayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(autoPlay)
+  const [isPlaying, setIsPlaying] = useState(false) // Changed to false by default - manual controll
   const [speed, setSpeed] = useState(1) // 0.5x, 1x, 1.5x, 2x
   const [tokens, setTokens] = useState<GlossToken[]>([])
 
@@ -27,45 +27,13 @@ export function SignAnimationPlayer({
     const parsed = parseGloss(gloss)
     setTokens(parsed.tokens)
     setCurrentIndex(0)
-    setIsPlaying(autoPlay)
-  }, [gloss, autoPlay])
+    setIsPlaying(false) // Don't auto-play on gloss change
+  }, [gloss])
 
-  // Animation loop
-  useEffect(() => {
-    if (!isPlaying || tokens.length === 0) return
-
-    const currentToken = tokens[currentIndex]
-    if (!currentToken) return
-
-    const baseDuration = getTokenDuration(currentToken)
-    const duration = baseDuration / speed
-
-    const timer = setTimeout(() => {
-      if (currentIndex < tokens.length - 1) {
-        setCurrentIndex((prev) => prev + 1)
-      } else {
-        // Animation complete
-        setIsPlaying(false)
-        onComplete?.()
-      }
-    }, duration)
-
-    return () => clearTimeout(timer)
-  }, [isPlaying, currentIndex, tokens, speed, onComplete])
-
-  const handlePlayPause = useCallback(() => {
-    if (currentIndex >= tokens.length - 1 && !isPlaying) {
-      // Restart from beginning
-      setCurrentIndex(0)
-      setIsPlaying(true)
-    } else {
-      setIsPlaying((prev) => !prev)
-    }
-  }, [currentIndex, tokens.length, isPlaying])
+  // No automatic animation loop - removed the auto-advance useEffect
 
   const handleReplay = useCallback(() => {
     setCurrentIndex(0)
-    setIsPlaying(true)
   }, [])
 
   const handlePrevious = useCallback(() => {
@@ -73,8 +41,15 @@ export function SignAnimationPlayer({
   }, [])
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => Math.min(tokens.length - 1, prev + 1))
-  }, [tokens.length])
+    setCurrentIndex((prev) => {
+      const nextIndex = Math.min(tokens.length - 1, prev + 1)
+      if (nextIndex === tokens.length - 1 && prev === tokens.length - 1) {
+        // Already at the end
+        onComplete?.()
+      }
+      return nextIndex
+    })
+  }, [tokens.length, onComplete])
 
   const handleSpeedChange = useCallback(() => {
     const speeds = [0.5, 1, 1.5, 2]
@@ -82,6 +57,9 @@ export function SignAnimationPlayer({
     const nextSpeed = speeds[(currentSpeedIndex + 1) % speeds.length]
     setSpeed(nextSpeed)
   }, [speed])
+
+  // Note: Speed is kept for future use if auto-play is re-enabled
+  // Currently controls are manual (next/previous buttons)
 
   if (tokens.length === 0) {
     return (
@@ -122,8 +100,29 @@ export function SignAnimationPlayer({
           </div>
 
           {/* Sign Counter */}
-          <div className="text-sm text-muted-foreground">
-            Sign {currentIndex + 1} of {tokens.length}
+          <div className="text-sm text-muted-foreground mb-2">
+            Current Sign: {currentIndex + 1} of {tokens.length}
+          </div>
+
+          {/* Navigation Arrows - Under Current Sign */}
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <button
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+              title="Previous sign"
+            >
+              <SkipBack className="h-6 w-6" />
+            </button>
+
+            <button
+              onClick={handleNext}
+              disabled={currentIndex >= tokens.length - 1}
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-lg"
+              title="Next sign"
+            >
+              <SkipForward className="h-6 w-6" />
+            </button>
           </div>
         </div>
       </div>
@@ -138,40 +137,14 @@ export function SignAnimationPlayer({
         </div>
       </div>
 
-      {/* Playback Controls */}
+      {/* Other Controls */}
       <div className="flex items-center justify-center gap-4">
-        <button
-          onClick={handlePrevious}
-          disabled={currentIndex === 0}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title="Previous sign"
-        >
-          <SkipBack className="h-5 w-5" />
-        </button>
-
         <button
           onClick={handleReplay}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          title="Replay from start"
+          title="Restart from beginning"
         >
           <RotateCcw className="h-5 w-5" />
-        </button>
-
-        <button
-          onClick={handlePlayPause}
-          className="p-4 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-colors shadow-lg"
-          title={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-        </button>
-
-        <button
-          onClick={handleNext}
-          disabled={currentIndex >= tokens.length - 1}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          title="Next sign"
-        >
-          <SkipForward className="h-5 w-5" />
         </button>
 
         <button

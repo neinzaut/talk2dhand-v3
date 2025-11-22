@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${fredoka.variable} font-sans`}>
+      <body className={`${fredoka.variable} font-sans`} suppressHydrationWarning>
         <div className="min-h-screen bg-background" style={{ backgroundImage: 'url(/icons/bgpattern.png)', backgroundRepeat: 'repeat' }}>
           <AppSidebar />
           <AppHeader />
