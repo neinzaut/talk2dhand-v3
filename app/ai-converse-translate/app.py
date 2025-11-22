@@ -561,6 +561,252 @@ You output ONLY the ASL gloss"""
     raise Exception("Failed to get AI response")
 
 
+def get_gemini_gloss_reconstruction(text: str) -> str:
+    """Get Gemini AI to reconstruct text into ASL gloss with API key rotation"""
+    global current_key_index
+    
+    import google.generativeai as genai
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    
+    if not API_KEYS:
+        raise ValueError("No API keys available")
+    
+    # Try each API key in rotation
+    attempts = len(API_KEYS)
+    last_error = None
+    
+    for attempt in range(attempts):
+        try:
+            api_key = API_KEYS[current_key_index]
+            logger.info(f"Using API key #{current_key_index + 1} for gloss reconstruction (attempt {attempt + 1}/{attempts})")
+            
+            genai.configure(api_key=api_key)
+            
+            # System instruction for ASL gloss reconstruction
+            system_instruction = """(STRICT ASL GLOSS RECONSTRUCTION)
+Your task is to convert any user input into correct ASL GLOSS.
+Output ONLY the reconstructed ASL gloss. No explanations, no extra text.
+
+1. LANGUAGE HANDLING
+If the input sentence is Tagalog, translate it to English first, then proceed to ASL restructuring.
+
+If the input is English, proceed directly.
+
+2. PRONOUN & PERSPECTIVE RULE
+Preserve original pronouns exactly as they appear ("your" → YOUR, not ME).
+
+Do not invert or reinterpret pronouns based on speaker.
+
+Only rearrange grammar; never change viewpoint.
+
+3. ASL SYNTAX RULES
+A. TOPIC–COMMENT ORDER
+Move major topic / time / place first.
+
+Then give the comment / action / description.
+
+Order priority:
+
+TIME (if present)
+
+LOCATION (if present)
+
+SUBJECT
+
+VERB
+
+OBJECT
+
+EXTRA DETAIL
+
+B. WH-WORD PLACEMENT
+If the sentence contains WHO, WHAT, WHERE, WHEN, WHY, HOW, WHICH, place the WH-word at the end.
+
+Examples:
+EN: What is your name? → YOUR NAME WHAT
+EN: Where did she go? → SHE GO WHERE
+
+C. YES/NO QUESTION RULE
+Do NOT move anything to the end.
+
+Keep standard ASL order.
+
+No WH-word added.
+
+Example:
+EN: Did you eat? → YOU EAT?
+
+4. VERB RULES
+A. REMOVE ALL FORMS OF "TO BE"
+Delete: is, am, are, was, were, be, being, been.
+
+B. REMOVE ALL HELPING VERBS
+Delete: do, does, did, will, would, should, could, can, may, might, have, has, had
+unless needed for meaning.
+
+C. PERFECT ASPECT ("have/has/had eaten/seen/etc.")
+If the helper verb expresses completion, convert to FINISH.
+
+Examples:
+EN: Have you eaten? → YOU EAT FINISH?
+EN: I have finished the work. → WORK I FINISH
+
+If "have/has/had" is only grammatical filler → remove it.
+
+5. ARTICLE & FILLER REMOVAL
+Delete: a, an, the, and all unnecessary filler words.
+
+Example:
+EN: The cat is on the table. → CAT TABLE ON
+
+6. VERB PHRASE SIMPLIFICATION
+Keep the main verb only.
+
+Keep essential directional/inflection forms when obvious from meaning.
+
+Examples:
+EN: Do you want to go? → YOU WANT GO
+EN: Did you see Claire today at school? → TODAY SCHOOL YOU SEE CLAIRE?
+
+7. TIME & LOCATION RULE
+If present, place TIME first and LOCATION second unless sentence context requires another logical topic.
+
+Examples:
+EN: I will meet you tomorrow at school. → TOMORROW SCHOOL I MEET YOU
+
+8. NO EXTRA WORDS
+You MUST NOT:
+
+Add words not present in meaning
+
+Add WH-words unless the English sentence already contains a WH-question
+
+Add explanations or punctuation beyond an optional final "?"
+
+9. OUTPUT FORMAT
+ALL CAPS only
+
+Words separated by single spaces
+
+No quotes, no commentary, no explanation
+
+Output only the final ASL gloss
+
+10. SUMMARY OF OUTPUT BEHAVIOR
+You:
+
+Detect Tagalog → translate to English → apply ASL rules
+
+If English → apply ASL rules
+
+Produce only the ASL gloss in strict format
+
+Never output anything else"""
+        
+            # Create model with system instruction
+            model = genai.GenerativeModel(
+                model_name='gemini-2.5-flash',
+                system_instruction=system_instruction
+            )
+            
+            # Generation config
+            generation_config = genai.GenerationConfig(
+                temperature=0.2,
+                top_k=40,
+                top_p=0.95,
+                max_output_tokens=1024,
+            )
+            
+            # Relaxed safety settings
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            }
+            
+            # Generate response
+            response = model.generate_content(
+                f"Convert to ASL gloss: {text}",
+                generation_config=generation_config,
+                safety_settings=safety_settings
+            )
+            
+            # Check if response was blocked or empty
+            if not response.candidates:
+                raise Exception("Response was blocked by safety filters. Please try rephrasing your text.")
+            
+            candidate = response.candidates[0]
+            
+            # Check finish reason
+            if candidate.finish_reason == 3:  # SAFETY
+                raise Exception("Response was blocked due to safety concerns. Please rephrase your text.")
+            elif candidate.finish_reason == 4:  # RECITATION
+                raise Exception("Response was blocked due to recitation concerns. Please try different text.")
+            elif candidate.finish_reason not in [1, 2]:  # Not STOP or MAX_TOKENS
+                raise Exception(f"Response generation stopped unexpectedly (reason: {candidate.finish_reason}). Please try again.")
+            
+            # Check if response has valid parts
+            if not candidate.content.parts:
+                raise Exception("No gloss generated. Please try rephrasing your text.")
+            
+            asl_gloss = response.text.strip()
+            
+            logger.info(f"Text: {text} -> Gloss (key #{current_key_index + 1}): {asl_gloss}")
+            
+            # Rotate to next key for next call
+            current_key_index = (current_key_index + 1) % len(API_KEYS)
+            
+            return asl_gloss
+            
+        except Exception as e:
+            error_str = str(e).lower()
+            is_rate_limit = '429' in str(e) or 'quota' in error_str or 'rate limit' in error_str
+            
+            if is_rate_limit and attempt < attempts - 1:
+                logger.warning(f"Rate limit hit on API key #{current_key_index + 1}: {e}")
+                current_key_index = (current_key_index + 1) % len(API_KEYS)
+                logger.info(f"Rotating to API key #{current_key_index + 1}")
+                last_error = e
+                continue
+            else:
+                logger.error(f"Gemini API error on key #{current_key_index + 1}: {e}")
+                raise e
+    
+    # If all keys exhausted
+    if last_error:
+        raise Exception(f"All {len(API_KEYS)} API keys exhausted due to rate limits")
+    raise Exception("Failed to get gloss reconstruction")
+
+
+class TranslateGlossRequest(BaseModel):
+    """Request model for text-to-gloss translation"""
+    text: str
+
+
+class TranslateGlossResponse(BaseModel):
+    """Response model for text-to-gloss translation"""
+    gloss: str
+
+
+@app.post("/translate-gloss", response_model=TranslateGlossResponse)
+async def translate_gloss(request: TranslateGlossRequest):
+    """
+    Translate text to ASL gloss using Gemini AI
+    """
+    try:
+        if not request.text or not request.text.strip():
+            raise HTTPException(status_code=400, detail="Text is required")
+        
+        gloss = get_gemini_gloss_reconstruction(request.text.strip())
+        
+        return TranslateGlossResponse(gloss=gloss)
+        
+    except Exception as e:
+        logger.error(f"Translation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/infer", response_model=InferResponse)
 async def infer(request: InferRequest):
     """
