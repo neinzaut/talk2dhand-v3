@@ -32,6 +32,15 @@ export default function LearnPage() {
     <div className="flex gap-6 p-6">
       {/* Main Content */}
       <div className="flex-1 space-y-6">
+        {/* Welcome Header */}
+        <section className="relative overflow-hidden rounded-2xl shadow-sm">
+          <img 
+            src="/icons/dashboard-header.png" 
+            alt="Dashboard Header" 
+            className="h-full w-full object-cover"
+          />
+        </section>
+
         {/* Jump back into - Now uses dynamic current lesson */}
         {currentLesson && (
           <section>
