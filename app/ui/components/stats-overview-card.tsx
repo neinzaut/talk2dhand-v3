@@ -70,77 +70,114 @@ export function StatsOverviewCard({ streak, isStreakActive }: StatsOverviewCardP
             isTransitioning ? "opacity-50 scale-95" : "opacity-100 scale-100"
           }`}
         >
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 shadow-md">
-                <p className="text-sm font-semibold text-orange-100">LEVEL</p>
-                <p className="text-3xl font-bold text-white">{stats.level}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {nextLevel ? (
-                    <>
-                      {stats.currentLevelXP} / {maxXP} XP to Level {nextLevel}
-                    </>
-                  ) : (
-                    <>Max Level Reached!</>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <XPProgressBar
-            currentXP={stats.currentLevelXP}
-            maxXP={maxXP || stats.currentLevelXP}
-            level={stats.level}
-            animated={true}
-            height="h-4"
-          />
-        </div>
-
-        {/* Total XP */}
-        <div>
-          <p className="mb-2 text-sm text-muted-foreground">Total XP ({currentLanguage.toUpperCase()})</p>
-          <p
-            className={`text-4xl font-bold transition-all duration-300 ${
-              isTransitioning ? "opacity-50" : "opacity-100"
-            }`}
-          >
-            {stats.xp} XP
-          </p>
-        </div>
-
-        {/* Streak - Conditional */}
-        {isStreakActive && (
-          <div className="border-t pt-4">
-            <p className="mb-2 text-sm text-muted-foreground">Daily Streak</p>
-            <div className="flex items-center gap-3">
-              <div
-                className={`flex h-14 w-14 items-center justify-center rounded-full bg-yellow-100 transition-all duration-300 ${
-                  isStreakAnimating
-                    ? "scale-110 shadow-lg shadow-yellow-300/50"
-                    : "scale-100"
-                }`}
-              >
-                <img
-                  src="/icons/streak.png"
-                  alt="Streak"
-                  className={`h-8 w-8 transition-all duration-300 ${
-                    isStreakAnimating ? "animate-pulse brightness-125" : ""
-                  }`}
+          <div className="flex items-center gap-4">
+            {/* Circular Level Indicator */}
+            <div className="relative h-24 w-24 flex-shrink-0">
+              <svg className="h-24 w-24 -rotate-90 transform">
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="none"
+                  className="text-gray-200"
                 />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 40}`}
+                  strokeDashoffset={`${2 * Math.PI * 40 * (1 - (maxXP ? stats.currentLevelXP / maxXP : 0))}`}
+                  className="text-orange-500 transition-all duration-500"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-xs font-semibold text-muted-foreground">LEVEL</p>
+                <p className="text-2xl font-bold text-orange-500">{stats.level}</p>
               </div>
-              <span
-                className={`text-3xl font-bold transition-all duration-300 ${
-                  isStreakAnimating ? "scale-110 text-orange-500" : "scale-100"
-                }`}
-              >
-                {streak} Days
-              </span>
+            </div>
+
+            {/* XP Progress Text */}
+            <div>
+              <p className="text-2xl font-semibold">
+                {nextLevel ? (
+                  <>
+                    {maxXP - stats.currentLevelXP} XP
+                  </>
+                ) : (
+                  <>Max Level!</>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {nextLevel ? `to Level ${nextLevel}` : "You've reached the top!"}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Total XP Card */}
+          <div className="rounded-lg bg-gray-50 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-5 w-5 text-blue-600"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span>Total XP ({currentLanguage.toUpperCase()})</span>
+            </div>
+            <p
+              className={`text-2xl font-semibold transition-all duration-300 ${
+                isTransitioning ? "opacity-50" : "opacity-100"
+              }`}
+            >
+              {stats.xp.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Daily Streak Card */}
+          <div className="rounded-lg bg-gray-50 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-5 w-5 text-orange-600"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span>Daily Streak</span>
+            </div>
+            <p
+              className={`text-2xl font-semibold transition-all duration-300 ${
+                isStreakAnimating ? "scale-110 text-orange-500" : "scale-100"
+              }`}
+            >
+              {streak} Days
+            </p>
+          </div>
+        </div>
 
         {/* Badges Showcase */}
         {recentBadges.length > 0 && (
