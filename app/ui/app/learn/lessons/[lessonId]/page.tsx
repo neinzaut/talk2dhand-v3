@@ -480,13 +480,16 @@ export default function LessonPage() {
                           {children}
                         </blockquote>
                       ),
-                      img: ({ src, alt }) => (
-                        <img
-                          src={src?.startsWith('/') ? src : `/${src}`}
-                          alt={alt || 'Sign language demonstration'}
-                          className="h-32 w-auto rounded-lg shadow-md my-4 mx-auto object-contain"
-                        />
-                      ),
+                      img: ({ src, alt }) => {
+                        const imgSrc = typeof src === 'string' ? (src.startsWith('/') ? src : `/${src}`) : '';
+                        return (
+                          <img
+                            src={imgSrc}
+                            alt={alt || 'Sign language demonstration'}
+                            className="h-32 w-auto rounded-lg shadow-md my-4 mx-auto object-contain"
+                          />
+                        );
+                      },
                     }}
                   >
                     {currentSubLesson.content || ""}
