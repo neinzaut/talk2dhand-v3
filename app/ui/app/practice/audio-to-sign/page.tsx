@@ -7,6 +7,9 @@ import { HowToUseModal } from "@/components/how-to-use-modal"
 import { toast } from "react-toastify"
 import { useSpeechPractice } from "@/hooks/useSpeechPractice"
 
+// Force dynamic rendering to avoid ONNX runtime issues during build
+export const dynamic = 'force-dynamic'
+
 const getUnlabelledImageUrl = (signId: string, language: string) => {
   if (language === "asl") return `/images/asl-unlabelled/${signId}.png`
   if (language === "fsl") return `/images/fsl-unlabelled/${signId}.png`
