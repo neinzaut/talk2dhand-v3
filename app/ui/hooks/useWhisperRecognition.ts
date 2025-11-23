@@ -286,9 +286,10 @@ export function useWhisperRecognition({
         // Extract text more carefully
         let text = ""
         if (typeof result === "string") {
-          text = result.trim()
+          text = (result as string).trim()
         } else if (result && typeof result === "object") {
-          text = (result.text || result[0]?.text || "").toString().trim()
+          const resultObj = result as any
+          text = (resultObj.text || resultObj[0]?.text || "").toString().trim()
         }
         
         console.log("📝 Transcription result:", text)
