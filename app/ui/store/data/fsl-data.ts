@@ -269,52 +269,101 @@ Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang
               completed: false,
               content: `### **Lesson 4: FSL Grammar and Structure**
 
-FSL grammar is uniquely Filipino. Like ASL, it often follows a **Topic–Comment** structure — but it also shows influences from Filipino discourse patterns (which emphasize context, emotion, and storytelling).
+FSL grammar is uniquely Filipino. Like ASL, it follows a **Topic–Comment** structure — but with Filipino cultural influences that emphasize context, emotion, and storytelling.
 
-| English | FSL-like Gloss | Meaning |
-| ----- | ----- | ----- |
-| *I'm going to school today.* | **TODAY SCHOOL I GO.** | Topic = today school; Comment = I go. |
-| *Where do you live?* | **IKAW LIVE WHERE?** | Topic = you live; Comment = where. |
-| *My mom is a teacher.* | **MOM TEACHER SHE.** | Topic = mom; Comment = teacher. |
 
-FSL naturally **drops filler words** like *is*, *am*, or *are*, and uses **visual rhythm and expression** to convey meaning.  
-Examples:
+### **Understanding Glossing**
 
-* "I am happy." → **I HAPPY.**
+Before we explore grammar, let's understand **glossing** — a system that helps us write down FSL signs using written words as labels.
 
-* "We are friends." → **WE FRIEND.**
+#### **Core Glossing Conventions**
 
-* "He is cooking adobo." → **HE COOK ADOBO.**
+| Convention | Example |
+| ----- | ----- |
+| **CAPITALIZATION** | **HOUSE** (the sign for "bahay") |
+| **Fingerspelling** | **M-A-N-I-L-A** (spelled letter by letter) |
+| **Lexicalized Signs** | **#BUSY**, **#DO**, **#PIZZA** (fingerspelling that became a sign) |
+| **Compound Signs** | **GOOD-MORNING**, **MOTHER-FATHER** (multiple words = one sign) |
+| **Non-Manual Signals** | Facial expressions shown as **(q)** for question, **(neg)** for negation |
 
-Unlike ASL, FSL grammar often includes **localized vocabulary** for cultural references — especially for **places, foods, and emotions**. The way something is signed in Baguio may differ slightly from how it's signed in Davao, and both are correct within their regions.
+**Remember:** Glossing is a learning tool to understand FSL structure!
 
-FSL also features **two types of facial grammar**:
 
-1. **Grammatical Facial Expressions (GFE)** — mark sentence type (e.g., question vs statement).
+### **Basic Sentence Structure**
 
-2. **Affective Facial Expressions (AFE)** — express emotion or tone (e.g., happy, serious, sad).
+#### **Topic–Comment Order**
 
-These work together, so a sentence like "Are you okay?" combines raised eyebrows (GFE) with a concerned face (AFE).
+FSL typically follows a **Topic–Comment** pattern:
+1. **Topic** = What/who you're talking about
+2. **Comment** = What you want to say about it
 
-FSL storytelling is also **more visually rich and animated** than ASL. Signers often include cultural gestures, humor, and repetition to emphasize empathy or connection — mirroring the natural liveliness of Filipino conversation.
+**Examples:**
 
-> 💡 **Tip:** To learn FSL grammar, focus on what you *see*, not what you *say*. Identify the topic, build the comment visually, and let your expressions and body language do the rest.
+| English | FSL Gloss |
+| ----- | ----- |
+| I'm going to school today. | **TODAY SCHOOL I GO** |
+| Where do you live? | **HOUSE YOU WHERE** |
+| My mom is a teacher. | **MOM TEACHER** |
 
----
+#### **Shortening Sentences**
 
-### **Summary for Beginners**
+FSL drops filler words like *is*, *am*, *are*:
 
-* FSL is a **distinct, full language**, not a signed form of Tagalog or ASL.
+* "I am happy." → **I HAPPY**
+* "We are friends." → **WE FRIEND**
+* "He is cooking adobo." → **HE COOK ADOBO**
 
-* While ASL influenced its roots, FSL developed its **own grammar, vocabulary, and style**.
 
-* The biggest differences are found in **localized terms** (places, food, culture) and **regional dialects**.
+### **FSL's Unique Negation System**
 
-* **Facial and body expressions** are even more emphasized in FSL — they are central to meaning.
+FSL has **three specific negation signs** — you must choose the right one!
 
-* **Variation is natural**: different regions sign some concepts differently, and that's okay.
+**1. HINDI (NOT)** — for denying facts or identity
+* **DOCTOR ME HINDI** = I am not a doctor
+* **HANDSOME HE HINDI** = He is not handsome
+* **KNOW ME HINDI** = I don't know
 
-* FSL embodies **Filipino identity** — expressive, warm, and deeply community-centered.`
+**2. WALA (NONE)** — for absence or not having
+* **MONEY ME WALA** = I have no money
+* **TODAY CLASS WALA** = There is no class today
+* **EAT ME WALA-PA** = I haven't eaten yet
+
+**3. AYAW (DON'T-WANT)** — for refusal or dislike
+* **RICE ME AYAW** = I don't want rice
+
+**Positive forms:**
+* **GUSTO** (want) — opposite of AYAW
+* **MERON** (have/exists) — opposite of WALA
+
+
+### **Conditional Statements (If/Then)**
+
+Like ASL, FSL doesn't use manual signs for "if" or "then" — it's shown through facial expressions!
+
+**How it works:**
+* Raise your eyebrows during the "if" part
+* Then sign the "then" part with a neutral face
+
+**Examples:**
+* **(cond) RAIN FINISH, ME GO** = If the rain stops, I'll go
+* **(cond) TOMORROW SUNNY, BEACH WE GO** = If tomorrow is sunny, we'll go to the beach
+
+
+### **What Makes FSL Special**
+
+✓ **Distinct language** — not just signed Tagalog or ASL
+
+✓ **Regional variations** — Baguio and Davao may sign differently (both correct!)
+
+✓ **Cultural vocabulary** — special signs for Filipino food, places, emotions
+
+✓ **Expressive storytelling** — more animated with cultural gestures
+
+✓ **Two types of facial expressions:**
+  - **GFE** (Grammatical) — marks questions, statements
+  - **AFE** (Affective) — shows emotion and tone
+
+> 💡 **Tip:** FSL is visual and cultural. Focus on what you *see*, not what you *say*. Let your expressions and body language tell the story!`
             },
             {
               id: "lesson-4-practice",

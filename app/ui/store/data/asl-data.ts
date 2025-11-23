@@ -258,60 +258,98 @@ Notice how the hand movements flow naturally and include appropriate facial expr
               completed: false,
               content: `### **Lesson 4: ASL Grammar and Structure**
 
-ASL is a full language with its own **syntax, morphology, and grammar** — it is *not* just English translated to hands. 
+ASL is a full language with its own **syntax, morphology, and grammar** — it is *not* just English translated to hands.
 
-#### **Topic–Comment Order & Examples**
 
-A key structure in ASL is **Topic–Comment**. In this structure, you first introduce the **topic** (what or who you're talking about), then follow with the **comment** (what you want to say about it).
+### **Understanding Glossing**
 
-| English | ASL-like gloss | Meaning |
-| ----- | ----- | ----- |
-| *I am going to school today.* | **TODAY SCHOOL I GO** | The topic is *today school*, then the comment *I go*. |
-| *Where do you live?* | **YOU LIVE WHERE?** | Topic = you live, comment = where? |
-| *My mom is a teacher.* | **MOM TEACHER SHE or MOM TEACHER** | Topic = mom, comment = teacher, optional pronoun. |
+Before we explore grammar, let's understand **glossing** — a system that helps us write down ASL signs using English words as labels.
 
-#### **Shortening in ASL**
+#### **Core Glossing Conventions**
 
-Everyday ASL often drops unnecessary words—especially those implied by context.  
-Examples:
+| Convention | Example |
+| ----- | ----- |
+| **CAPITALIZATION** | **HOUSE** (the sign for "house") |
+| **Fingerspelling** | **J-O-H-N** (spelled letter by letter) |
+| **Lexicalized Signs** | **#JOB**, **#CAR** (fingerspelling that became a sign) |
+| **Compound Signs** | **THANK-YOU**, **DON'T-WANT** (multiple words = one sign) |
+| **Non-Manual Signals** | Facial expressions shown as **(q)** for question, **(neg)** for negation |
 
-* "I am going to school." → **SCHOOL I GO.**
+**Remember:** Glossing is a learning tool, not a translation!
 
-* "He is hungry." → **HE HUNGRY.** (omit *is*)
 
-* "She is reading a book." → **SHE READ BOOK.**
+### **Basic Sentence Structure**
 
-You can shorten a sentence whenever the meaning remains clear. The rule of thumb: remove what the viewer can already infer, but always keep the **topic** and **main idea**.
+#### **Topic–Comment Order**
 
-#### **Figuring Out ASL Grammar as a Learner**
+ASL typically follows a **Topic–Comment** pattern:
+1. **Topic** = What/who you're talking about
+2. **Comment** = What you want to say about it
 
-1. **Identify the topic**—what is this about?
+**Examples:**
 
-2. **State your comment**—what do you want to say about it?
+| English | ASL Gloss |
+| ----- | ----- |
+| I am going to school today. | **TODAY SCHOOL I GO** |
+| Where do you live? | **YOU LIVE WHERE?** |
+| My mom is a teacher. | **MOM TEACHER** |
 
-3. **Use space and referencing:** assign areas in signing space for people or things and point back instead of repeating names.
+#### **Shortening Sentences**
 
-4. **Watch for NMS:** facial and body cues show question type, emotion, and emphasis.
+ASL drops words that are obvious from context:
 
-5. **Observe native signers:** exposure helps you internalize rhythm, order, and natural reduction.
+* "I am going to school." → **SCHOOL I GO**
+* "He is hungry." → **HE HUNGRY**
+* "She is reading a book." → **SHE READ BOOK**
 
-**More examples:**
+**Key principle:** If it's clear from context, you can leave it out!
 
-* *Do you want coffee or tea?* → **YOU WANT COFFEE OR TEA?**
 
-* *I saw Juan at the mall yesterday.* → **YESTERDAY MALL JUAN I SEE.**
+### **Expressing Negation**
 
-* *Where is your house?* → **YOUR HOUSE WHERE**
+ASL has three main ways to say "no" or "not":
 
-ASL also uses **spatial referencing**—placing people or objects in signing space and pointing back to those spots instead of repeating names.
+**1. Headshake** (most common)
+* Shake your head while signing
+* Written as **(neg)**
+* Example: **ME UNDERSTAND (neg)** = I don't understand
 
-**Non-manual signals (NMS)**—facial expressions, head shifts, and body movement—are part of grammar. They can turn a statement into a question, add emphasis, or show emotion.
+**2. Negative Signs**
+* **NOT**, **CAN'T**, **NEVER**, **NONE**
+* Usually at the end of the sentence
+* Example: **DOG ME HAVE NONE** = I don't have a dog
 
-Minor variations in space use or timing are **stylistic**, reflecting regional and personal expression.
+**3. Built-in Negation**
+* Some signs naturally mean "don't"
+* Example: **DON'T-KNOW**, **DON'T-WANT**
 
-Most importantly, ASL is a **complete, living language** with its own slang, storytelling, and poetry. It isn't a simplified form of English—it's the visual voice of the Deaf community.
 
-> 💡 **Tip:** Watch Deaf signers online or in person to see how they naturally use space and facial expression. You'll learn not just what ASL says, but *how* it says it.`
+### **Conditional Statements (If/Then)**
+
+ASL doesn't use signs for "if" or "then" — it's all in the face!
+
+**How it works:**
+* Raise your eyebrows during the "if" part
+* Then sign the "then" part with a neutral face
+
+**Examples:**
+* **(cond) RAIN STOP, ME GO** = If the rain stops, I'll go
+* **(cond) TOMORROW SUNNY, BEACH WE GO-TO** = If it's sunny tomorrow, we'll go to the beach
+
+
+### **Key Takeaways**
+
+✓ ASL has its own grammar — it's not English on hands
+
+✓ **Topic–Comment** is the basic structure
+
+✓ **Facial expressions** are grammar (not just emotion!)
+
+✓ Drop unnecessary words — keep it visual and clear
+
+✓ **Spatial referencing** — point to locations for people/things
+
+> 💡 **Tip:** Watch Deaf signers to see how they naturally use space and facial expressions. That's how you'll really learn ASL grammar!`
             },
             {
               id: "lesson-4-practice",
