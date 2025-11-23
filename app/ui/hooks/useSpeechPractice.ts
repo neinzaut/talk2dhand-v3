@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "react-toastify"
-import { useWhisperRecognition } from "./useWhisperRecognition"
 
 export interface UseSpeechPracticeOptions {
   correctAnswer: string
@@ -70,7 +69,17 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
   const [feedback, setFeedback] = useState("")
   const [micAllowed, setMicAllowed] = useState(true)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [whisperHook, setWhisperHook] = useState<any>(null)
   const { map: letterLookup, maxTokens } = useMemo(() => buildLetterLookup(language), [language])
+
+  // Dynamically load Whisper hook only in browser
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    import("./useWhisperRecognition").then((module) => {
+      setWhisperHook(module)
+    })
+  }, [])
 
   // Reset state when correctAnswer changes (user selects a new sign)
   useEffect(() => {
@@ -121,10 +130,10 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     }
   }
 
-  // Use Whisper for offline speech recognition
-  const whisper = useWhisperRecognition({
+  // Use Whisper for offline speech recognition (dynamically loaded)
+  const whisper = whisperHook?.useWhisperRecognition({
     language: language === "FSL" ? "fil" : "en",
-    onResult: (text) => {
+    onResult: (text: string) => {
       console.log("📝 Whisper result:", text)
       const normalized = normalizeTranscription(text)
       const { letter, invalid } = extractCandidateLetter(normalized)
@@ -142,11 +151,11 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
       setSpokenText(displayText)
       checkAnswer(letter)
     },
-    onError: (error) => {
+    onError: (error: string) => {
       console.error("❌ Whisper error:", error)
       setFeedback(error)
     },
-  })
+  }) || { isRecording: false, isProcessing: false, isModelLoading: false, startRecording: () => {}, stopRecording: () => {}, transcript: "" }
 
   useEffect(() => {
     // Check if getUserMedia is available
