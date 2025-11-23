@@ -1,6 +1,16 @@
 import { useState, useRef, useCallback } from "react"
-import { pipeline, AutomaticSpeechRecognitionPipeline } from "@xenova/transformers"
 import { toast } from "react-toastify"
+
+// Dynamically import transformers only in browser to avoid build issues
+let pipeline: any = null
+let AutomaticSpeechRecognitionPipeline: any = null
+
+if (typeof window !== 'undefined') {
+  import("@xenova/transformers").then((module) => {
+    pipeline = module.pipeline
+    AutomaticSpeechRecognitionPipeline = module.AutomaticSpeechRecognitionPipeline
+  })
+}
 
 export interface UseWhisperRecognitionOptions {
   language?: string // "en" for English, "fil" for Filipino
@@ -21,13 +31,13 @@ export function useWhisperRecognition({
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
-  const transcriber = useRef<AutomaticSpeechRecognitionPipeline | null>(null)
+  const transcriber = useRef<any | null>(null)
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize Whisper model (lazy loading)
   const initializeModel = useCallback(async () => {
     // Skip model loading during build/SSR
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !pipeline) {
       console.log("⚠️ Skipping model initialization during build")
       return null
     }
@@ -46,6 +56,12 @@ export function useWhisperRecognition({
       const modelName = "Xenova/whisper-base.en"
       
       console.log("🤖 Loading model:", modelName)
+      
+      // Ensure pipeline is loaded before using it
+      if (!pipeline) {
+        const module = await import("@xenova/transformers")
+        pipeline = module.pipeline
+      }
       
       transcriber.current = await pipeline(
         "automatic-speech-recognition",
