@@ -16,25 +16,6 @@ interface HTMLPoseViewerElement extends HTMLElement {
   shadowRoot: ShadowRoot;
 }
 
-// Extend JSX IntrinsicElements for pose-viewer
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'pose-viewer': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          src?: string;
-          autoplay?: string | boolean;
-          loop?: string | boolean;
-          width?: string | number;
-          'aspect-ratio'?: string | number;
-          background?: string;
-        },
-        HTMLElement
-      >;
-    }
-  }
-}
-
 export interface SkeletonPoseViewerProps {
   /** URL or path to the .pose file or gloss text to generate pose */
   gloss: string;
