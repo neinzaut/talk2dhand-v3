@@ -1,15 +1,26 @@
 import { useState, useRef, useCallback } from "react"
 import { toast } from "react-toastify"
 
-// Dynamically import transformers only in browser to avoid build issues
+// Dynamically import transformers only in browser to avoid build/runtime issues
 let pipeline: any = null
 let AutomaticSpeechRecognitionPipeline: any = null
+let transformersLoading = false
 
-if (typeof window !== 'undefined') {
-  import("@xenova/transformers").then((module) => {
+async function loadTransformers() {
+  if (pipeline || transformersLoading) return
+  if (typeof window === 'undefined') return
+  
+  try {
+    transformersLoading = true
+    const module = await import("@xenova/transformers")
     pipeline = module.pipeline
     AutomaticSpeechRecognitionPipeline = module.AutomaticSpeechRecognitionPipeline
-  })
+    console.log("✅ Transformers library loaded")
+  } catch (error) {
+    console.error("❌ Failed to load transformers:", error)
+  } finally {
+    transformersLoading = false
+  }
 }
 
 export interface UseWhisperRecognitionOptions {
@@ -37,8 +48,8 @@ export function useWhisperRecognition({
   // Initialize Whisper model (lazy loading)
   const initializeModel = useCallback(async () => {
     // Skip model loading during build/SSR
-    if (typeof window === 'undefined' || !pipeline) {
-      console.log("⚠️ Skipping model initialization during build")
+    if (typeof window === 'undefined') {
+      console.log("⚠️ Skipping model initialization during SSR")
       return null
     }
     
@@ -49,6 +60,13 @@ export function useWhisperRecognition({
       console.log("🤖 Loading Whisper model... This may take a minute on first load.")
       toast.info("🤖 Loading speech recognition model... Please wait.")
 
+      // Ensure transformers library is loaded first
+      await loadTransformers()
+      
+      if (!pipeline) {
+        throw new Error("Failed to load transformers library")
+      }
+
       // Use Whisper base model for better short-phrase detection
       // whisper-tiny.en is too aggressive at filtering, base.en handles short phrases better
       // For FSL, users still speak letter names in English (e.g., "A", "B", "Ch", "Ng")
@@ -56,12 +74,6 @@ export function useWhisperRecognition({
       const modelName = "Xenova/whisper-base.en"
       
       console.log("🤖 Loading model:", modelName)
-      
-      // Ensure pipeline is loaded before using it
-      if (!pipeline) {
-        const module = await import("@xenova/transformers")
-        pipeline = module.pipeline
-      }
       
       transcriber.current = await pipeline(
         "automatic-speech-recognition",
