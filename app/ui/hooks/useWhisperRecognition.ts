@@ -267,7 +267,6 @@ export function useWhisperRecognition({
           return_timestamps: false,
           chunk_length_s: 10, // Shorter chunks for better short-phrase detection
           stride_length_s: 2,
-          initial_prompt: "Letter A. Letter B. Letter C.", // Hint at expected format
           // Parameters to improve short phrase detection
           max_new_tokens: 30, // Limit output length for short phrases
           temperature: 0.0, // Deterministic output (no randomness)
