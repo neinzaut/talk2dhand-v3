@@ -1,0 +1,85 @@
+services:
+  # Static Signs Recognition Service
+  - type: web
+    name: talk2dhand-static-signs
+    runtime: docker
+    dockerfilePath: ./app/static-signs/Dockerfile
+    dockerContext: ./app/static-signs
+    envVars:
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 2
+      - key: TF_ENABLE_ONEDNN_OPTS
+        value: 0
+    plan: free
+    
+  # Dynamic Phrases Recognition Service
+  - type: web
+    name: talk2dhand-dynamic-phrases
+    runtime: docker
+    dockerfilePath: ./app/dynamic-phrases/Dockerfile
+    dockerContext: ./app/dynamic-phrases
+    envVars:
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 2
+      - key: PYTHONUNBUFFERED
+        value: 1
+    plan: free
+    
+  # AI Converse Translation Service
+  - type: web
+    name: talk2dhand-ai-converse
+    runtime: docker
+    dockerfilePath: ./app/ai-converse-translate/Dockerfile
+    dockerContext: ./app
+    envVars:
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 2
+      - key: PYTHONUNBUFFERED
+        value: 1
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY_2
+        sync: false
+      - key: GOOGLE_API_KEY_3
+        sync: false
+      - key: GOOGLE_API_KEY_4
+        sync: false
+      - key: GOOGLE_API_KEY_5
+        sync: false
+      - key: GOOGLE_API_KEY_6
+        sync: false
+      - key: GOOGLE_API_KEY_7
+        sync: false
+      - key: GOOGLE_API_KEY_8
+        sync: false
+      - key: GOOGLE_API_KEY_9
+        sync: false
+      - key: GOOGLE_API_KEY_10
+        sync: false
+    plan: free
+    
+  # UI Frontend
+  - type: web
+    name: talk2dhand-ui
+    runtime: docker
+    dockerfilePath: ./app/ui/Dockerfile
+    dockerContext: ./app/ui
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_STATIC_SIGNS_API
+        fromService:
+          name: talk2dhand-static-signs
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_DYNAMIC_PHRASES_API
+        fromService:
+          name: talk2dhand-dynamic-phrases
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_AI_CONVERSE_API
+        fromService:
+          name: talk2dhand-ai-converse
+          type: web
+          property: host
+    plan: free

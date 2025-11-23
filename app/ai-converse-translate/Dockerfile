@@ -34,10 +34,9 @@ RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 \
 
 # Copy application files
 COPY app.py .
-COPY .env .
 
-# Verify that the shared model path will be mounted
-RUN mkdir -p /app/shared-models/islr
+# Copy ISLR model files from dynamic-phrases
+COPY ../dynamic-phrases/module/islr /app/shared-models/islr
 
 # Expose port 8100
 EXPOSE 8100
