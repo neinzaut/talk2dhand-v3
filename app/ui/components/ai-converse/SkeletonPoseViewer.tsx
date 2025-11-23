@@ -237,19 +237,19 @@ export const SkeletonPoseViewer: React.FC<SkeletonPoseViewerProps> = ({
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
-      <pose-viewer
-        ref={viewerRef as any}
-        src={poseUrl}
-        autoplay={autoplay ? 'true' : 'false'}
-        loop={loop ? 'true' : 'false'}
-        width={typeof width === 'number' ? `${width}px` : width}
-        aspect-ratio={aspectRatio.toString()}
-        background={background}
-        style={{
+      {React.createElement('pose-viewer', {
+        ref: viewerRef as any,
+        src: poseUrl,
+        autoplay: autoplay ? 'true' : 'false',
+        loop: loop ? 'true' : 'false',
+        width: typeof width === 'number' ? `${width}px` : width,
+        'aspect-ratio': aspectRatio.toString(),
+        background: background,
+        style: {
           display: 'block',
           maxWidth: '100%',
-        }}
-      />
+        }
+      })}
       
       {/* Current Word/Letter Display */}
       {showCurrentWord && currentWord && (
