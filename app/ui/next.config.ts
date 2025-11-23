@@ -7,14 +7,23 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker
   output: 'standalone',
   
-  // Exclude ONNX runtime from server bundle to prevent crashes
+  // Exclude ONNX runtime and transformers from server bundle
   webpack: (config, { isServer }) => {
     if (isServer) {
+      // Completely exclude these packages from server bundle
       config.externals = config.externals || []
-      config.externals.push({
-        '@xenova/transformers': 'commonjs @xenova/transformers',
-        'onnxruntime-node': 'commonjs onnxruntime-node',
-      })
+      config.externals.push(
+        '@xenova/transformers',
+        'onnxruntime-node',
+        'onnxruntime-common',
+        'sharp'
+      )
+    } else {
+      // Client-side: ensure transformers uses WASM backend
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'onnxruntime-node': false,
+      }
     }
     return config
   },

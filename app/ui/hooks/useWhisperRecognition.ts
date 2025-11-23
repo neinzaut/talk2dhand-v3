@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { toast } from "react-toastify"
 
 // Dynamically import transformers only in browser to avoid build/runtime issues
 let pipeline: any = null
-let AutomaticSpeechRecognitionPipeline: any = null
+let env: any = null
 let transformersLoading = false
 
 async function loadTransformers() {
@@ -12,10 +12,17 @@ async function loadTransformers() {
   
   try {
     transformersLoading = true
+    console.log("🔧 Loading transformers library (client-side only)...")
     const module = await import("@xenova/transformers")
+    
+    // Force WASM backend for client-side execution (no ONNX runtime)
+    module.env.backends.onnx.wasm.numThreads = 1
+    module.env.allowLocalModels = false
+    module.env.useBrowserCache = true
+    
     pipeline = module.pipeline
-    AutomaticSpeechRecognitionPipeline = module.AutomaticSpeechRecognitionPipeline
-    console.log("✅ Transformers library loaded")
+    env = module.env
+    console.log("✅ Transformers library loaded with WASM backend")
   } catch (error) {
     console.error("❌ Failed to load transformers:", error)
   } finally {
@@ -44,6 +51,13 @@ export function useWhisperRecognition({
   const audioChunksRef = useRef<Blob[]>([])
   const transcriber = useRef<any | null>(null)
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Preload transformers library on client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      loadTransformers()
+    }
+  }, [])
 
   // Initialize Whisper model (lazy loading)
   const initializeModel = useCallback(async () => {
