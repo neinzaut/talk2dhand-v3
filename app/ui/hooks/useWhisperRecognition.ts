@@ -26,6 +26,12 @@ export function useWhisperRecognition({
 
   // Initialize Whisper model (lazy loading)
   const initializeModel = useCallback(async () => {
+    // Skip model loading during build/SSR
+    if (typeof window === 'undefined') {
+      console.log("⚠️ Skipping model initialization during build")
+      return null
+    }
+    
     if (transcriber.current) return transcriber.current
 
     try {
@@ -69,6 +75,12 @@ export function useWhisperRecognition({
 
   // Start recording audio
   const startRecording = useCallback(async () => {
+    // Skip during build/SSR
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      console.log("⚠️ Skipping recording during build")
+      return
+    }
+    
     try {
       console.log("🎤 Starting audio recording...")
       setError(null)
