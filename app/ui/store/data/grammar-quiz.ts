@@ -8,338 +8,258 @@ export interface GrammarQuizItem {
   language: "asl" | "fsl"
 }
 
-// ASL Quiz Items (20 items from QUIZ_CONTENT.md)
+// ASL Quiz Items (15 items from Glossing Practice and Quiz.md)
 const aslQuizItems: GrammarQuizItem[] = [
   {
     id: "asl-quiz-1",
     language: "asl",
-    sentence: "Where do you work?",
-    correctGloss: "YOU WORK WHERE?",
+    sentence: "I washed my car yesterday.",
+    correctGloss: "YESTERDAY CAR ME WASH",
     rationale:
-      "This is a standard WH-question. The subject YOU and verb WORK establish the context, and the WH-sign WHERE is placed at the end. Non-manual signals include furrowed eyebrows over WHERE.",
+      "Time (YESTERDAY) + Topic (CAR) + Subject (ME) + Action (WASH). Use 'ME' for 'I'. ASL follows a Time-Topic-Comment structure where temporal information comes first.",
   },
   {
     id: "asl-quiz-2",
     language: "asl",
-    sentence: "My parents are coming to visit next week.",
-    correctGloss: "NEXT-WEEK, MY PARENTS COME-HERE VISIT.",
+    sentence: "Do you want coffee?",
+    correctGloss: "COFFEE YOU WANT",
     rationale:
-      "This sentence follows the Time-Topic-Comment structure. NEXT-WEEK establishes the time. MY PARENTS is the topic. COME-HERE VISIT is the comment. The sign PARENTS is a compound of MOTHER+FATHER.",
+      "Topic (COFFEE) + Subject (YOU) + Verb (WANT). This is a Yes/No question, so eyebrows should be raised. The object/topic is established first.",
   },
   {
     id: "asl-quiz-3",
     language: "asl",
-    sentence: "I don't know his name.",
-    correctGloss: "IX-he NAME, ME DON'T-KNOW.",
+    sentence: "My name is Sarah.",
+    correctGloss: "MY NAME SARAH",
     rationale:
-      "The object, IX-he NAME (his name), is topicalized. The negation is expressed using the single sign DON'T-KNOW, which incorporates negation through reversal of orientation.",
+      "Possessive (MY) + Noun (NAME) + Fingerspelled Name. Do not use 'IS'. Names are fingerspelled and indicated with fs- prefix.",
   },
   {
     id: "asl-quiz-4",
     language: "asl",
-    sentence: "If I finish my homework, I can go to the movies.",
-    correctGloss: "MY HOMEWORK ME FINISH, MOVIE ME CAN GO.",
+    sentence: "Where is the bathroom?",
+    correctGloss: "BATHROOM WHERE",
     rationale:
-      "This is a conditional sentence. The 'if' clause, MY HOMEWORK ME FINISH, is the condition/topic. The 'then' clause, MOVIE ME CAN GO, is the consequence. Raised eyebrows must be held over the entire conditional clause.",
+      "Topic (BATHROOM) + Question Word (WHERE). WH-words go at the end in ASL. Furrowed eyebrows are used over the WH-word.",
   },
   {
     id: "asl-quiz-5",
     language: "asl",
-    sentence: "Do you want to eat pizza for dinner?",
-    correctGloss: "TONIGHT DINNER PIZZA, YOU WANT EAT?",
+    sentence: "I don't have a dog.",
+    correctGloss: "DOG ME HAVE NONE",
     rationale:
-      "This is a Yes/No question. The topic TONIGHT DINNER PIZZA is established first for clarity. The question itself is YOU WANT EAT?. The entire sentence must be accompanied by raised eyebrows, widened eyes, and a forward head tilt.",
+      "Topic (DOG) + Subject (ME) + Negation (HAVE NONE). 'HAVE NONE' shows lack of possession in ASL.",
   },
   {
     id: "asl-quiz-6",
     language: "asl",
-    sentence: "The book on the table is mine.",
-    correctGloss: "BOOK ON TABLE, IX-'that' MY.",
+    sentence: "She is not a teacher.",
+    correctGloss: "TEACHER SHE NOT",
     rationale:
-      "This sentence uses topicalization. The topic is BOOK ON TABLE. IX-'that' points to the established topic, and MY is the comment. Raised eyebrows are used over the topic phrase BOOK ON TABLE.",
+      "Topic (TEACHER) + Pronoun (SHE) + Negation (NOT). Negation goes at the end or is shown with a headshake.",
   },
   {
     id: "asl-quiz-7",
     language: "asl",
-    sentence: "He failed the test because he didn't study.",
-    correctGloss: "TEST IX-he FAIL WHY-rhq? STUDY NOT.",
+    sentence: "I am reading a book.",
+    correctGloss: "BOOK ME READ",
     rationale:
-      "This sentence uses a rhetorical question to explain the reason. The topic is established: TEST IX-he FAIL. The rhetorical question WHY-rhq? follows, and is immediately answered: STUDY NOT.",
+      "Topic (BOOK) + Subject (ME) + Action (READ). The object is topicalized for emphasis.",
   },
   {
     id: "asl-quiz-8",
     language: "asl",
-    sentence: "What time does the meeting start tomorrow?",
-    correctGloss: "TOMORROW, MEETING START WHAT-TIME?",
+    sentence: "See you tomorrow.",
+    correctGloss: "TOMORROW SEE YOU",
     rationale:
-      "A WH-question following TTC structure. TOMORROW is the time. MEETING is the topic. START WHAT-TIME? is the comment/question. Furrowed eyebrows are used over WHAT-TIME.",
+      "Time (TOMORROW) + Action (SEE) + Object (YOU). Time markers typically come first in ASL.",
   },
   {
     id: "asl-quiz-9",
     language: "asl",
-    sentence: "She can't come to the party.",
-    correctGloss: "PARTY, IX-she COME CAN'T.",
+    sentence: "I don't understand.",
+    correctGloss: "ME UNDERSTAND",
     rationale:
-      "The topic PARTY is established. The comment is IX-she COME CAN'T. The negative sign CAN'T is placed at the end for emphasis. A negative headshake should accompany CAN'T.",
+      "Subject (ME) + Verb (UNDERSTAND) + Negation marker. The (neg) notation indicates a headshake is used to show negation.",
   },
   {
     id: "asl-quiz-10",
     language: "asl",
-    sentence: "I was born in California.",
-    correctGloss: "ME BORN WHERE-rhq? fs-C-A-L-I-F-O-R-N-I-A.",
+    sentence: "The cat is under the table.",
+    correctGloss: "TABLE CAT UNDER",
     rationale:
-      "This is an effective use of a rhetorical question to introduce information. The signer states ME BORN, asks WHERE-rhq?, and immediately answers by fingerspelling the location.",
+      "Establish the anchor (TABLE) + Topic (CAT) + Location (UNDER). Setting the reference point first provides spatial context.",
   },
   {
     id: "asl-quiz-11",
     language: "asl",
-    sentence: "Are your brothers older than you?",
-    correctGloss: "YOUR BROTHERS, OLDER THAN YOU?",
+    sentence: "When is your birthday?",
+    correctGloss: "YOUR BIRTHDAY WHEN",
     rationale:
-      "A Yes/No question. The topic YOUR BROTHERS is established, followed by the question. Raised eyebrows and a forward head tilt must be maintained throughout the entire sentence.",
+      "Topic (YOUR BIRTHDAY) + WH-Question (WHEN). WH-words are placed at the end with appropriate facial grammar.",
   },
   {
     id: "asl-quiz-12",
     language: "asl",
-    sentence: "The cat is sleeping on the chair.",
-    correctGloss: "CHAIR, CAT SLEEP.",
+    sentence: "I prefer tea.",
+    correctGloss: "TEA ME PREFER",
     rationale:
-      "This sentence uses O,SV structure. The object/location CHAIR is topicalized to set the scene. The comment CAT SLEEP follows. Raised eyebrows are used over CHAIR.",
+      "Topic (TEA) + Subject (ME) + Verb (PREFER). The preferred item is topicalized.",
   },
   {
     id: "asl-quiz-13",
     language: "asl",
-    sentence: "I have never been to France.",
-    correctGloss: "FRANCE, ME GO-TO NEVER.",
+    sentence: "My mom is working now.",
+    correctGloss: "NOW MY MOM WORK",
     rationale:
-      "Topic FRANCE is established first. The comment ME GO-TO NEVER contains the negative sign NEVER at the end for emphasis.",
+      "Time (NOW) + Topic (MY MOM) + Action (WORK). Time-Topic-Comment structure with temporal marker first.",
   },
   {
     id: "asl-quiz-14",
     language: "asl",
-    sentence: "Why are you learning ASL?",
-    correctGloss: "YOU LEARN ASL WHY?",
+    sentence: "Who is that man?",
+    correctGloss: "MAN THAT WHO",
     rationale:
-      "A standard WH-question. The phrase YOU LEARN ASL sets up the context, and the WH-sign WHY is placed at the end. Furrowed eyebrows over WHY.",
+      "Point (THAT) + Topic (MAN) + WH-Question (WHO). Use MAN THAT to follow the noun-adjective rule, with WH-word at the end.",
   },
   {
     id: "asl-quiz-15",
     language: "asl",
-    sentence: "If the store is closed, we will go home.",
-    correctGloss: "STORE CLOSE, WE-2 GO-HOME.",
+    sentence: "I have three brothers.",
+    correctGloss: "BROTHER ME HAVE THREE",
     rationale:
-      "A conditional sentence. The 'if' clause is STORE CLOSE. The 'then' clause is WE-2 GO-HOME. Raised eyebrows must be held over STORE CLOSE.",
-  },
-  {
-    id: "asl-quiz-16",
-    language: "asl",
-    sentence: "My teacher gave me a lot of homework.",
-    correctGloss: "HOMEWORK, MY TEACHER GIVE-ME (MUCH).",
-    rationale:
-      "The object HOMEWORK is topicalized for emphasis. The comment MY TEACHER GIVE-ME follows. The concept of 'a lot' is often shown non-manually or with a sign like MUCH.",
-  },
-  {
-    id: "asl-quiz-17",
-    language: "asl",
-    sentence: "They will not be at the game on Friday.",
-    correctGloss: "FRIDAY, GAME, IX-they NOT BE-THERE.",
-    rationale:
-      "This follows a Time-Topic-Comment structure. FRIDAY is the time. GAME is the topic. IX-they NOT BE-THERE is the comment, with the negation placed before the verb.",
-  },
-  {
-    id: "asl-quiz-18",
-    language: "asl",
-    sentence: "Who is that woman with the long, brown hair?",
-    correctGloss: "THAT WOMAN, LONG BROWN HAIR, WHO?",
-    rationale:
-      "A descriptive WH-question. The topic is established first with descriptive elements: THAT WOMAN, LONG BROWN HAIR. The WH-word WHO is placed at the very end.",
-  },
-  {
-    id: "asl-quiz-19",
-    language: "asl",
-    sentence: "My favorite movie is Star Wars.",
-    correctGloss: "MY FAVORITE MOVIE WHAT-rhq? #S-T-A-R W-A-R-S.",
-    rationale:
-      "A rhetorical question is the most common and natural way to express 'my favorite is...'. The topic MY FAVORITE MOVIE is followed by the rhetorical question WHAT-rhq? and the answer. Note the use of a lexicalized sign for STAR (#S-T-A-R).",
-  },
-  {
-    id: "asl-quiz-20",
-    language: "asl",
-    sentence: "Do you understand the instructions?",
-    correctGloss: "INSTRUCTIONS, YOU UNDERSTAND?",
-    rationale:
-      "A Yes/No question with topicalization. The topic INSTRUCTIONS is established first, followed by the question YOU UNDERSTAND?. Raised eyebrows and forward head tilt must be held over the entire sentence.",
+      "Topic (BROTHER) + Subject (ME) + Action/Quantity (HAVE THREE). The noun is stated first, followed by the quantity.",
   },
 ]
 
-// FSL Quiz Items (20 items from QUIZ_CONTENT.md)
+// FSL Quiz Items (15 items from Glossing Practice and Quiz.md)
 const fslQuizItems: GrammarQuizItem[] = [
   {
     id: "fsl-quiz-1",
     language: "fsl",
-    sentence: "What is your favorite color?",
-    correctGloss: "YOUR FAVORITE COLOR WHAT?",
+    sentence: "I don't want rice.",
+    correctGloss: "RICE ME AYAW",
     rationale:
-      "The topic is YOUR FAVORITE COLOR. The WH-word WHAT is placed at the end. The whq NMS is required.",
+      "Topic (RICE) + Subject (ME) + Negation (AYAW). AYAW is used for dislike or refusal, distinguishing it from WALA (absence) and HINDI (denial).",
   },
   {
     id: "fsl-quiz-2",
     language: "fsl",
-    sentence: "I am not tired.",
-    correctGloss: "IX-me TIRED.",
+    sentence: "I have no money.",
+    correctGloss: "MONEY ME WALA",
     rationale:
-      "This is a simple Topic-Comment sentence (IX-me is the topic). The negation is indicated by the n NMS (headshake) over the comment TIRED.",
+      "Topic (MONEY) + Subject (ME) + Negation (WALA). WALA indicates absence or not having something.",
   },
   {
     id: "fsl-quiz-3",
     language: "fsl",
-    sentence: "My brother's name is Ben.",
-    correctGloss: "MY BROTHER, NAME fs-B-E-N.",
+    sentence: "I am not a doctor.",
+    correctGloss: "DOCTOR ME HINDI",
     rationale:
-      "MY BROTHER is the topic. The comment provides the name. Proper nouns like 'Ben' are fingerspelled, indicated by fs-.",
+      "Topic (DOCTOR) + Subject (ME) + Negation (HINDI). HINDI is used for denying facts or identity.",
   },
   {
     id: "fsl-quiz-4",
     language: "fsl",
-    sentence: "Do you like coffee?",
-    correctGloss: "YOU LIKE COFFEE?",
+    sentence: "Where do you live?",
+    correctGloss: "HOUSE YOU WHERE",
     rationale:
-      "This is a yes/no question requiring the q NMS. The structure follows a simple Topic-Comment order.",
+      "Topic (HOUSE/LIVE) + Subject (YOU) + Question (WHERE). WH-words are placed at the end in FSL.",
   },
   {
     id: "fsl-quiz-5",
     language: "fsl",
-    sentence: "We will eat later.",
-    correctGloss: "LATER, WE EAT.",
+    sentence: "There is no class today.",
+    correctGloss: "TODAY CLASS WALA",
     rationale:
-      "The time marker LATER comes first, following the TTC structure. WE is the topic and EAT is the comment.",
+      "Time (TODAY) + Topic (CLASS) + Negation (WALA). WALA indicates the absence of something.",
   },
   {
     id: "fsl-quiz-6",
     language: "fsl",
-    sentence: "Where do you live?",
-    correctGloss: "YOU LIVE WHERE?",
+    sentence: "He is not handsome.",
+    correctGloss: "HANDSOME HE HINDI",
     rationale:
-      "The topic is YOU. The WH-word WHERE is placed at the end of the question, which requires the whq NMS.",
+      "Topic/Adjective (HANDSOME) + Subject (HE) + Negation (HINDI). HINDI denies the quality or attribute.",
   },
   {
     id: "fsl-quiz-7",
     language: "fsl",
-    sentence: "The house is big and white.",
-    correctGloss: "HOUSE, BIG WHITE.",
+    sentence: "Did you buy the bag?",
+    correctGloss: "BAG YOU BUY",
     rationale:
-      "HOUSE is the topic, followed by the descriptive comments (adjectives) BIG and WHITE.",
+      "Topic (BAG) + Subject (YOU) + Action (BUY). The (q) notation indicates a yes/no question with raised eyebrows.",
   },
   {
     id: "fsl-quiz-8",
     language: "fsl",
-    sentence: "I need your help.",
-    correctGloss: "YOUR HELP, IX-me NEED.",
+    sentence: "I don't know.",
+    correctGloss: "KNOW ME HINDI",
     rationale:
-      "This follows the Object-Subject-Verb (OSV) structure, a common form of topicalization. The object YOUR HELP is the topic, followed by the comment IX-me NEED.",
+      "Verb (KNOW) + Subject (ME) + Negation (HINDI). HINDI is used to negate the knowledge or understanding.",
   },
   {
     id: "fsl-quiz-9",
     language: "fsl",
-    sentence: "Why are you sad?",
-    correctGloss: "YOU SAD WHY?",
+    sentence: "My father is tall.",
+    correctGloss: "FATHER MINE TALL",
     rationale:
-      "The topic is YOU SAD. The WH-word WHY is placed at the end. The entire phrase requires the whq NMS.",
+      "Topic (FATHER MINE) + Adjective (TALL). FSL shows possession through word sequence rather than apostrophe.",
   },
   {
     id: "fsl-quiz-10",
     language: "fsl",
-    sentence: "My birthday is in November.",
-    correctGloss: "MY BIRTHDAY, #NOV.",
+    sentence: "We will eat later.",
+    correctGloss: "LATER EAT WE",
     rationale:
-      "MY BIRTHDAY is the topic. The month NOVEMBER is often signed using its lexicalized form, #NOV.",
+      "Time (LATER) + Action (EAT) + Subject (WE). Time markers come first in FSL grammar.",
   },
   {
     id: "fsl-quiz-11",
     language: "fsl",
-    sentence: "He is my friend.",
-    correctGloss: "IX-he MY FRIEND.",
+    sentence: "Do you have water?",
+    correctGloss: "WATER YOU MERON",
     rationale:
-      "The pronoun 'he' is signed by pointing (IX-he) to a specific person or an established space representing that person. This is a simple Topic-Comment sentence.",
+      "Topic (WATER) + Subject (YOU) + Possession (MERON). MERON means 'have' or 'exists', the opposite of WALA.",
   },
   {
     id: "fsl-quiz-12",
     language: "fsl",
-    sentence: "I don't understand.",
-    correctGloss: "IX-me UNDERSTAND.",
+    sentence: "I want to sleep.",
+    correctGloss: "SLEEP ME GUSTO",
     rationale:
-      "IX-me is the topic. The negation is efficiently conveyed by the n NMS (headshake) over the comment UNDERSTAND.",
+      "Topic (SLEEP) + Subject (ME) + Desire (GUSTO). GUSTO expresses desire or wanting, the opposite of AYAW.",
   },
   {
     id: "fsl-quiz-13",
     language: "fsl",
-    sentence: "Yesterday, I bought a new book.",
-    correctGloss: "YESTERDAY, BOOK NEW, IX-me BUY.",
+    sentence: "She is not my friend.",
+    correctGloss: "FRIEND SHE HINDI",
     rationale:
-      "The sentence follows the TTC structure. YESTERDAY is the time. The topic is the BOOK, which is described as NEW. The comment is IX-me BUY.",
+      "Topic (FRIEND) + Subject (SHE) + Negation (HINDI). HINDI denies the relationship or fact.",
   },
   {
     id: "fsl-quiz-14",
     language: "fsl",
-    sentence: "Is your mother a doctor?",
-    correctGloss: "YOUR MOTHER DOCTOR?",
+    sentence: "I haven't eaten yet.",
+    correctGloss: "EAT ME WALA-PA",
     rationale:
-      "A straightforward yes/no question requiring the q NMS over the entire phrase. The structure is Topic-Comment.",
+      "Action (EAT) + Subject (ME) + Negation (WALA-PA). Use a hyphen for 'not yet', combining WALA with PA.",
   },
   {
     id: "fsl-quiz-15",
     language: "fsl",
-    sentence: "My grandfather is old.",
-    correctGloss: "MY GRANDFATHER, OLD.",
+    sentence: "The house is very big.",
+    correctGloss: "HOUSE BIG",
     rationale:
-      "MY GRANDFATHER is the topic, marked by the t NMS. OLD is the comment.",
-  },
-  {
-    id: "fsl-quiz-16",
-    language: "fsl",
-    sentence: "How much is this?",
-    correctGloss: "IX-this HOW-MUCH?",
-    rationale:
-      "The topic is the object being pointed at (IX-this). The WH-phrase HOW-MUCH is a compound sign placed at the end. The whq NMS is required.",
-  },
-  {
-    id: "fsl-quiz-17",
-    language: "fsl",
-    sentence: "I have two sisters.",
-    correctGloss: "SISTER, IX-me HAVE TWO.",
-    rationale:
-      "The topic is SISTER. The comment is IX-me HAVE TWO, specifying the subject and quantity.",
-  },
-  {
-    id: "fsl-quiz-18",
-    language: "fsl",
-    sentence: "I am learning FSL.",
-    correctGloss: "#FSL, IX-me LEARN.",
-    rationale:
-      "#FSL is the topic. The comment IX-me LEARN describes the action being performed in relation to the topic. #FSL is a lexicalized sign.",
-  },
-  {
-    id: "fsl-quiz-19",
-    language: "fsl",
-    sentence: "The children are playing outside.",
-    correctGloss: "OUTSIDE, CHILDREN PLAY++.",
-    rationale:
-      "The location OUTSIDE can be established first, similar to a time marker. CHILDREN is the topic. The sign PLAY is repeated (++) to indicate a continuous or ongoing action.",
-  },
-  {
-    id: "fsl-quiz-20",
-    language: "fsl",
-    sentence: "Please say that again.",
-    correctGloss: "AGAIN, PLEASE.",
-    rationale:
-      "This is a command or request. The core concept is 'again.' The sign PLEASE is added for politeness. The word 'that' is contextual and does not need a separate sign.",
+      "Topic (HOUSE) + Adjective (BIG). 'Very' is shown by facial expression and intensity, not a separate sign.",
   },
 ]
 
 export const getQuizItems = (language: "asl" | "fsl"): GrammarQuizItem[] => {
   const quizPool = language === "asl" ? aslQuizItems : fslQuizItems
 
-  // Randomly select 10 items from the pool of 20
+  // Randomly select 10 items from the pool of 15
   const shuffled = [...quizPool].sort(() => Math.random() - 0.5)
   return shuffled.slice(0, 10)
 }
