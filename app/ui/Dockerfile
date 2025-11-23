@@ -13,6 +13,12 @@ RUN npm install
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Install additional libraries needed for onnxruntime
+RUN apk add --no-cache \
+    gcompat \
+    libstdc++
+
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy the rest of the application
@@ -27,6 +33,11 @@ RUN npm run build
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
+
+# Install runtime libraries for onnxruntime
+RUN apk add --no-cache \
+    gcompat \
+    libstdc++
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
