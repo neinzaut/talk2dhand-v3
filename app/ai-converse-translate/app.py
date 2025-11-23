@@ -44,8 +44,22 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Suppress TensorFlow warnings
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+# Suppress TensorFlow warnings and optimize memory
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+# Memory optimization for TensorFlow
+import tensorflow as tf
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        logger.warning(f"GPU memory growth setting failed: {e}")
+
+# Limit TensorFlow to use less memory
+tf.config.set_soft_device_placement(True)
 
 # Global variables
 recognizer = None

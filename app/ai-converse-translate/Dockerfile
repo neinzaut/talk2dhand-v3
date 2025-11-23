@@ -20,9 +20,10 @@ COPY ai-converse-translate/requirements.txt .
 
 # Install Python dependencies with increased timeout and in stages
 # Separate commands to isolate failures and allow caching
+# Use tensorflow-cpu instead of tensorflow to reduce memory
 RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 \
     --trusted-host pypi.org --trusted-host files.pythonhosted.org \
-    tensorflow==2.15.0
+    tensorflow-cpu==2.15.0
 
 RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 \
     --trusted-host pypi.org --trusted-host files.pythonhosted.org \

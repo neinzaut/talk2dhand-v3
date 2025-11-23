@@ -33,9 +33,17 @@ services:
     dockerContext: ./app
     envVars:
       - key: TF_CPP_MIN_LOG_LEVEL
-        value: 2
+        value: 3
       - key: PYTHONUNBUFFERED
         value: 1
+      - key: TF_ENABLE_ONEDNN_OPTS
+        value: 0
+      - key: TF_FORCE_GPU_ALLOW_GROWTH
+        value: true
+      - key: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+        value: python
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: 100000
       - key: GOOGLE_API_KEY
         sync: false
       - key: GOOGLE_API_KEY_2
