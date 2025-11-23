@@ -261,6 +261,7 @@ export function useWhisperRecognition({
       
       // Run Whisper transcription with optimized settings for short phrases
       try {
+        // @ts-ignore - Using additional parameters not in official types but supported by runtime
         const result = await model(audioData, {
           language: "english", // Always use English for ASL/FSL letters
           task: "transcribe",
@@ -273,7 +274,7 @@ export function useWhisperRecognition({
           compression_ratio_threshold: 1.8, // Lower threshold to accept more results
           logprob_threshold: -0.5, // Lower threshold to accept more results
           no_speech_threshold: 0.3, // Lower threshold (was 0.6) - more lenient on silence detection
-        }) as any
+        })
         
         console.log("✅ Whisper completed successfully")
 
