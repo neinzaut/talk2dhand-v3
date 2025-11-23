@@ -15,9 +15,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy TypeScript configuration and type definitions first
-COPY tsconfig.json next-env.d.ts ./
-
 # Copy the rest of the application
 COPY . .
 
