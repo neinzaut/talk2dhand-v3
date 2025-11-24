@@ -156,7 +156,8 @@ export default function TextToSignPage() {
       return
     }
     try {
-      const apiUrl = 'http://localhost:8000/predict'
+      const staticApi = process.env.NEXT_PUBLIC_STATIC_SIGNS_API || 'http://localhost:8000';
+      const apiUrl = `${staticApi}/predict`
       
       // Determine expected type from the current letter
       const expectedLetter = letters[currentLetterIndex];

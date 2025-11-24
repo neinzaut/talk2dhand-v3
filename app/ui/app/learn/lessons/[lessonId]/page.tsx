@@ -220,7 +220,9 @@ export default function LessonPage() {
     try {
       // Determine which API to use based on lesson
       const isDynamicPhrases = lesson.id === "lesson-3";
-      const apiUrl = isDynamicPhrases ? 'http://localhost:5008/predict' : 'http://localhost:8000/predict';
+      const staticApi = process.env.NEXT_PUBLIC_STATIC_SIGNS_API || 'http://localhost:8000';
+      const dynamicApi = process.env.NEXT_PUBLIC_DYNAMIC_PHRASES_API || 'http://localhost:5008';
+      const apiUrl = isDynamicPhrases ? `${dynamicApi}/predict` : `${staticApi}/predict`;
       
       // Determine expected type for static signs
       let expectedType: "alphabet" | "number" | null = null;

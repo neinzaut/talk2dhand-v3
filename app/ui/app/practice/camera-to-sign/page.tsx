@@ -179,7 +179,8 @@ function CameraToSignPage() {
       requestBody.confidenceThreshold = 0.05;
     }
     
-    fetch("http://localhost:8000/predict", {
+    const staticApi = process.env.NEXT_PUBLIC_STATIC_SIGNS_API || 'http://localhost:8000';
+    fetch(`${staticApi}/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
