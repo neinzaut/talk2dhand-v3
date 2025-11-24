@@ -4,13 +4,15 @@ const StarterPage = () => {
   return (
     <div className="starter-page-container">
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-12 max-w-5xl">
-        <h1 className="text-6xl font-extrabold mb-8 text-blue-600 text-center">Welcome to Talk2DHand</h1>
+        <div className="mb-8 flex justify-center">
+          <img src="/icons/logo.png" alt="Talk2DHand Logo" className="h-15" />
+        </div>
         <p className="mb-8 text-xl text-gray-800 text-center">
-          Render's limits may cause difficulties in performing this on your local machine. View the video demo below to see how Talk2DHand works.
+          This application is hosted on Render's <b>free tier</b>. Render's limits may cause difficulties in performing this on your local machine. View the video demo below to see how Talk2DHand works.
         </p>
         <div className="mb-8 flex justify-center">
           <iframe
-            src="https://drive.google.com/file/d/1mFtealLhmXdaS_hjkpm4lIHvJiNM5_3G/preview"
+            src="https://drive.google.com/file/d/1H6PQK7QNKBdgkeQy7gJLgL0ppNYFpKKS/view?usp=sharings"
             width="800"
             height="450"
             allow="autoplay"
@@ -19,7 +21,7 @@ const StarterPage = () => {
           ></iframe>
         </div>
         <p className="mb-6 text-lg text-gray-800 text-center">
-          If you'd like to test it in full without errors, contact the following developers: <br />
+          If you'd like to test it in full without rate limits, contact the following developers for local testing: <br />
           <a href="mailto:leb0006@dlsud.edu.ph" className="text-blue-600 hover:text-blue-800 underline font-semibold">leb0006@dlsud.edu.ph</a>, <a href="mailto:tfa2079@dlsud.edu.ph" className="text-blue-600 hover:text-blue-800 underline font-semibold">tfa2079@dlsud.edu.ph</a>, <a href="mailto:vko2058@dlsud.edu.ph" className="text-blue-600 hover:text-blue-800 underline font-semibold">vko2058@dlsud.edu.ph</a>
         </p>
         <p className="mb-10 text-lg text-gray-800 text-center font-semibold">
