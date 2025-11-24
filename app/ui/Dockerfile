@@ -61,7 +61,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
+# Don't hardcode PORT - let Render set it (defaults to 10000)
+# ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 # Preload prevent-ort.js to stub ONNX modules before Next.js starts

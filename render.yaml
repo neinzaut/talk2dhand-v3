@@ -87,6 +87,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: NEXT_PUBLIC_STATIC_SIGNS_API
         fromService:
           name: talk2dhand-static-signs

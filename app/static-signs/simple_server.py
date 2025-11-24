@@ -479,7 +479,8 @@ def predict():
             'error': str(e)
         }), 500
 
-# Run the app on port 8000
+# Run the app on port from environment or default 8000
 if __name__ == '__main__':
-    print(f"Flask app starting with models_loaded={model_manager.is_model_loaded()}")
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    port = int(os.environ.get('PORT', 8000))
+    print(f"Flask app starting on port {port} with models_loaded={model_manager.is_model_loaded()}")
+    app.run(host='0.0.0.0', port=port, debug=False)
