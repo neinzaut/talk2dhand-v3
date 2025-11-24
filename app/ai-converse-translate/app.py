@@ -50,6 +50,14 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 # Memory optimization for TensorFlow
 import tensorflow as tf
+
+# Aggressive threading limits to reduce memory
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
+
+# Use mixed precision to reduce memory footprint
+tf.keras.mixed_precision.set_global_policy('mixed_float16')
+
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
     try:

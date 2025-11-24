@@ -50,12 +50,18 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy prevent-ort script to block native ONNX bindings
+COPY --chown=nextjs:nodejs prevent-ort.js ./prevent-ort.js
+
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
+
+# Preload prevent-ort.js to stub ONNX modules before Next.js starts
+ENV NODE_OPTIONS="--require /app/prevent-ort.js"
 
 CMD ["node", "server.js"]
 
