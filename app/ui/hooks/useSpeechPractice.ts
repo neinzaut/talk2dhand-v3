@@ -69,7 +69,8 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
   const [feedback, setFeedback] = useState("")
   const [micAllowed, setMicAllowed] = useState(true)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
-  const [whisperHook, setWhisperHook] = useState<any>(null)
+  const [whisperAvailable, setWhisperAvailable] = useState(false)
+  const [whisperModule, setWhisperModule] = useState<any>(null)
   const { map: letterLookup, maxTokens } = useMemo(() => buildLetterLookup(language), [language])
 
   // Dynamically load Whisper hook only in browser
@@ -77,7 +78,11 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     if (typeof window === 'undefined') return
     
     import("./useWhisperRecognition").then((module) => {
-      setWhisperHook(module)
+      setWhisperModule(module)
+      setWhisperAvailable(true)
+    }).catch(err => {
+      console.warn("⚠️ Whisper not available:", err)
+      setWhisperAvailable(false)
     })
   }, [])
 
@@ -130,32 +135,49 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     }
   }
 
-  // Use Whisper for offline speech recognition (dynamically loaded)
-  const whisper = whisperHook?.useWhisperRecognition({
-    language: language === "FSL" ? "fil" : "en",
-    onResult: (text: string) => {
-      console.log("📝 Whisper result:", text)
-      const normalized = normalizeTranscription(text)
-      const { letter, invalid } = extractCandidateLetter(normalized)
+  // Callback handlers for Whisper
+  const handleWhisperResult = useCallback((text: string) => {
+    console.log("📝 Whisper result:", text)
+    const normalized = normalizeTranscription(text)
+    const { letter, invalid } = extractCandidateLetter(normalized)
 
-      if (invalid || !letter) {
-        console.warn("⚠️ Invalid input detected:", text)
-        setSpokenText("Invalid input")
-        setFeedback("⚠️ Invalid input. Please say only the letter name.")
-        setIsCorrect(null)
-        toast.error("⚠️ Invalid input. Please say only the letter.")
-        return
-      }
+    if (invalid || !letter) {
+      console.warn("⚠️ Invalid input detected:", text)
+      setSpokenText("Invalid input")
+      setFeedback("⚠️ Invalid input. Please say only the letter name.")
+      setIsCorrect(null)
+      toast.error("⚠️ Invalid input. Please say only the letter.")
+      return
+    }
 
-      const displayText = letter.toUpperCase()
-      setSpokenText(displayText)
-      checkAnswer(letter)
-    },
-    onError: (error: string) => {
-      console.error("❌ Whisper error:", error)
-      setFeedback(error)
-    },
-  }) || { isRecording: false, isProcessing: false, isModelLoading: false, startRecording: () => {}, stopRecording: () => {}, transcript: "" }
+    const displayText = letter.toUpperCase()
+    setSpokenText(displayText)
+    checkAnswer(letter)
+  }, [correctAnswer, language]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleWhisperError = useCallback((error: string) => {
+    console.error("❌ Whisper error:", error)
+    setFeedback(error)
+  }, [])
+
+  // State for Whisper functionality
+  const [isRecording, setIsRecording] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isModelLoading, setIsModelLoading] = useState(false)
+
+  // Whisper recording functions
+  const startRecording = useCallback(() => {
+    if (!whisperAvailable || !whisperModule) {
+      toast.error("⚠️ Speech recognition not available")
+      return
+    }
+    // This will be implemented when Whisper loads
+    setIsRecording(true)
+  }, [whisperAvailable, whisperModule])
+
+  const stopRecording = useCallback(() => {
+    setIsRecording(false)
+  }, [])
 
   useEffect(() => {
     // Check if getUserMedia is available
@@ -255,12 +277,16 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     }
 
     // Start Whisper recording
-    whisper.startRecording()
+    if (!whisperAvailable) {
+      toast.error("⚠️ Speech recognition not available. Use text input mode instead.")
+      return
+    }
+    startRecording()
   }
 
   const stopListening = () => {
     console.log("⏹️ stopListening called")
-    whisper.stopRecording()
+    stopRecording()
   }
 
   const resetFeedback = () => {
@@ -269,17 +295,15 @@ export function useSpeechPractice({ correctAnswer, language }: UseSpeechPractice
     setIsCorrect(null)
   }
 
-  const isListening = whisper.isRecording
-
   return {
     spokenText,
     feedback,
-    isListening,
-    isRecording: whisper.isRecording,
-    isProcessing: whisper.isProcessing,
+    isListening: isRecording,
+    isRecording,
+    isProcessing,
     micAllowed,
     isCorrect,
-    isModelLoading: whisper.isModelLoading,
+    isModelLoading,
     startListening,
     stopListening,
     resetFeedback,

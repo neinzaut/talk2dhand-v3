@@ -93,15 +93,15 @@ services:
         fromService:
           name: talk2dhand-static-signs
           type: web
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL
       - key: NEXT_PUBLIC_DYNAMIC_PHRASES_API
         fromService:
           name: talk2dhand-dynamic-phrases
           type: web
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL
       - key: NEXT_PUBLIC_AI_CONVERSE_API
         fromService:
           name: talk2dhand-ai-converse
           type: web
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL
     plan: free
