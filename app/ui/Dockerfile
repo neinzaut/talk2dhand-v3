@@ -53,6 +53,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy prevent-ort script to block native ONNX bindings
 COPY --chown=nextjs:nodejs prevent-ort.js ./prevent-ort.js
 
+# Remove onnxruntime-node from node_modules if it exists (nuclear option)
+RUN rm -rf node_modules/onnxruntime-node node_modules/.bin/onnx* || true
+RUN rm -rf node_modules/@xenova/transformers/node_modules/onnxruntime-node || true
+
 USER nextjs
 
 EXPOSE 3000

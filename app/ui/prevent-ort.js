@@ -2,6 +2,8 @@
 // This file is preloaded into Node (via NODE_OPTIONS --require).
 // It creates harmless stubs for packages that would otherwise load native ONNX bindings.
 
+console.log('[prevent-ort.js] ✅ PRELOAD SCRIPT EXECUTING - Stubbing ONNX packages...');
+
 function stubModule(moduleName) {
   try {
     // If already resolved, replace its exports
@@ -38,10 +40,11 @@ const modulesToStub = [
 for (const name of modulesToStub) {
   try {
     stubModule(name);
+    console.log(`[prevent-ort.js] ✅ Stubbed: ${name}`);
     // also provide a fallback global marker
     global.__STUBBED_MODULES__ = global.__STUBBED_MODULES__ || {};
     global.__STUBBED_MODULES__[name] = true;
   } catch (err) {
-    // ignore
+    console.log(`[prevent-ort.js] ⚠️ Failed to stub ${name}:`, err.message);
   }
 }
