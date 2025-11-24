@@ -111,6 +111,15 @@ mp_drawing = mp.solutions.drawing_utils
 # Initialize the model manager
 model_manager = ModelManager.get_instance()
 
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint for service verification"""
+    return jsonify({
+        'service': 'talk2dhand-static-signs',
+        'status': 'running',
+        'endpoints': ['/health', '/predict']
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint that confirms if models are loaded"""

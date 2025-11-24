@@ -246,6 +246,14 @@ def _run_inference(state: ClientState) -> Optional[Dict[str, float]]:
     }
 
 
+@app.get("/")
+def root():
+    return jsonify({
+        'service': 'talk2dhand-dynamic-phrases',
+        'status': 'running',
+        'endpoints': ['/health', '/predict']
+    })
+
 @app.post("/health")
 def health():
     return jsonify(
