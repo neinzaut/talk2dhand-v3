@@ -38,11 +38,13 @@ export default function LessonPage() {
   const [backendError, setBackendError] = useState<string>("");
   const [clientId] = useState(() => `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [showSignGifs, setShowSignGifs] = useState(false);
-
+  const [backendStatus, setBackendStatus] = useState<"checking" | "ready" | "loading" | "error">("checking");
+  const [backendStatusMessage, setBackendStatusMessage] = useState<string>("Checking backend...");
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const healthCheckAttempts = useRef(0)
 
   // Find the lesson
   let lesson = null
@@ -134,6 +136,58 @@ export default function LessonPage() {
       setShowStartButton(true);
     }
   }
+
+  // Check backend health
+  const checkBackendHealth = async () => {
+    const isDynamicPhrases = lesson.id === "lesson-3";
+    const staticApi = process.env.NEXT_PUBLIC_STATIC_SIGNS_API || 'http://localhost:8000';
+    const dynamicApi = process.env.NEXT_PUBLIC_DYNAMIC_PHRASES_API || 'http://localhost:5008';
+    const apiUrl = isDynamicPhrases ? dynamicApi : staticApi;
+    
+    healthCheckAttempts.current += 1;
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch(`${apiUrl}/health`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        setBackendStatus("ready");
+        setBackendStatusMessage("Backend ready");
+        return true;
+      } else {
+        throw new Error(`Health check returned ${response.status}`);
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError' || healthCheckAttempts.current < 6) {
+        // Still loading or timeout - retry
+        setBackendStatus("loading");
+        setBackendStatusMessage(`Backend is starting... (attempt ${healthCheckAttempts.current}/6)`);
+        
+        // Retry after delay
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return checkBackendHealth();
+      } else {
+        setBackendStatus("error");
+        setBackendStatusMessage("Backend unavailable. Please refresh the page.");
+        return false;
+      }
+    }
+  };
+
+  // Check backend when practice sub-lesson starts
+  useEffect(() => {
+    if (currentSubLesson?.type === "practice") {
+      healthCheckAttempts.current = 0;
+      setBackendStatus("checking");
+      setBackendStatusMessage("Checking backend...");
+      checkBackendHealth();
+    }
+  }, [currentSubLesson?.type, lesson.id]);
 
   // Cleanup function
   useEffect(() => {
@@ -255,7 +309,27 @@ export default function LessonPage() {
         body: JSON.stringify(requestBody),
       });
       
-      if (!response.ok) throw new Error(`[detectSign] Backend error: ${response.status}`);
+      if (!response.ok) {
+        // Handle 502/503 errors (backend overloaded or crashed)
+        if (response.status === 502 || response.status === 503) {
+          setBackendError("Backend is overloaded or restarting. Detection paused...");
+          // Stop detection temporarily
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+            detectionIntervalRef.current = null;
+          }
+          // Mark backend as loading and recheck
+          setBackendStatus("loading");
+          healthCheckAttempts.current = 0;
+          setTimeout(() => checkBackendHealth(), 5000);
+          return;
+        }
+        throw new Error(`Backend error: ${response.status}`);
+      }
+      
+      // Clear any previous backend errors
+      if (backendError) setBackendError("");
+      
       const data = await response.json();
       
       if (data && data.prediction) {
@@ -563,16 +637,48 @@ export default function LessonPage() {
               </div>
             ) : showStartButton ? (
               <div className="text-white text-center p-4">
-                <p className="text-xl mb-4">Ready to start practicing?</p>
-                <p className="text-sm text-gray-400 mb-6">Click the button below to initialize your camera</p>
-                <Button 
-                  onClick={initCamera}
-                  variant="default"
-                  size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
-                >
-                  Start Camera
-                </Button>
+                {backendStatus === "checking" || backendStatus === "loading" ? (
+                  <>
+                    <div className="animate-pulse mb-4">
+                      <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    </div>
+                    <p className="text-xl mb-2">{backendStatusMessage}</p>
+                    <p className="text-sm text-gray-400">
+                      {backendStatus === "loading" 
+                        ? "The service is waking up from sleep mode. This may take 30-60 seconds..." 
+                        : "Checking backend availability..."}
+                    </p>
+                  </>
+                ) : backendStatus === "error" ? (
+                  <>
+                    <p className="text-xl mb-2 text-red-400">Backend Unavailable</p>
+                    <p className="text-sm text-gray-400 mb-4">{backendStatusMessage}</p>
+                    <Button 
+                      onClick={() => {
+                        healthCheckAttempts.current = 0;
+                        checkBackendHealth();
+                      }}
+                      variant="default"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Retry Connection
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl mb-4">Ready to start practicing?</p>
+                    <p className="text-sm text-gray-400 mb-6">Click the button below to initialize your camera</p>
+                    <Button 
+                      onClick={initCamera}
+                      variant="default"
+                      size="lg"
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
+                      disabled={backendStatus !== "ready"}
+                    >
+                      Start Camera
+                    </Button>
+                  </>
+                )}
               </div>
             ) : (
               <>
@@ -603,10 +709,16 @@ export default function LessonPage() {
                   </div>
                 )}
                 {backendError && !isInitializing && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="rounded bg-red-700/70 text-white px-6 py-3 text-lg font-semibold shadow-lg border border-red-400/60">
-                      {backendError}
-                    </span>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                    <div className="bg-red-700/90 text-white px-6 py-4 rounded-lg shadow-xl border-2 border-red-400 max-w-md text-center">
+                      <p className="text-lg font-semibold mb-2">⚠️ Backend Error</p>
+                      <p className="text-sm">{backendError}</p>
+                      {backendStatus === "loading" && (
+                        <div className="mt-3">
+                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
                 {!selectedSignId && !isInitializing && !backendError && (

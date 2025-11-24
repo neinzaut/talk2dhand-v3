@@ -74,12 +74,15 @@ const AIConversePage = () => {
   const [selectedMessageGloss, setSelectedMessageGloss] = useState<string | null>(null)
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [glossTokens, setGlossTokens] = useState<string[]>([])
+  const [backendStatus, setBackendStatus] = useState<"checking" | "ready" | "loading" | "error">("checking")
+  const [backendStatusMessage, setBackendStatusMessage] = useState<string>("Checking backend...")
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const healthCheckAttempts = useRef(0)
 
   // Clear messages on mount (hard refresh)
   useEffect(() => {
