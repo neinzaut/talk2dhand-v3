@@ -12,7 +12,7 @@ const StarterPage = () => {
         </p>
         <div className="mb-8 flex justify-center">
           <iframe
-            src="https://drive.google.com/file/d/1H6PQK7QNKBdgkeQy7gJLgL0ppNYFpKKS/view?usp=sharings"
+            src="https://drive.google.com/file/d/1mFtealLhmXdaS_hjkpm4lIHvJiNM5_3G/view?usp=sharing"
             width="800"
             height="450"
             allow="autoplay"
