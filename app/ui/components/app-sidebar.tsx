@@ -17,11 +17,11 @@ const navigation = [
     href: "/practice",
     icon: Target,
   },
-  {
-    name: "AI Converse",
-    href: "/ai-converse",
-    icon: MessageSquare,
-  },
+  // {
+  //   name: "AI Converse",
+  //   href: "/ai-converse",
+  //   icon: MessageSquare,
+  // },
 ]
 
 export function AppSidebar() {

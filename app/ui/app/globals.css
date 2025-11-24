@@ -132,6 +132,17 @@
   background-image: url('/path-to-background-pattern.jpg');
 }
 
+.starter-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-image: url(/icons/bgpattern.png);
+  background-repeat: repeat;
+}
+
 .starter-overlay {
   display: flex;
   flex-direction: column;
