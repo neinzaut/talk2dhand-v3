@@ -29,6 +29,9 @@ COPY . .
 # Verify that the TFLite model exists and is readable
 RUN test -f module/islr/model.tflite || (echo "ERROR: module/islr/model.tflite not found!" && exit 1)
 
+# Pre-download MediaPipe models during build to avoid runtime download issues
+RUN python -c "import mediapipe as mp; holistic = mp.solutions.holistic.Holistic(model_complexity=0)" || true
+
 # Expose port 5008
 EXPOSE 5008
 
