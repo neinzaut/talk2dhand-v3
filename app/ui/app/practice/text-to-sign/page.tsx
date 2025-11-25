@@ -9,8 +9,14 @@ import { cn, getExpectedType } from "@/lib/utils"
 import { useAppStore } from "@/store/app-store"
 import { aslData } from "@/store/data/asl-data"
 import { fslData } from "@/store/data/fsl-data"
+import { ChNgConfirmationDialog } from "@/components/practice/ChNgConfirmationDialog"
 
 type SignStatus = "idle" | "correct" | "incorrect"
+
+interface PendingDigraph {
+  digraph: string
+  position: number
+}
 
 export default function TextToSignPage() {
   const router = useRouter()
@@ -31,6 +37,11 @@ export default function TextToSignPage() {
   const [annotatedImage, setAnnotatedImage] = useState<string>("")
   const [backendError, setBackendError] = useState<string>("")
   const [isPracticing, setIsPracticing] = useState(false)
+
+  // Ch/Ng confirmation dialog state
+  const [showChNgDialog, setShowChNgDialog] = useState(false)
+  const [pendingDigraph, setPendingDigraph] = useState<PendingDigraph | null>(null)
+  const [pendingInput, setPendingInput] = useState<string>("")
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -179,14 +190,45 @@ export default function TextToSignPage() {
       const data = await response.json()
       
       if (data && data.prediction) {
-        setDetectedSign(data.prediction.toUpperCase())
-        setBackendError("")
-        if (data.annotated_image) setAnnotatedImage(data.annotated_image)
-        
         const predictedSign = data.prediction.toLowerCase()
         const expectedSign = letters[currentLetterIndex].toLowerCase()
         
-        if (predictedSign === expectedSign) {
+        // Check for digraph mapping in FSL
+        let isCorrect = false
+        let displayText = data.prediction.toUpperCase()
+        
+        if (currentLanguage === "fsl") {
+          // Ch is detected as 'H'
+          if (expectedSign === "ch" && predictedSign === "h") {
+            isCorrect = true
+            displayText = "CH"
+          }
+          // Ng is detected as 'V' or '2'
+          else if (expectedSign === "ng" && (predictedSign === "v" || predictedSign === "2")) {
+            isCorrect = true
+            displayText = "NG"
+          }
+          // Ñ is detected as 'P'
+          else if (expectedSign === "ñ" && predictedSign === "p") {
+            isCorrect = true
+            displayText = "Ñ"
+          }
+          // Normal letter match
+          else if (predictedSign === expectedSign) {
+            isCorrect = true
+            displayText = data.prediction.toUpperCase()
+          }
+        } else {
+          // For ASL or other languages, just direct match
+          isCorrect = (predictedSign === expectedSign)
+          displayText = data.prediction.toUpperCase()
+        }
+        
+        setDetectedSign(displayText)
+        setBackendError("")
+        if (data.annotated_image) setAnnotatedImage(data.annotated_image)
+        
+        if (isCorrect) {
           setSignStatuses((prev) => ({ ...prev, [currentLetterIndex]: 'correct' }))
           if (detectionIntervalRef.current) {
             clearInterval(detectionIntervalRef.current)
@@ -243,11 +285,79 @@ export default function TextToSignPage() {
     }
   }, [currentLetterIndex, isCameraReady, isPracticing])
 
+  // Helper function to detect Ch or Ng digraphs in FSL
+  const detectDigraphs = (text: string): PendingDigraph | null => {
+    if (currentLanguage !== "fsl") return null
+    
+    const upperText = text.toUpperCase()
+    
+    // Check for "CH" pattern
+    const chIndex = upperText.indexOf("CH")
+    if (chIndex !== -1) {
+      return { digraph: "Ch", position: chIndex }
+    }
+    
+    // Check for "NG" pattern
+    const ngIndex = upperText.indexOf("NG")
+    if (ngIndex !== -1) {
+      return { digraph: "Ng", position: ngIndex }
+    }
+    
+    return null
+  }
+
   const handleSubmit = () => {
     if (!inputText.trim()) return
     
-    // Convert input to array of letters/numbers (filter out spaces and special chars if needed)
-    const chars = inputText.toUpperCase().split('').filter(char => /[A-Z0-9]/.test(char))
+    // Check for Ch/Ng digraphs only when FSL is selected
+    if (currentLanguage === "fsl") {
+      const detected = detectDigraphs(inputText)
+      if (detected) {
+        setPendingDigraph(detected)
+        setPendingInput(inputText)
+        setShowChNgDialog(true)
+        return
+      }
+    }
+    
+    // Process input normally if no digraphs detected or not FSL
+    processInput(inputText)
+  }
+
+  const processInput = (text: string, digraphChoices: Map<number, "single" | "separate"> = new Map()) => {
+    const upperText = text.toUpperCase()
+    const chars: string[] = []
+    let i = 0
+    
+    while (i < upperText.length) {
+      const char = upperText[i]
+      
+      // Check if current position starts with a digraph
+      if (currentLanguage === "fsl" && i < upperText.length - 1) {
+        const twoChar = upperText.substring(i, i + 2)
+        
+        // Check if this is a Ch or Ng digraph and if user chose to keep it as single
+        if ((twoChar === "CH" || twoChar === "NG") && digraphChoices.get(i) === "single") {
+          chars.push(twoChar)
+          i += 2
+          continue
+        }
+      }
+      
+      // Handle Ñ character for FSL
+      if (currentLanguage === "fsl" && char === "Ñ") {
+        chars.push("Ñ")
+        i++
+        continue
+      }
+      
+      // Only include alphanumeric characters
+      if (/[A-Z0-9]/.test(char)) {
+        chars.push(char)
+      }
+      i++
+    }
+    
     setLetters(chars)
     setSignStatuses({})
     setCurrentLetterIndex(0)
@@ -260,6 +370,29 @@ export default function TextToSignPage() {
     if (!isCameraReady && !showStartButton) {
       initCamera()
     }
+  }
+
+  const handleChNgChoice = (choice: "single" | "separate") => {
+    if (!pendingDigraph || !pendingInput) return
+    
+    const digraphChoices = new Map<number, "single" | "separate">()
+    
+    if (choice === "single") {
+      // Mark this digraph position to be kept as a single letter
+      digraphChoices.set(pendingDigraph.position, "single")
+    }
+    // If "separate", we don't need to mark anything - default behavior will split
+    
+    processInput(pendingInput, digraphChoices)
+    setShowChNgDialog(false)
+    setPendingDigraph(null)
+    setPendingInput("")
+  }
+
+  const handleChNgCancel = () => {
+    setShowChNgDialog(false)
+    setPendingDigraph(null)
+    setPendingInput("")
   }
 
   const handleClear = () => {
@@ -510,6 +643,14 @@ export default function TextToSignPage() {
           </>
         )}
       </div>
+
+      {/* Ch/Ng Confirmation Dialog */}
+      <ChNgConfirmationDialog
+        isOpen={showChNgDialog}
+        digraph={pendingDigraph?.digraph || ""}
+        onChoice={handleChNgChoice}
+        onCancel={handleChNgCancel}
+      />
     </div>
   )
 }
