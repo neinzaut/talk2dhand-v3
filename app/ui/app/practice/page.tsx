@@ -11,7 +11,7 @@ export default function PracticePage() {
   const practiceOptions = [
     {
       title: "Text-to-Sign",
-      description: "Enter any word or phrase and see its ASL or FSL sign instantly — perfect for learning new vocabulary visually.",
+      description: "Enter any word and see its ASL or FSL sign instantly — perfect for learning new vocabulary visually through fingerspelling.",
       icon: <Target className="h-8 w-8" />,
       action: () => router.push("/practice/text-to-sign"),
       color: "bg-blue-500"

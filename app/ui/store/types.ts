@@ -6,6 +6,7 @@ export interface Sign {
   id: string
   label: string
   imageUrl: string
+  hidden?: boolean // Optional property to hide specific signs
 }
 
 export type SubLessonType = "content" | "practice" | "quiz" | "grammar-practice"

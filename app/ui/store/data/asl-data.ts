@@ -107,7 +107,7 @@ When fingerspelling, keep your hand at **chest to shoulder height**, relaxed, an
             { id: "7", label: "7", imageUrl: "/images/asl-labelled/7.png" },
             { id: "8", label: "8", imageUrl: "/images/asl-labelled/8.png" },
             { id: "9", label: "9", imageUrl: "/images/asl-labelled/9.png" },
-            { id: "10", label: "10", imageUrl: "/images/asl-labelled/10.png" },
+            { id: "10", label: "10", imageUrl: "/images/asl-labelled/10.png", hidden: true },
           ],
           subLessons: [
             {
@@ -159,7 +159,7 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
             { id: "drink", label: "Drink", imageUrl: "/gifs/drink-c.gif" },
             { id: "fine", label: "Fine", imageUrl: "/gifs/fine.gif" },
             { id: "food", label: "Food", imageUrl: "/gifs/food.gif" },
-            { id: "go", label: "Go", imageUrl: "/gifs/go.gif" },
+            { id: "go", label: "Go", imageUrl: "/gifs/go.gif", hidden: true },
             { id: "happy", label: "Happy", imageUrl: "/gifs/happy.gif" },
             { id: "have", label: "Have", imageUrl: "/gifs/have.gif" },
             { id: "hesheit", label: "He/She/It", imageUrl: "/gifs/he-she-it.gif" },

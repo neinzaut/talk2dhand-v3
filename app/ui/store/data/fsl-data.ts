@@ -104,7 +104,7 @@ FSL signers also tend to be **more expressive in their rhythm and movement**. Wh
             { id: "7", label: "7", imageUrl: "/images/fsl-labelled/7.png" },
             { id: "8", label: "8", imageUrl: "/images/fsl-labelled/8.png" },
             { id: "9", label: "9", imageUrl: "/images/fsl-labelled/9.png" },
-            { id: "10", label: "10", imageUrl: "/images/fsl-labelled/10.png" },
+            { id: "10", label: "10", imageUrl: "/images/fsl-labelled/10.png", hidden: true },
           ],
           subLessons: [
             {
@@ -159,7 +159,7 @@ Across the Philippines, you'll see slight **regional variations** — especially
             { id: "drink", label: "Inumin", imageUrl: "/gifs/drink-c.gif" },
             { id: "fine", label: "Ayos", imageUrl: "/gifs/fine.gif" },
             { id: "food", label: "Pagkain", imageUrl: "/gifs/food.gif" },
-            { id: "go", label: "Pumunta", imageUrl: "/gifs/go.gif" },
+            { id: "go", label: "Pumunta", imageUrl: "/gifs/go.gif", hidden: true },
             { id: "happy", label: "Masaya", imageUrl: "/gifs/happy.gif" },
             { id: "have", label: "Mayroon", imageUrl: "/gifs/have.gif" },
             { id: "hesheit", label: "Siya", imageUrl: "/gifs/he-she-it.gif" },

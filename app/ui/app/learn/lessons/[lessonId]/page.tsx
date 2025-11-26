@@ -650,7 +650,7 @@ export default function LessonPage() {
         )}
 
         <div className="grid grid-cols-7 gap-4">
-          {lesson.signs.map((sign) => (
+          {lesson.signs.filter((sign) => !sign.hidden).map((sign) => (
             <button
               key={sign.id}
               onClick={() => handleSignSelect(sign.id)}
