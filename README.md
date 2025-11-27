@@ -1,3 +1,6 @@
+<img width="1000" height="630" alt="image" src="https://github.com/user-attachments/assets/09fe2378-9721-4bf0-8b89-3c12b74c8859" />
+
+
 # Talk2DHand v3
 
 A gamified platform for learning American Sign Language (ASL) and Filipino Sign Language (FSL) with AI-powered conversation practice and real-time sign recognition.
