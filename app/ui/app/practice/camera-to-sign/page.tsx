@@ -161,7 +161,7 @@ function CameraToSignPage() {
     // FSL-specific letter mappings (FSL letters that map to ASL equivalents)
     const fslLetterMapping: Record<string, string> = {
       'CH': 'H',      // CH maps to H
-      'Ñ': 'P',       // Ñ (enye) maps to P
+      'Ñ': 'H',       // Ñ (enye) maps to P
       'NG': 'V',      // NG maps to V
     };
     

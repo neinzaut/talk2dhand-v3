@@ -198,25 +198,28 @@ export default function TextToSignPage() {
         let displayText = data.prediction.toUpperCase()
         
         if (currentLanguage === "fsl") {
-          // Ch is detected as 'H'
+          // Ch is detected as 'H' (special rule: only output Ch)
           if (expectedSign === "ch" && predictedSign === "h") {
-            isCorrect = true
-            displayText = "CH"
+            isCorrect = true;
+            displayText = "CH";
+          }
+          // If Ch is expected, never output Ñ
+          else if (expectedSign === "ñ" && predictedSign === "h") {
+            // Only allow Ñ if Ch is not expected
+            if (letters[currentLetterIndex].toLowerCase() !== "ch") {
+              isCorrect = true;
+              displayText = "Ñ";
+            }
           }
           // Ng is detected as 'V' or '2'
           else if (expectedSign === "ng" && (predictedSign === "v" || predictedSign === "2")) {
-            isCorrect = true
-            displayText = "NG"
-          }
-          // Ñ is detected as 'P'
-          else if (expectedSign === "ñ" && predictedSign === "p") {
-            isCorrect = true
-            displayText = "Ñ"
+            isCorrect = true;
+            displayText = "NG";
           }
           // Normal letter match
           else if (predictedSign === expectedSign) {
-            isCorrect = true
-            displayText = data.prediction.toUpperCase()
+            isCorrect = true;
+            displayText = data.prediction.toUpperCase();
           }
         } else {
           // For ASL or other languages, just direct match

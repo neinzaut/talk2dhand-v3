@@ -267,14 +267,14 @@ export default function LessonPage() {
         // FSL-specific letter mappings (FSL letters that map to ASL equivalents)
         const fslLetterMapping: Record<string, string> = {
           'ch': 'h',      // CH maps to H
-          'enye': 'p',    // Ñ (enye) maps to P
+          'enye': 'h',    // Ñ (enye) maps to P
           'ng': 'v',      // NG maps to V
         };
         
         // Reverse mapping for display purposes
         const fslDisplayMapping: Record<string, string> = {
           'h': 'CH',
-          'p': 'Ñ',
+          'h': 'Ñ',
           'v': 'NG',
         };
         
