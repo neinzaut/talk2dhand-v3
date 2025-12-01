@@ -148,33 +148,34 @@ Across the Philippines, you'll see slight **regional variations** — especially
         },
         {
           id: "lesson-3",
-          title: "Lesson 3: Mga Parirala",
+          title: "Lesson 3: Mga Salita",
           subtitle: "Matuto kung paano mag-sign ng mga salita!",
           icon: "❓",
           thumbnail: "/icons/phrases.png",
           completed: false,
           progress: 0,
           signs: [
-            { id: "bad", label: "Masama", imageUrl: "/gifs/bad.gif" },
-            { id: "drink", label: "Inumin", imageUrl: "/gifs/drink-c.gif" },
-            { id: "fine", label: "Ayos", imageUrl: "/gifs/fine.gif" },
-            { id: "food", label: "Pagkain", imageUrl: "/gifs/food.gif" },
-            { id: "go", label: "Pumunta", imageUrl: "/gifs/go.gif", hidden: true },
-            { id: "happy", label: "Masaya", imageUrl: "/gifs/happy.gif" },
-            { id: "have", label: "Mayroon", imageUrl: "/gifs/have.gif" },
-            { id: "hesheit", label: "Siya", imageUrl: "/gifs/he-she-it.gif" },
-            { id: "hello", label: "Kumusta", imageUrl: "/gifs/hello.gif" },
-            { id: "like", label: "Gusto", imageUrl: "/gifs/like.gif" },
-            { id: "minemy", label: "Akin", imageUrl: "/gifs/my-mine.gif" },
-            { id: "not", label: "Hindi", imageUrl: "/gifs/not.gif" },
-            { id: "now", label: "Ngayon", imageUrl: "/gifs/now.gif" },
-            { id: "sad", label: "Malungkot", imageUrl: "/gifs/sad.gif" },
-            { id: "see", label: "Makita", imageUrl: "/gifs/see.gif" },
-            { id: "thankyou", label: "Salamat", imageUrl: "/gifs/thankyou.gif" },
-            { id: "weus", label: "Tayo/Kami", imageUrl: "/gifs/we-us.gif" },
-            { id: "where", label: "Saan", imageUrl: "/gifs/where.gif" },
-            { id: "will", label: "Gagawin", imageUrl: "/gifs/will.gif" },
-            { id: "yourself", label: "Ikaw", imageUrl: "/gifs/yourself.gif" },
+            { id: "bad", label: "Masama", imageUrl: "bad.gif" },
+            { id: "drink-c", label: "Inumin", imageUrl: "drink-c.gif" },
+            { id: "fine", label: "Mabuti", imageUrl: "fine.gif" },
+            { id: "food", label: "Pagkain", imageUrl: "food.gif", hidden: true },
+            { id: "go", label: "Pumunta", imageUrl: "go.gif", hidden: true },
+            { id: "happy", label: "Masaya", imageUrl: "happy.gif" },
+            { id: "have", label: "Mayroon", imageUrl: "have.gif" },
+            { id: "he-she-it", label: "Siya", imageUrl: "he-she-it.gif" },
+            { id: "hello", label: "Kumusta", imageUrl: "hello.gif" },
+            { id: "like", label: "Gusto", imageUrl: "like.gif" },
+            { id: "my-mine", label: "Akin", imageUrl: "my-mine.gif" },
+            { id: "not", label: "Hindi", imageUrl: "not.gif" },
+            { id: "now", label: "Ngayon", imageUrl: "now.gif" },
+            { id: "sad", label: "Malungkot", imageUrl: "sad.gif" },
+            { id: "see", label: "Makita", imageUrl: "see.gif" },
+            { id: "thank-you", label: "Salamat", imageUrl: "thank-you.gif" },
+            { id: "we-us", label: "Kami/Tayo", imageUrl: "we-us.gif" },
+            { id: "where", label: "Saan", imageUrl: "where.gif" },
+            { id: "will", label: "Gagawin", imageUrl: "will.gif" },
+            { id: "today", label: "Ngayong Araw", imageUrl: "today.gif", hidden: true },
+            { id: "yourself", label: "Sarili", imageUrl: "yourself.gif" }
           ],
           subLessons: [
             {
@@ -218,21 +219,20 @@ Because Filipino culture values friendliness and emotion, **facial grammar** is 
 
 #### **Mga Halimbawa ng Visual (Visual Examples)**
 
-Narito ang mga animated na halimbawa ng mga pariralang iyong masasanay:
+Narito ang mga animated na halimbawa ng mga salitang iyong masasanay:
 
 | Tanda | Animasyon | Tanda | Animasyon |
 | :---- | :----: | :---- | :----: |
-| **Masama** | ![Bad](/gifs/bad.gif) | **Inumin** | ![Drink](/gifs/drink-c.gif) |
-| **Ayos** | ![Fine](/gifs/fine.gif) | **Pagkain** | ![Food](/gifs/food.gif) |
-| **Pumunta** | ![Go](/gifs/go.gif) | **Masaya** | ![Happy](/gifs/happy.gif) |
-| **Mayroon** | ![Have](/gifs/have.gif) | **Siya** | ![He/She/It](/gifs/he-she-it.gif) |
-| **Kumusta** | ![Hello](/gifs/hello.gif) | **Gusto** | ![Like](/gifs/like.gif) |
-| **Akin** | ![My/Mine](/gifs/my-mine.gif) | **Hindi** | ![Not](/gifs/not.gif) |
-| **Ngayon** | ![Now](/gifs/now.gif) | **Malungkot** | ![Sad](/gifs/sad.gif) |
-| **Makita** | ![See](/gifs/see.gif) | **Salamat Po** | ![Thank You](/gifs/thank-you.gif) |
-| **Salamat** | ![Thanks](/gifs/thankyou.gif) | **Ngayong Araw** | ![Today](/gifs/today.gif) |
-| **Tayo/Kami** | ![We/Us](/gifs/we-us.gif) | **Saan** | ![Where](/gifs/where.gif) |
-| **Gagawin** | ![Will](/gifs/will.gif) | **Ikaw** | ![You](/gifs/yourself.gif) |
+| **Masama** | ![Bad](/gifs/fsl/bad.gif) | **Inumin** | ![Drink](/gifs/fsl/drink-c.gif) |
+| **Ayos** | ![Fine](/gifs/fsl/fine.gif) | **Pagkain** | ![Food](/gifs/fsl/food.gif) |
+| **Pumunta** | ![Go](/gifs/fsl/go.gif) | **Masaya** | ![Happy](/gifs/fsl/happy.gif) |
+| **Mayroon** | ![Have](/gifs/fsl/have.gif) | **Siya** | ![He/She/It](/gifs/fsl/he-she-it.gif) |
+| **Kumusta** | ![Hello](/gifs/fsl/hello.gif) | **Gusto** | ![Like](/gifs/fsl/like.gif) |
+| **Akin** | ![My/Mine](/gifs/fsl/my-mine.gif) | **Hindi** | ![Not](/gifs/fsl/not.gif) |
+| **Now** | ![Now](/gifs/fsl/now.gif) | **Malungkot** | ![Sad](/gifs/fsl/sad.gif) |
+| **Makita** | ![See](/gifs/fsl/see.gif) | **Salamat Po** | ![Thank You](/gifs/fsl/thank-you.gif) |
+| **Tayo/Kami** | ![We/Us](/gifs/fsl/we-us.gif) | **Saan** | ![Where](/gifs/fsl/where.gif) |
+| **Gagawin** | ![Will](/gifs/fsl/will.gif) | **Ikaw** | ![You](/gifs/fsl/yourself.gif) |
 
 Pansinin kung paano natural na umaagos ang mga paggalaw ng kamay at may kasamang naaangkop na mga pagpapahayag sa mukha. Magsanay ng mga tandang ito nang dahan-dahan sa una, na nakatuon sa wastong anyo at pagpapahayag.
 

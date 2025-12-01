@@ -666,7 +666,11 @@ export default function LessonPage() {
                 </span>
               ) : (
                 <img
-                  src={sign.imageUrl || "/placeholder.svg"}
+                  src={
+                    lesson.id === "lesson-3"
+                      ? `/gifs/${currentLanguage}/${sign.imageUrl}`
+                      : sign.imageUrl || "/placeholder.svg"
+                  }
                   alt={`Sign for ${sign.label}`}
                   className="w-full h-full object-cover rounded"
                 />

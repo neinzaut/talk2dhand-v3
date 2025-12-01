@@ -155,26 +155,27 @@ As with the alphabet, small **variations** in palm rotation, spacing, or motion 
           completed: false,
           progress: 0,
           signs: [
-            { id: "bad", label: "Bad", imageUrl: "/gifs/bad.gif" },
-            { id: "drink", label: "Drink", imageUrl: "/gifs/drink-c.gif" },
-            { id: "fine", label: "Fine", imageUrl: "/gifs/fine.gif" },
-            { id: "food", label: "Food", imageUrl: "/gifs/food.gif" },
-            { id: "go", label: "Go", imageUrl: "/gifs/go.gif", hidden: true },
-            { id: "happy", label: "Happy", imageUrl: "/gifs/happy.gif" },
-            { id: "have", label: "Have", imageUrl: "/gifs/have.gif" },
-            { id: "hesheit", label: "He/She/It", imageUrl: "/gifs/he-she-it.gif" },
-            { id: "hello", label: "Hello", imageUrl: "/gifs/hello.gif" },
-            { id: "like", label: "Like", imageUrl: "/gifs/like.gif" },
-            { id: "minemy", label: "My/Mine", imageUrl: "/gifs/my-mine.gif" },
-            { id: "not", label: "Not", imageUrl: "/gifs/not.gif" },
-            { id: "now", label: "Now", imageUrl: "/gifs/now.gif" },
-            { id: "sad", label: "Sad", imageUrl: "/gifs/sad.gif" },
-            { id: "see", label: "See", imageUrl: "/gifs/see.gif" },
-            { id: "thankyou", label: "Thank You", imageUrl: "/gifs/thankyou.gif" },
-            { id: "weus", label: "We/Us", imageUrl: "/gifs/we-us.gif" },
-            { id: "where", label: "Where", imageUrl: "/gifs/where.gif" },
-            { id: "will", label: "Will", imageUrl: "/gifs/will.gif" },
-            { id: "yourself", label: "Yourself", imageUrl: "/gifs/yourself.gif" },
+            { id: "bad", label: "Bad", imageUrl: "bad.gif" },
+            { id: "drink-c", label: "Drink", imageUrl: "drink-c.gif" },
+            { id: "fine", label: "Fine", imageUrl: "fine.gif" },
+            { id: "food", label: "Food", imageUrl: "food.gif", hidden: true },
+            { id: "go", label: "Go", imageUrl: "go.gif", hidden: true },
+            { id: "happy", label: "Happy", imageUrl: "happy.gif" },
+            { id: "have", label: "Have", imageUrl: "have.gif" },
+            { id: "he-she-it", label: "He/She/It", imageUrl: "he-she-it.gif" },
+            { id: "hello", label: "Hello", imageUrl: "hello.gif" },
+            { id: "like", label: "Like", imageUrl: "like.gif" },
+            { id: "my-mine", label: "My/Mine", imageUrl: "my-mine.gif" },
+            { id: "not", label: "Not", imageUrl: "not.gif" },
+            { id: "now", label: "Now", imageUrl: "now.gif" },
+            { id: "sad", label: "Sad", imageUrl: "sad.gif" },
+            { id: "see", label: "See", imageUrl: "see.gif" },
+            { id: "thank-you", label: "Thank You", imageUrl: "thank-you.gif" },
+            { id: "today", label: "Today", imageUrl: "today.gif", hidden: true },
+            { id: "we-us", label: "We/Us", imageUrl: "we-us.gif" },
+            { id: "where", label: "Where", imageUrl: "where.gif" },
+            { id: "will", label: "Will", imageUrl: "will.gif" },
+            { id: "yourself", label: "Yourself", imageUrl: "yourself.gif" }
           ],
           subLessons: [
             {
@@ -211,17 +212,16 @@ Below are animated examples of the phrases you'll practice:
 
 | Sign | Animation | Sign | Animation |
 | :---- | :----: | :---- | :----: |
-| **Bad** | ![Bad](/gifs/bad.gif) | **Drink** | ![Drink](/gifs/drink-c.gif) |
-| **Fine** | ![Fine](/gifs/fine.gif) | **Food** | ![Food](/gifs/food.gif) |
-| **Go** | ![Go](/gifs/go.gif) | **Happy** | ![Happy](/gifs/happy.gif) |
-| **Have** | ![Have](/gifs/have.gif) | **He/She/It** | ![He/She/It](/gifs/he-she-it.gif) |
-| **Hello** | ![Hello](/gifs/hello.gif) | **Like** | ![Like](/gifs/like.gif) |
-| **My/Mine** | ![My/Mine](/gifs/my-mine.gif) | **Not** | ![Not](/gifs/not.gif) |
-| **Now** | ![Now](/gifs/now.gif) | **Sad** | ![Sad](/gifs/sad.gif) |
-| **See** | ![See](/gifs/see.gif) | **Thank You** | ![Thank You](/gifs/thank-you.gif) |
-| **Thanks** | ![Thanks](/gifs/thankyou.gif) | **Today** | ![Today](/gifs/today.gif) |
-| **We/Us** | ![We/Us](/gifs/we-us.gif) | **Where** | ![Where](/gifs/where.gif) |
-| **Will** | ![Will](/gifs/will.gif) | **You** | ![You](/gifs/yourself.gif) |
+| **Bad** | ![Bad](/gifs/asl/bad.gif) | **Drink** | ![Drink](/gifs/asl/drink-c.gif) |
+| **Fine** | ![Fine](/gifs/asl/fine.gif) | **Food** | ![Food](/gifs/asl/food.gif) |
+| **Go** | ![Go](/gifs/asl/go.gif) | **Happy** | ![Happy](/gifs/asl/happy.gif) |
+| **Have** | ![Have](/gifs/asl/have.gif) | **He/She/It** | ![He/She/It](/gifs/asl/he-she-it.gif) |
+| **Hello** | ![Hello](/gifs/asl/hello.gif) | **Like** | ![Like](/gifs/asl/like.gif) |
+| **My/Mine** | ![My/Mine](/gifs/asl/my-mine.gif) | **Not** | ![Not](/gifs/asl/not.gif) |
+| **Now** | ![Now](/gifs/asl/now.gif) | **Sad** | ![Sad](/gifs/asl/sad.gif) |
+| **See** | ![See](/gifs/asl/see.gif) | **Thank You** | ![Thank You](/gifs/asl/thank-you.gif) |
+| **We/Us** | ![We/Us](/gifs/asl/we-us.gif) | **Where** | ![Where](/gifs/asl/where.gif) |
+| **Will** | ![Will](/gifs/asl/will.gif) | **You** | ![You](/gifs/asl/yourself.gif) |
 
 Notice how the hand movements flow naturally and include appropriate facial expressions. Practice these signs slowly at first, focusing on proper form and expression.
 
